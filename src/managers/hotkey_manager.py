@@ -1,5 +1,6 @@
 import logging
 from pynput import keyboard
+from pynput.keyboard import Controller, Listener, HotKey, Key
 import threading
 from PyQt5.QtCore import QTimer, pyqtSignal, QObject
 
@@ -23,6 +24,7 @@ class HotkeyManager(QObject):
         self.callback = callback
         self.config = config
         self.current_listener = None
+        self.controller = Controller()
 
         # Connect signal to callback for thread safety
         self.hotkey_pressed.connect(callback)
@@ -44,16 +46,19 @@ class HotkeyManager(QObject):
         self.logger.info(f"Setting up hotkey: {hotkey_combo}")
         
         try:
-            hotkey = keyboard.HotKey(
-                keyboard.HotKey.parse(hotkey_combo),
-                on_hotkey
+            hotkey = HotKey(
+                HotKey.parse(hotkey_combo),
+                on_activate=on_hotkey
             )
+            
+            def for_canonical(f):
+                return lambda k: f(self.current_listener.canonical(k))
             
             def start_listener():
                 self.logger.debug("Starting hotkey listener thread")
-                self.current_listener = keyboard.Listener(
-                    on_press=hotkey.press,
-                    on_release=hotkey.release
+                self.current_listener = Listener(
+                    on_press=for_canonical(hotkey.press),
+                    on_release=for_canonical(hotkey.release)
                 )
                 self.current_listener.start()
                 self.logger.info("Hotkey listener started successfully")
