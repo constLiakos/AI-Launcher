@@ -3,6 +3,8 @@ from pynput import keyboard
 import threading
 from PyQt5.QtCore import QTimer, pyqtSignal, QObject
 
+from utils.constants import Hotkey
+
 class HotkeyManager(QObject):
 
     hotkey_pressed = pyqtSignal()
@@ -38,7 +40,7 @@ class HotkeyManager(QObject):
             self.hotkey_pressed.emit()
         
         # Get hotkey from config
-        hotkey_combo = self.config.get('hotkey', '<alt>+x')
+        hotkey_combo = self.config.get('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)
         self.logger.info(f"Setting up hotkey: {hotkey_combo}")
         
         try:
@@ -63,7 +65,7 @@ class HotkeyManager(QObject):
         except Exception as e:
             self.logger.error(f"Invalid hotkey format: {hotkey_combo}. Error: {e}. Using default.")
             # Fallback to default hotkey
-            self.config.set('hotkey', '<alt>+x')
+            self.config.set('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)
             self.setup_hotkey()  # Retry with default
 
     def stop_listener(self):
