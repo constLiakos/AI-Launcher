@@ -139,12 +139,15 @@ class AnimationManager(QObject):
         
         # Handle response area height adjustment if this is the main window
         if hasattr(widget, 'response_area'):
-            min_response_height = ElementSize.RESPONSE_MIN_HEIGHT
-            max_response_height = max(
-                min_response_height, 
-                height - ElementSize.RESPONSE_MARGIN_BOTTOM
-            )
-            widget.response_area.setMaximumHeight(max_response_height)
+            min_height = ElementSize.RESPONSE_MIN_HEIGHT
+            max_height = ElementSize.RESPONSE_MAX_HEIGHT
+            available_height = height - ElementSize.RESPONSE_MARGIN_BOTTOM
+            
+            # Calculate optimal height
+            optimal_height = max(min_height, min(max_height, available_height))
+            
+            # Actually set the height, not just the maximum
+            widget.response_area.setFixedHeight(optimal_height)
         
         widget.update()
     
