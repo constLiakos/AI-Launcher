@@ -7,7 +7,7 @@ from utils.constants import AnimationConfig, ElementSize, Timing
 class AnimationManager(QObject):
     """Manages all animations for the application."""
     
-    def __init__(self, parent_widget, style_manager:StyleManager, logger:logging.Logger):
+    def __init__(self, parent_widget, logger:logging.Logger, style_manager:StyleManager):
         super().__init__(parent_widget)
         self.logger = logger.getChild('animation_manager')
         self.parent = parent_widget
