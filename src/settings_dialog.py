@@ -1,3 +1,4 @@
+import logging
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                             QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox)
 from PyQt5.QtCore import Qt, pyqtSignal
@@ -8,10 +9,11 @@ class SettingsDialog(QDialog):
     
     theme_changed = pyqtSignal(str)
 
-    def __init__(self, config, parent=None):
+    def __init__(self, logger:logging, config, parent=None):
         super().__init__(parent)
+        self.logger = logger.getChild('settings_dialogue')
         self.config = config
-        self.style_manager = StyleManager()
+        self.style_manager = StyleManager(logger)
         self.setup_ui()
         self.apply_styles()
         self.original_theme = self.config.get('theme', Theme.DEFAULT_THEME)

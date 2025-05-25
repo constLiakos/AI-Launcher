@@ -571,7 +571,7 @@ class Launcher(QMainWindow):
     def open_settings(self):
         """Open the settings dialog."""
         logger.debug("Opening settings dialog")
-        dialog:SettingsDialog = SettingsDialog(self.config, self)
+        dialog:SettingsDialog = SettingsDialog(logger, self.config, self)
 
         # Connect the theme change signal
         dialog.theme_changed.connect(self.on_theme_changed)
