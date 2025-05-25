@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                             QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox)
 from PyQt5.QtCore import Qt, pyqtSignal
 from managers.styles import StyleManager
-from utils.constants import LLM, Hotkey, SettingsDialogSize, Text, Theme, Timing
+from utils.constants import LLM, Conversation, Hotkey, SettingsDialogSize, Text, Theme, Timing
 
 class SettingsDialog(QDialog):
     
@@ -120,6 +120,19 @@ class SettingsDialog(QDialog):
         clear_label.setObjectName("fieldLabel")
         form_layout.addRow(clear_label, self.clear_previous_checkbox)
 
+        # Message History Limit
+        self.message_history_input = QLineEdit()
+        history_limit_value = self.config.get('message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT)
+        self.message_history_input.setText(str(history_limit_value))
+        self.logger.debug(f"Message history limit loaded: {history_limit_value}")
+        self.message_history_input.setObjectName("settingsInputField")
+        self.message_history_input.setPlaceholderText("Enter number of messages to keep (1-100)")
+        self.message_history_input.setMinimumHeight(35)
+        
+        history_label = QLabel("Message History Limit:")
+        history_label.setObjectName("fieldLabel")
+        form_layout.addRow(history_label, self.message_history_input)
+
         # Theme Selection
         self.theme_combo = QComboBox()
         self.theme_combo.addItems([Theme.CLASSIC, Theme.DARK])
@@ -213,6 +226,21 @@ class SettingsDialog(QDialog):
         clear_previous = self.clear_previous_checkbox.isChecked()
         self.config.set('clear_previous_response', clear_previous)
         self.logger.debug(f"Clear previous response saved: {clear_previous}")
+
+        # Save message history limit with validation
+        try:
+            history_limit = int(self.message_history_input.text())
+            if history_limit < 1:
+                history_limit = 1
+                self.logger.warning(f"Message history limit too low, setting to minimum: {history_limit}")
+            elif history_limit > 100:
+                history_limit = 100
+                self.logger.warning(f"Message history limit too high, setting to maximum: {history_limit}")
+            self.config.set('message_history_limit', history_limit)
+            self.logger.debug(f"Message history limit saved: {history_limit}")
+        except ValueError as e:
+            self.logger.error(f"Invalid message history limit value '{self.message_history_input.text()}': {e}, using default")
+            self.config.set('message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT)
         
         # Save theme
         new_theme = self.theme_combo.currentText()

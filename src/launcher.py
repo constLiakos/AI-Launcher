@@ -13,7 +13,7 @@ from settings_dialog import SettingsDialog
 from managers.animation_manager import AnimationManager
 from managers.styles import StyleManager
 from managers.hotkey_manager import HotkeyManager
-from utils.constants import ElementSize, Style, Theme, WindowSize, Colors, Text, Timing, TrayIcon
+from utils.constants import Conversation, ElementSize, Style, Theme, WindowSize, Colors, Text, Timing, TrayIcon
 from utils.markdown_render import MarkdownRenderer
 from managers.state_manager import StateManager
 
@@ -41,7 +41,10 @@ class Launcher(QMainWindow):
         self.api_client = ApiClient(self.config)
 
         # Initialize managers
-        self.conversation_manager = ConversationManager(logger, max_conversations=5)
+        # Check if we should clear previous response when reopening
+        convrestation_history_limit =  self.config.get('message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT)
+
+        self.conversation_manager = ConversationManager(logger, max_conversations=convrestation_history_limit)
         self.style_manager = StyleManager(logger)
         self.animation_manager = AnimationManager(self, logger, self.style_manager)
         self.state_manager = StateManager(self.config, logger)
