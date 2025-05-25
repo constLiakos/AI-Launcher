@@ -29,7 +29,7 @@ class Launcher(QMainWindow):
             level=log_level,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             handlers=[
-                logging.FileHandler('ui_launcher.log'),
+                logging.FileHandler('ai_launcher.log'),
                 logging.StreamHandler()  # Still shows in console
             ]
         )
