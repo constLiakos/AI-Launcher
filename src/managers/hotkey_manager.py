@@ -1,7 +1,8 @@
-import logging
-from pynput import keyboard
 import threading
-from PyQt5.QtCore import QTimer, pyqtSignal, QObject
+import time
+from pynput import keyboard
+from PyQt5.QtCore import QObject, pyqtSignal
+import logging
 
 from utils.constants import Hotkey
 
@@ -44,23 +45,33 @@ class HotkeyManager(QObject):
         self.logger.info(f"Setting up hotkey: {hotkey_combo}")
         
         try:
-            hotkey = keyboard.HotKey(
-                keyboard.HotKey.parse(hotkey_combo),
-                on_hotkey
-            )
-            
+            # Add delay for Windows compatibility
             def start_listener():
                 self.logger.debug("Starting hotkey listener thread")
+                time.sleep(0.1)  # Small delay to ensure proper initialization
+                
+                hotkey = keyboard.HotKey(
+                    keyboard.HotKey.parse(hotkey_combo),
+                    on_hotkey
+                )
+                
                 self.current_listener = keyboard.Listener(
                     on_press=hotkey.press,
-                    on_release=hotkey.release
+                    on_release=hotkey.release,
+                    suppress=False  # Don't suppress keys on Windows
                 )
+                
                 self.current_listener.start()
                 self.logger.info("Hotkey listener started successfully")
-                self.current_listener.join()
+                
+                # Keep thread alive
+                try:
+                    self.current_listener.join()
+                except Exception as e:
+                    self.logger.error(f"Listener thread error: {e}")
             
-            listener_thread = threading.Thread(target=start_listener, daemon=True)
-            listener_thread.start()
+            self.listener_thread = threading.Thread(target=start_listener, daemon=True)
+            self.listener_thread.start()
             
         except Exception as e:
             self.logger.error(f"Invalid hotkey format: {hotkey_combo}. Error: {e}. Using default.")
@@ -68,19 +79,22 @@ class HotkeyManager(QObject):
             self.config.set('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)
             self.setup_hotkey()  # Retry with default
 
+
+
     def stop_listener(self):
         """Stop the current hotkey listener."""
         if self.current_listener:
             self.logger.debug("Stopping hotkey listener")
             try:
                 self.current_listener.stop()
+                # Give it time to stop gracefully on Windows
+                if hasattr(self, 'listener_thread') and self.listener_thread.is_alive():
+                    self.listener_thread.join(timeout=1.0)
                 self.logger.info("Hotkey listener stopped successfully")
             except Exception as e:
                 self.logger.error(f"Error stopping hotkey listener: {e}")
             finally:
                 self.current_listener = None
-        else:
-            self.logger.debug("No active listener to stop")
 
     def restart_listener(self):
         """Restart the hotkey listener with new settings."""
