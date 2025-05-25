@@ -252,7 +252,7 @@ class Launcher(QMainWindow):
         input_layout.addWidget(self.input_field)
 
         # Settings button (gear icon)
-        self.settings_button = QPushButton("⚙")
+        self.settings_button = QPushButton(Text.SETTINGS_BUTTON)
         self.settings_button.setObjectName("settingsButton")
         self.settings_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
