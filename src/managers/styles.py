@@ -3,7 +3,7 @@ from utils.constants import BackgroundColors, Theme
 
 class StyleManager:
     """Manages all UI styles for the application."""
-    def __init__(self, logger:logging):
+    def __init__(self, logger:logging.Logger):
         self.logger = logger.getChild('style_manager')
 
         self.current_theme = Theme.DEFAULT_THEME

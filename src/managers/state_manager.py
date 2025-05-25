@@ -16,7 +16,7 @@ class StateManager(QObject):
     request_ready = pyqtSignal(str)
     expanded_changed = pyqtSignal(bool)
 
-    def __init__(self, config, logger:logging):
+    def __init__(self, config, logger:logging.Logger):
         super().__init__()
         self.logger = logger.getChild('state_manager')
         self.config = config

@@ -31,9 +31,9 @@ class Launcher(QMainWindow):
         # Initialize managers
         self.style_manager = StyleManager(logger)
         self.animation_manager = AnimationManager(self, self.style_manager, logger)
-        self.hotkey_manager = HotkeyManager(self.show_window, self.config, logger)
         self.state_manager = StateManager(self.config, logger)
         self.markdown_render = MarkdownRenderer(logger)
+        self.hotkey_manager = HotkeyManager(logger, self.show_window, self.config)
 
         # Set current theme
         self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)

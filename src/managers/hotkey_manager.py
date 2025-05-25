@@ -4,15 +4,16 @@ import threading
 from PyQt5.QtCore import QTimer
 
 class HotkeyManager:
-    def __init__(self, callback, config, logger:logging):
+    def __init__(self, logger:logging.Logger, callback, config):
         """
         Initialize hotkey manager.
-        
         Args:
             callback: Function to call when hotkey is pressed
             config: Configuration object to get hotkey settings
         """
         self.logger = logger.getChild('hotkey_manager')
+
+        self.logger.debug("HotkeyManager initializing...")
         self.callback = callback
         self.config = config
         self.current_listener = None
