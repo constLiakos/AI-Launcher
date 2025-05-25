@@ -271,15 +271,19 @@ class Launcher(QMainWindow):
         self.response_area.setMaximumHeight(ElementSize.RESPONSE_MAX_HEIGHT)
         container_layout.addWidget(self.response_area)
 
-        # Copy button positioned absolutely in top-right of response area
+        # Copy button positioned absolutely - make it a child of main_container instead
         self.copy_button = QPushButton(Text.COPY_BUTTON)
         self.copy_button.setObjectName("copyButton")
         self.copy_button.setFixedSize(
             ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
         self.copy_button.clicked.connect(self.copy_response)
         self.copy_button.setVisible(False)  # Hidden initially
-        # Make it a child of response area
-        self.copy_button.setParent(self.response_area)
+        
+        # Make it a child of main_container instead of response_area
+        self.copy_button.setParent(self.main_container)
+        
+        # Ensure it's on top
+        self.copy_button.raise_()
 
         # Add a stretch to push everything to the top if needed
         container_layout.addStretch()
@@ -308,14 +312,27 @@ class Launcher(QMainWindow):
         # Reapply stylesheet to update appearance
         self.input_field.setStyle(self.input_field.style())
 
+
     def position_copy_button(self):
-        """Position the copy button in the top-right corner of the response area."""
+        """Position the copy button in the top-right corner of the response area, accounting for scrollbar."""
         if self.response_area.isVisible():
-            # Position relative to response area
-            button_x = self.response_area.width() - self.copy_button.width() - 10
-            button_y = 10
+            # Get the response area's position relative to main_container
+            response_pos = self.response_area.pos()
+            response_geometry = self.response_area.geometry()
+            
+            # Account for the thin scrollbar and add some margin
+            scrollbar_width = 8  # Our thin scrollbar width
+            margin = 12
+            
+            # Calculate position relative to main_container
+            button_x = response_pos.x() + response_geometry.width() - self.copy_button.width() - scrollbar_width - margin
+            button_y = response_pos.y() + margin
+            
             self.copy_button.move(button_x, button_y)
             self.copy_button.raise_()  # Bring to front
+            
+            # Ensure it stays visible
+            self.copy_button.setVisible(True)
 
     def resizeEvent(self, event):
         """Handle window resize to reposition copy button."""

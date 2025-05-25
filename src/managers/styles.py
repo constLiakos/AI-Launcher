@@ -321,17 +321,14 @@ class StyleManager:
             font-size: 18px;
             font-weight: bold;
         }}
-        
         #settingsButton:hover {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 #3b82f6, stop:1 #2563eb);
         }}
-        
         #settingsButton:pressed {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 #2563eb, stop:1 #1d4ed8);
         }}
-        
         #copyButton {{
             background: {colors['transparent_white']};
             border: 1px solid rgba(79, 156, 249, 0.3);
@@ -340,7 +337,6 @@ class StyleManager:
             font-size: 16px;
             padding: 2px;
         }}
-        
         #copyButton:hover {{
             background: rgba(79, 156, 249, 0.1);
             border: 1px solid rgba(79, 156, 249, 0.5);
@@ -363,9 +359,46 @@ class StyleManager:
             color: {colors['text_color']};
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }}
-        
         #responseArea:focus {{
             outline: none;
+        }}
+
+        /* Modern thin scrollbar styles */
+        #responseArea QScrollBar:vertical {{
+            background: transparent;
+            width: 8px;
+            border-radius: 4px;
+            margin: 0px;
+        }}
+
+        #responseArea QScrollBar::handle:vertical {{
+            background: rgba(79, 156, 249, 0.3);
+            border-radius: 4px;
+            min-height: 20px;
+            margin: 2px;
+        }}
+
+        #responseArea QScrollBar::handle:vertical:hover {{
+            background: rgba(79, 156, 249, 0.5);
+        }}
+
+        #responseArea QScrollBar::handle:vertical:pressed {{
+            background: rgba(79, 156, 249, 0.7);
+        }}
+
+        #responseArea QScrollBar::add-line:vertical,
+        #responseArea QScrollBar::sub-line:vertical {{
+            height: 0px;
+            background: transparent;
+        }}
+
+        #responseArea QScrollBar::add-page:vertical,
+        #responseArea QScrollBar::sub-page:vertical {{
+            background: transparent;
+        }}
+
+        #responseArea QScrollBar:horizontal {{
+            height: 0px;
         }}
         """
     
