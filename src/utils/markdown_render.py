@@ -1,4 +1,5 @@
 """Markdown rendering utilities."""
+import logging
 import re
 try:
     import markdown
@@ -10,7 +11,8 @@ except ImportError:
 class MarkdownRenderer:
     """Handle markdown to HTML conversion."""
     
-    def __init__(self):
+    def __init__(self, logger:logging):
+        self.logger = logger.getChild('markdown_render')
         self.extensions = ['codehilite', 'fenced_code', 'tables'] if MARKDOWN_AVAILABLE else []
     
     def to_html(self, text):

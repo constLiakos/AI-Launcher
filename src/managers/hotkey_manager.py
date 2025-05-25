@@ -1,9 +1,10 @@
+import logging
 from pynput import keyboard
 import threading
 from PyQt5.QtCore import QTimer
 
 class HotkeyManager:
-    def __init__(self, callback, config):
+    def __init__(self, callback, config, logger:logging):
         """
         Initialize hotkey manager.
         
@@ -11,6 +12,7 @@ class HotkeyManager:
             callback: Function to call when hotkey is pressed
             config: Configuration object to get hotkey settings
         """
+        self.logger = logger.getChild('hotkey_manager')
         self.callback = callback
         self.config = config
         self.current_listener = None

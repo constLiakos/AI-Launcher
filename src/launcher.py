@@ -1,10 +1,10 @@
 # Add missing imports at the top
+import logging
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLineEdit, QPushButton, QLabel, QTextEdit, QFrame,
                              QApplication, QAction, QGraphicsDropShadowEffect, QSystemTrayIcon, QMenu, QAction, QShortcut)
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence
-import logging
 
 from config import Config
 from api_client import ApiClient
@@ -29,11 +29,11 @@ class Launcher(QMainWindow):
         self.api_client = ApiClient(self.config)
 
         # Initialize managers
-        self.style_manager:StyleManager = StyleManager()
-        self.animation_manager = AnimationManager(self, self.style_manager)
-        self.hotkey_manager = HotkeyManager(self.show_window, self.config)
-        self.state_manager = StateManager(self.config)
-        self.markdown_render = MarkdownRenderer()
+        self.style_manager = StyleManager(logger)
+        self.animation_manager = AnimationManager(self, self.style_manager, logger)
+        self.hotkey_manager = HotkeyManager(self.show_window, self.config, logger)
+        self.state_manager = StateManager(self.config, logger)
+        self.markdown_render = MarkdownRenderer(logger)
 
         # Set current theme
         self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
@@ -150,6 +150,7 @@ class Launcher(QMainWindow):
         try:
             # Check if we should clear previous response when reopening
             if self.config.get('clear_previous_response', False):
+                logger.debug("Clearing previous response on window show")
                 # Clear the response area and hide it
                 self.response_area.setText("")
                 self.response_area.setVisible(False)
@@ -163,6 +164,7 @@ class Launcher(QMainWindow):
                 # Clear input field
                 self.input_field.clear()
 
+            logger.debug(f"Window shown, position: ({self.x()}, {self.y()})")
             # First, ensure the window is visible
             if self.isMinimized():
                 self.setWindowState(self.windowState() & ~Qt.WindowMinimized)
@@ -405,11 +407,14 @@ class Launcher(QMainWindow):
     @pyqtSlot(str)
     def send_request(self, prompt):
         """Send request - called by StateManager signal."""
+        logger.debug(f"Sending request with prompt length: {len(prompt)}")
         if not prompt or self.state_manager.is_currently_processing():
+            logger.debug("Request blocked - empty prompt or already processing")
             return
 
         # Start processing through StateManager
         request_id = self.state_manager.start_processing()
+        logger.debug(f"Started processing with request_id: {request_id}")
 
         # Execute request
         QTimer.singleShot(50, lambda: self._execute_request(request_id))
@@ -425,7 +430,9 @@ class Launcher(QMainWindow):
 
     def _handle_chunk(self, chunk, request_id):
         """Handle incoming response chunks with validation."""
+        logger.debug(f"Received chunk for request {request_id}, size: {len(chunk)}")
         if not self.state_manager.is_request_valid(request_id):
+            logger.debug(f"Invalid request_id {request_id}, ignoring chunk")
             return
 
         try:
@@ -466,9 +473,10 @@ class Launcher(QMainWindow):
 
     def _handle_error(self, error_message, request_id):
         """Handle errors with validation."""
+        logger.error(f"Request {request_id} failed: {error_message}")
         if not self.state_manager.handle_error(error_message, request_id):
             return
-
+        
         # Get error text from StateManager
         error_text = self.state_manager.get_accumulated_response()
 
@@ -562,6 +570,7 @@ class Launcher(QMainWindow):
 
     def open_settings(self):
         """Open the settings dialog."""
+        logger.debug("Opening settings dialog")
         dialog:SettingsDialog = SettingsDialog(self.config, self)
 
         # Connect the theme change signal
@@ -575,6 +584,7 @@ class Launcher(QMainWindow):
         dialog.move(center_x, center_y)
 
         if dialog.exec_():
+            logger.debug(f"Settings saved, new theme: {new_theme}")
             # Check if theme changed
             new_theme = self.config.get('theme', Theme.DEFAULT_THEME)
             if new_theme != self.current_theme:
@@ -600,6 +610,7 @@ class Launcher(QMainWindow):
         """Restore window position (top-left corner)."""
         x = self.config.get('position_x', WindowSize.DEFAULT_X)
         y = self.config.get('position_y', WindowSize.DEFAULT_Y)
+        logger.debug(f"Restoring window position to ({x}, {y})")
         self.move(x, y)
 
     def save_geometry(self):
@@ -611,12 +622,20 @@ class Launcher(QMainWindow):
 
     def closeEvent(self, event):
         """Override close event to hide to tray instead of quitting."""
+        logger.debug("Close event triggered")
+        
         if not self.should_quit and hasattr(self, 'tray_icon') and self.tray_icon.isVisible():
+            logger.debug("Hiding to tray instead of quitting")
             event.ignore()
             self.hide_window()
         else:
+            logger.debug(f"Actually quitting - should_quit: {self.should_quit}, "
+                        f"has_tray: {hasattr(self, 'tray_icon')}, "
+                        f"tray_visible: {self.tray_icon.isVisible() if hasattr(self, 'tray_icon') else 'N/A'}")
             self.hotkey_manager.cleanup()
+            logger.debug("Hotkey manager cleaned up")
             event.accept()
+            logger.debug("Application closing")
 
     def mousePressEvent(self, event):
         """Enable window dragging."""
@@ -647,29 +666,37 @@ class Launcher(QMainWindow):
 
     def on_state_changed(self, new_state):
         """Handle state changes from StateManager."""
+        logger.debug(f"State changed to: {new_state}")
         self.set_input_state(new_state)
-
+        
         if new_state == "normal" and not self.state_manager.get_current_prompt():
+            logger.debug("State is normal with no prompt - checking if response should be hidden")
             if self.response_area.isVisible():
+                logger.debug("Hiding response area")
                 self.hide_response()
 
     def on_processing_changed(self, is_processing):
         """Handle processing state changes."""
+        logger.debug(f"Processing state changed: {'started' if is_processing else 'stopped'}")
         self.settings_button.setEnabled(not is_processing)
 
     def on_response_ready(self, response):
         """Handle when response is ready to display."""
+        logger.debug(f"Response ready, length: {len(response)} characters")
         self.response_area.setText(response)
 
     def on_request_cancelled(self):
         """Handle request cancellation."""
+        logger.debug("Request cancelled - resetting UI state")
         self.set_input_state("normal")
         self.settings_button.setEnabled(True)
 
     def on_input_changed(self, text):
         """Simplified input handling - delegate to StateManager."""
+        logger.debug(f"Input changed, length: {len(text)} characters")
         self.state_manager.set_prompt(text)
 
     def force_send_request(self):
         """Delegate to StateManager."""
+        logger.debug("Force send request triggered (Enter key pressed)")
         self.state_manager.force_send_request()

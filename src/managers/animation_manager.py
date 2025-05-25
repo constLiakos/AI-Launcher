@@ -1,3 +1,4 @@
+import logging
 from PyQt5.QtCore import QTimer, QPropertyAnimation, QRect, QEasingCurve, QObject, QVariantAnimation
 from PyQt5.QtGui import QColor
 from managers.styles import StyleManager
@@ -6,8 +7,9 @@ from utils.constants import AnimationConfig, ElementSize, Timing
 class AnimationManager(QObject):
     """Manages all animations for the application."""
     
-    def __init__(self, parent_widget, style_manager:StyleManager):
+    def __init__(self, parent_widget, style_manager:StyleManager, logger:logging):
         super().__init__(parent_widget)
+        self.logger = logger.getChild('animation_manager')
         self.parent = parent_widget
         self.thinking_timer = QTimer()
         self.thinking_timer.timeout.connect(self.update_thinking_animation)
