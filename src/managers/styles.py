@@ -17,11 +17,17 @@ class StyleManager:
     def set_theme(self, theme):
         """Set the current theme."""
         if theme in self.themes:
+            old_theme = self.current_theme
             self.current_theme = theme
+            self.logger.info(f"Theme changed from {old_theme} to {theme}")
+        else:
+            self.logger.warning(f"Attempted to set invalid theme: {theme}")
 
     def get_theme_colors(self):
         """Get colors for current theme."""
-        return self.themes[self.current_theme]
+        colors = self.themes[self.current_theme]
+        self.logger.debug(f"Retrieved colors for theme: {self.current_theme}")
+        return colors
     
     def _get_classic_theme(self):
         """Classic theme colors."""
@@ -81,6 +87,7 @@ class StyleManager:
     def get_settings_dialog_styles(self):
         """Get complete styles for settings dialog."""
         colors = self.get_theme_colors()
+        self.logger.debug("Generated settings dialog styles")
         return f"""
         QDialog {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -281,6 +288,7 @@ class StyleManager:
     def get_animated_thinking_style(self, color):
         """Get animated thinking style with specific color."""
         colors = self.get_theme_colors()
+        self.logger.debug(f"Generated animated thinking style with color: {color}")
         return f"""
         QLineEdit#inputFieldThinking {{
             background: {colors['field_bg']};
@@ -302,6 +310,7 @@ class StyleManager:
     def get_button_styles(self):
         """Get main application button styles."""
         colors = self.get_theme_colors()
+        self.logger.debug("Generated main application button styles")
         return f"""
         #settingsButton {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
@@ -342,6 +351,7 @@ class StyleManager:
     def get_response_area_style(self):
         """Get response area styles."""
         colors = self.get_theme_colors()
+        self.logger.debug("Generated response area styles")
         return f"""
         #responseArea {{
             background: {colors['response_bg']};
@@ -364,6 +374,7 @@ class StyleManager:
         if theme and theme != self.current_theme:
             old_theme = self.current_theme
             self.set_theme(theme)
+            self.logger.debug(f"Temporarily switched to theme {theme} for style generation")
             style = (
                 self._get_main_style() +
                 self._get_input_field_style()['normal'] +
@@ -372,8 +383,10 @@ class StyleManager:
                 self.get_response_area_style()
             )
             self.current_theme = old_theme
+            self.logger.debug(f"Reverted to original theme: {old_theme}")
             return style
         
+        self.logger.debug(f"Generated complete stylesheet for current theme: {self.current_theme}")
         return (
             self._get_main_style() +
             self._get_input_field_style()['normal'] +
@@ -390,6 +403,7 @@ class StyleManager:
 
         def get_primary_button(self):
             colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("Generated primary button style")
             return f"""
             QPushButton {{
                 background: {colors['primary']};
@@ -407,6 +421,7 @@ class StyleManager:
         
         def get_copy_button_default_style(self):
             colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("Generated copy button default style")
             return f"""
             QPushButton {{
                 background: {colors['primary']};
@@ -425,6 +440,7 @@ class StyleManager:
         def get_copy_button_success_style(self):
             """Get success style for copy button."""
             colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("Generated copy button success style")
             return f"""
             QPushButton {{
                 background: {colors['success']};
