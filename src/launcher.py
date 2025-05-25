@@ -22,6 +22,17 @@ class Launcher(QMainWindow):
     def __init__(self, debug=False):
         super().__init__()
         self.debug = debug
+
+        log_level = logging.DEBUG if self.debug else logging.INFO
+        logging.basicConfig(
+            level=log_level,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler('ui_launcher.log'),
+                logging.StreamHandler()  # Still shows in console
+            ]
+        )
+        
         # Initialize configuration
         self.config = Config()
 
@@ -29,11 +40,11 @@ class Launcher(QMainWindow):
         self.api_client = ApiClient(self.config)
 
         # Initialize managers
-        self.hotkey_manager = HotkeyManager(logger, self.show_window, self.config)
         self.style_manager = StyleManager(logger)
         self.animation_manager = AnimationManager(self, logger, self.style_manager)
         self.state_manager = StateManager(self.config, logger)
         self.markdown_render = MarkdownRenderer(logger)
+        self.hotkey_manager = HotkeyManager(logger, self.show_window, self.config)
 
         # Set current theme
         self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
@@ -70,15 +81,6 @@ class Launcher(QMainWindow):
         # Setup global hotkey
         self.hotkey_manager.setup_hotkey()
 
-        log_level = logging.DEBUG if self.debug else logging.INFO
-        logging.basicConfig(
-            level=log_level,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('ui_launcher.log'),
-                logging.StreamHandler()  # Still shows in console
-            ]
-        )
 
     # Remove the old hotkey methods and replace with:
     def restart_hotkey_listener(self):
