@@ -76,15 +76,15 @@ class StateManager(QObject):
             self.logger.debug("Empty prompt, cleaning up state")
             self.cleanup_state()
 
-    def create_streaming_worker(self, api_client, request_id):
-        """Create and configure streaming worker."""
+    def create_streaming_worker(self, api_client, request_id, conversation_history=None):
+        """Create and configure streaming worker with optional conversation history."""
         self.logger.debug(f"Creating streaming worker for request_id: {request_id}")
         if not self.is_request_valid(request_id):
             self.logger.debug(f"Request {request_id} is invalid, not creating worker")
             return None
-
-        # Create worker with current prompt
-        worker = StreamingWorker(api_client, self.current_prompt, request_id)
+        
+        # Create worker with current prompt and conversation history
+        worker = StreamingWorker(api_client, self.current_prompt, request_id, conversation_history)
         self.streaming_worker = worker
         self.logger.debug(f"Streaming worker created successfully for request {request_id}")
         return worker

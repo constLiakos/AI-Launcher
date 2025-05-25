@@ -6,13 +6,13 @@ class ApiClient:
         self.config = config
         self.current_request = None  # Track current request for cancellation
 
-    def send_streaming_request(self, prompt):
+    def send_streaming_request(self, messages):
         """Send a streaming request to the OpenAI compatible API."""
         try:
             api_key = self.config.get('api_key')
             api_base = self.config.get('api_base')
             model = self.config.get('model')
-
+            
             if not api_key:
                 raise Exception("API key not configured. Please check settings.")
 
@@ -21,9 +21,17 @@ class ApiClient:
                 "Authorization": f"Bearer {api_key}"
             }
 
+            # Handle both old format (single prompt string) and new format (messages array)
+            if isinstance(messages, str):
+                # Legacy support: convert string prompt to messages format
+                messages_data = [{"role": "user", "content": messages}]
+            else:
+                # New format: use messages array directly
+                messages_data = messages
+
             data = {
                 "model": model,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": messages_data,
                 "max_tokens": self.config.get('max_tokens', 500),
                 "temperature": self.config.get('temperature', 0.7),
                 "stream": True  # Enable streaming
@@ -47,7 +55,6 @@ class ApiClient:
             for line in self.current_request.iter_lines():
                 if line:
                     line = line.decode('utf-8')
-                    
                     # Skip empty lines and comments
                     if not line.strip() or line.startswith('#'):
                         continue
@@ -63,16 +70,13 @@ class ApiClient:
                         try:
                             # Parse JSON chunk
                             chunk = json.loads(data_str)
-                            
                             # Extract content from chunk
-                            if ('choices' in chunk and 
-                                len(chunk['choices']) > 0 and 
+                            if ('choices' in chunk and
+                                len(chunk['choices']) > 0 and
                                 'delta' in chunk['choices'][0]):
-                                
                                 delta = chunk['choices'][0]['delta']
                                 if 'content' in delta:
                                     yield delta['content']
-                                    
                         except json.JSONDecodeError:
                             # Skip malformed JSON chunks
                             continue

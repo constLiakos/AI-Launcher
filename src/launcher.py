@@ -8,6 +8,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence
 
 from config import Config
 from api_client import ApiClient
+from managers.conversation_manager import ConversationManager
 from settings_dialog import SettingsDialog
 from managers.animation_manager import AnimationManager
 from managers.styles import StyleManager
@@ -40,11 +41,13 @@ class Launcher(QMainWindow):
         self.api_client = ApiClient(self.config)
 
         # Initialize managers
+        self.conversation_manager = ConversationManager(logger, max_conversations=5)
         self.style_manager = StyleManager(logger)
         self.animation_manager = AnimationManager(self, logger, self.style_manager)
         self.state_manager = StateManager(self.config, logger)
         self.markdown_render = MarkdownRenderer(logger)
         self.hotkey_manager = HotkeyManager(logger, self.show_window, self.config)
+
 
         # Set current theme
         self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
@@ -212,6 +215,9 @@ class Launcher(QMainWindow):
                     self.state_manager.accumulated_response = ""
                 # Clear input field
                 self.input_field.clear()
+
+                # Optionally clear conversation history when window reopens
+                self.conversation_manager.clear_history()
 
             logger.debug(f"Window shown, position: ({self.x()}, {self.y()})")
             # First, ensure the window is visible
@@ -480,6 +486,9 @@ class Launcher(QMainWindow):
             logger.debug("Request blocked - empty prompt or already processing")
             return
 
+        # Store the current prompt for this conversation
+        self.current_user_prompt = prompt
+
         # Start processing through StateManager
         request_id = self.state_manager.start_processing()
         logger.debug(f"Started processing with request_id: {request_id}")
@@ -527,9 +536,20 @@ class Launcher(QMainWindow):
                 f"Error processing response: {str(e)}", request_id)
 
     def _handle_completion(self, request_id):
-        """Handle request completion with validation."""
+        """Handle request completion with conversation storage."""
         if not self.state_manager.handle_completion(request_id):
             return
+
+        # Get the complete response
+        full_response = self.state_manager.get_accumulated_response()
+        
+        # Store the conversation (user prompt + assistant response)
+        if hasattr(self, 'current_user_prompt') and full_response:
+            self.conversation_manager.add_conversation(
+                self.current_user_prompt, 
+                full_response
+            )
+            logger.debug("Conversation added to history")
 
         # Final update of response
         self._update_response_display()
@@ -570,8 +590,11 @@ class Launcher(QMainWindow):
     def _execute_request(self, request_id):
         """Execute request using StateManager's worker creation."""
         try:
+            # Get conversation history for context
+            conversation_history = self.conversation_manager.get_conversation_history()
+
             worker = self.state_manager.create_streaming_worker(
-                self.api_client, request_id)
+                self.api_client, request_id, conversation_history)
             if not worker:
                 return
 
