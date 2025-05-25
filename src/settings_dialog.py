@@ -17,8 +17,10 @@ class SettingsDialog(QDialog):
         self.setup_ui()
         self.apply_styles()
         self.original_theme = self.config.get('theme', Theme.DEFAULT_THEME)
+        self.logger.debug(f"SettingsDialog initialized with theme: {self.original_theme}")
 
     def setup_ui(self):
+        self.logger.debug("Setting up SettingsDialog UI")
         self.setWindowTitle(Text.SETTINGS_DIALOGUE_LABEL)
         self.setFixedSize(SettingsDialogSize.WINDOW_WIDTH, SettingsDialogSize.WINDOW_HEIGHT)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
@@ -42,19 +44,23 @@ class SettingsDialog(QDialog):
         
         # API Key
         self.api_key_input = QLineEdit()
-        self.api_key_input.setText(self.config.get('api_key', ''))
+        api_key_value = self.config.get('api_key', '')
+        self.api_key_input.setText(api_key_value)
+        self.logger.debug(f"API key loaded: {'***' if self.config.get('api_key', '') else 'empty'}")
+
         self.api_key_input.setEchoMode(QLineEdit.Password)
         self.api_key_input.setObjectName("settingsInputField")
         self.api_key_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_API_KEY_PLACEHOLDER)
         self.api_key_input.setMinimumHeight(35)
-        
         api_key_label = QLabel(Text.SETTINGS_DIALOGUE_API_KEY_LABEL)
         api_key_label.setObjectName("fieldLabel")
         form_layout.addRow(api_key_label, self.api_key_input)
         
         # API Base URL
         self.api_base_input = QLineEdit()
-        self.api_base_input.setText(self.config.get('api_base', LLM.DEFAULT_API_BASE))
+        api_base_value = self.config.get('api_base', LLM.DEFAULT_API_BASE)
+        self.api_base_input.setText(api_base_value)
+        self.logger.debug(f"API base URL loaded: {api_base_value}")
         self.api_base_input.setObjectName("settingsInputField")
         self.api_base_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_API_BASE_PLACEHOLDER)
         self.api_base_input.setMinimumHeight(35)
@@ -65,7 +71,9 @@ class SettingsDialog(QDialog):
         
         # Model Name
         self.model_input = QLineEdit()
-        self.model_input.setText(self.config.get('model', LLM.DEFAULT_LLM_MODEL))
+        model_value = self.config.get('model', LLM.DEFAULT_LLM_MODEL)
+        self.model_input.setText(model_value)
+        self.logger.debug(f"Model loaded: {model_value}")
         self.model_input.setObjectName("settingsInputField")
         self.model_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_LLM_MODEL_PLACEHOLDER)
         self.model_input.setMinimumHeight(35)
@@ -76,7 +84,9 @@ class SettingsDialog(QDialog):
         
         # Request Delay
         self.delay_input = QLineEdit()
-        self.delay_input.setText(str(self.config.get('request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)))
+        delay_value = self.config.get('request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)
+        self.delay_input.setText(str(delay_value))
+        self.logger.debug(f"Request delay loaded: {delay_value}")
         self.delay_input.setObjectName("settingsInputField")
         self.delay_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_REQUEST_DELAY_PLACEHOLDER_PLACEHOLDER)
         self.delay_input.setMinimumHeight(35)
@@ -87,7 +97,9 @@ class SettingsDialog(QDialog):
 
         # Hotkey Configuration
         self.hotkey_input = QLineEdit()
-        self.hotkey_input.setText(self.config.get('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW))
+        hotkey_value = self.config.get('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)
+        self.hotkey_input.setText(hotkey_value)
+        self.logger.debug(f"Hotkey loaded: {hotkey_value}")
         self.hotkey_input.setObjectName("settingsInputField")
         self.hotkey_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_HOTKEY_TOGGLE_MINIMIZE_WINDOW_PLACEHOLDER)
         self.hotkey_input.setMinimumHeight(35)
@@ -98,7 +110,9 @@ class SettingsDialog(QDialog):
 
         # Clear Previous Response Checkbox
         self.clear_previous_checkbox = QCheckBox("Clear previous response when window reopens")
-        self.clear_previous_checkbox.setChecked(self.config.get('clear_previous_response', False))
+        clear_previous_value = self.config.get('clear_previous_response', False)
+        self.clear_previous_checkbox.setChecked(clear_previous_value)
+        self.logger.debug(f"Clear previous response loaded: {clear_previous_value}")
         self.clear_previous_checkbox.setObjectName("settingsCheckBox")
         self.clear_previous_checkbox.setMinimumHeight(35)
         
@@ -113,6 +127,7 @@ class SettingsDialog(QDialog):
         theme_index = self.theme_combo.findText(current_theme)
         if theme_index >= 0:
             self.theme_combo.setCurrentIndex(theme_index)
+        self.logger.debug(f"Theme loaded: {current_theme}")
         self.theme_combo.setObjectName("settingsComboBox")
         self.theme_combo.setMinimumHeight(35)
         
@@ -144,41 +159,70 @@ class SettingsDialog(QDialog):
         
         layout.addLayout(button_layout)
         self.setLayout(layout)
+
+        self.logger.debug("SettingsDialog UI setup completed")
         
     def apply_styles(self):
         """Apply styles using StyleManager."""
+        self.logger.debug("Applying styles to SettingsDialog")
         self.setStyleSheet(self.style_manager.get_settings_dialog_styles())
 
     def save_settings(self):
-        self.config.set('api_key', self.api_key_input.text())
-        self.config.set('api_base', self.api_base_input.text())
-        self.config.set('model', self.model_input.text())
+        self.logger.info("Saving settings")
+
+        # API Key
+        api_key = self.api_key_input.text()
+        self.config.set('api_key', api_key)
+        self.logger.debug(f"API key saved: {'***' if api_key else 'empty'}")
+        
+        # API Base
+        api_base = self.api_base_input.text()
+        self.config.set('api_base', api_base)
+        self.logger.debug(f"API base saved: {api_base}")
+        
+        # Model
+        model = self.model_input.text()
+        self.config.set('model', model)
+        self.logger.debug(f"Model saved: {model}")
         
         # Save request delay with validation
         try:
             delay = float(self.delay_input.text())
             if delay < 0.1:
                 delay = 0.1
+                self.logger.warning(f"Request delay too low, setting to minimum: {delay}")
             elif delay > 10.0:
                 delay = 10.0
+                self.logger.warning(f"Request delay too high, setting to maximum: {delay}")
             self.config.set('request_delay', delay)
-        except ValueError:
+            self.logger.debug(f"Request delay saved: {delay}")
+        except ValueError as e:
+            self.logger.error(f"Invalid delay value '{self.delay_input.text()}': {e}, using default")
             self.config.set('request_delay', 2.0)
             
         # Save hotkey
         hotkey_text = self.hotkey_input.text().strip()
         if hotkey_text:
             self.config.set('hotkey', hotkey_text)
+            self.logger.debug(f"Hotkey saved: {hotkey_text}")
         else:
-            self.config.set('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)  # Default if empty
+            self.config.set('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)
+            self.logger.debug("Empty hotkey, using default")
 
-        self.config.set('clear_previous_response', self.clear_previous_checkbox.isChecked())
+       # Clear previous response
+        clear_previous = self.clear_previous_checkbox.isChecked()
+        self.config.set('clear_previous_response', clear_previous)
+        self.logger.debug(f"Clear previous response saved: {clear_previous}")
+        
         # Save theme
         new_theme = self.theme_combo.currentText()
         self.config.set('theme', new_theme)
+        self.logger.debug(f"Theme saved: {new_theme}")
         
         # Emit signal if theme changed
         if new_theme != self.original_theme:
+            self.logger.info(f"Theme changed from {self.original_theme} to {new_theme}")
             self.theme_changed.emit(new_theme)
-            
+        
+        self.logger.info("Settings saved successfully")
         self.hide()
