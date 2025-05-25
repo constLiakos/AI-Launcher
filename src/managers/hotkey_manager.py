@@ -1,22 +1,30 @@
 import logging
 from pynput import keyboard
 import threading
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, pyqtSignal, QObject
 
-class HotkeyManager:
-    def __init__(self, logger:logging.Logger, callback, config):
+class HotkeyManager(QObject):
+
+    hotkey_pressed = pyqtSignal()
+
+    def __init__(self, logger: logging.Logger, callback, config):
         """
         Initialize hotkey manager.
         Args:
             callback: Function to call when hotkey is pressed
             config: Configuration object to get hotkey settings
         """
+        super().__init__()
         self.logger = logger.getChild('hotkey_manager')
 
         self.logger.debug("HotkeyManager initializing...")
         self.callback = callback
         self.config = config
         self.current_listener = None
+
+        # Connect signal to callback for thread safety
+        self.hotkey_pressed.connect(callback)
+
         self.logger.info("HotkeyManager initialized")
         
     def setup_hotkey(self):
@@ -25,9 +33,9 @@ class HotkeyManager:
         self.stop_listener()
             
         def on_hotkey():
-            self.logger.debug("Hotkey pressed, triggering callback")
-            # Use QTimer to ensure callback runs in main thread
-            QTimer.singleShot(0, self.callback)
+            self.logger.debug("Hotkey pressed, emitting signal")
+            # Emit signal instead of direct callback - safer on Windows
+            self.hotkey_pressed.emit()
         
         # Get hotkey from config
         hotkey_combo = self.config.get('hotkey', '<alt>+x')
