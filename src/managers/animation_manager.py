@@ -92,64 +92,44 @@ class AnimationManager(QObject):
             if animation.state() == QPropertyAnimation.Running:
                 animation.stop()
             del self.active_animations[animation_key]
-    
-    def animate_resize(self, widget, width, height, fast=False):
-        """Unified resize animation method using constants."""
-        animation_key = f"resize_{id(widget)}"
+
+    def animate_window_resize(self, widget, new_width, new_height, fast=False):
+        """Special method for animating window resizes that preserves resize capability."""
+        animation_key = f"window_resize_{id(widget)}"
         self._stop_animation(animation_key)
         
-        # Choose animation parameters based on speed using constants
         duration = AnimationConfig.RESIZE_FAST_DURATION if fast else AnimationConfig.RESIZE_DURATION
         easing = AnimationConfig.RESIZE_FAST_EASING if fast else AnimationConfig.RESIZE_EASING
         
-        # Disable updates during animation for smoother performance
-        if AnimationConfig.DISABLE_UPDATES_DURING_RESIZE:
-            widget.setUpdatesEnabled(False)
-        
-        # Create and configure animation
+        # Create geometry animation
         animation = QPropertyAnimation(widget, b"geometry")
         animation.setDuration(duration)
         animation.setEasingCurve(easing)
         
-        # Calculate geometry - keep top-left position, only expand size
         current_geometry = widget.geometry()
         new_geometry = QRect(
             current_geometry.x(),
             current_geometry.y(),
-            width,
-            height
+            new_width,
+            new_height
         )
         
         animation.setStartValue(current_geometry)
         animation.setEndValue(new_geometry)
         
-        # Store animation and setup completion callback
+        # Store animation
         self.active_animations[animation_key] = animation
-        animation.finished.connect(lambda: self._finalize_resize(widget, width, height, animation_key))
+        animation.finished.connect(lambda: self._finalize_window_resize(widget, animation_key))
         animation.start()
-    
-    def _finalize_resize(self, widget, width, height, animation_key):
-        """Finalize resize operation and cleanup using constants."""
-        # Clean up animation reference
+
+    def _finalize_window_resize(self, widget, animation_key):
+        """Finalize window resize without affecting resize capability."""
         if animation_key in self.active_animations:
             del self.active_animations[animation_key]
         
-        # Re-enable updates and set final size
-        if AnimationConfig.DISABLE_UPDATES_DURING_RESIZE:
-            widget.setUpdatesEnabled(True)
-        widget.setFixedSize(width, height)
-        
-        # Handle response area height adjustment if this is the main window
-        if hasattr(widget, 'response_area'):
-            min_height = ElementSize.RESPONSE_MIN_HEIGHT
-            max_height = ElementSize.RESPONSE_MAX_HEIGHT
-            available_height = height - ElementSize.RESPONSE_MARGIN_BOTTOM
-            
-            # Calculate optimal height
-            optimal_height = max(min_height, min(max_height, available_height))
-            
-            # Actually set the height, not just the maximum
-            widget.response_area.setFixedHeight(optimal_height)
-        
+        # Don't call setFixedSize - let the window remain resizable
         widget.update()
-    
+        
+        # Reposition any floating elements like copy button
+        if hasattr(widget, 'position_copy_button'):
+            widget.position_copy_button()

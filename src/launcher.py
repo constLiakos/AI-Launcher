@@ -81,6 +81,53 @@ class Launcher(QMainWindow):
         # Setup global hotkey
         self.hotkey_manager.setup_hotkey()
 
+        self.resize_margin = 20  # Pixels from edge to trigger resize
+        self.resize_direction = None
+        self.resize_start_pos = None
+        self.resize_start_geometry = None
+
+    def get_resize_direction(self, pos):
+        """Determine resize direction based on mouse position."""
+        rect = self.rect()
+        margin = self.resize_margin
+        
+        left = pos.x() <= margin
+        right = pos.x() >= rect.width() - margin
+        top = pos.y() <= margin
+        bottom = pos.y() >= rect.height() - margin
+        
+        if top and left:
+            return "top-left"
+        elif top and right:
+            return "top-right"
+        elif bottom and left:
+            return "bottom-left"
+        elif bottom and right:
+            return "bottom-right"
+        elif left:
+            return "left"
+        elif right:
+            return "right"
+        elif top:
+            return "top"
+        elif bottom:
+            return "bottom"
+        else:
+            return None
+
+
+    def update_cursor(self, direction):
+        """Update cursor based on resize direction."""
+        if direction == "top-left" or direction == "bottom-right":
+            self.setCursor(Qt.SizeFDiagCursor)
+        elif direction == "top-right" or direction == "bottom-left":
+            self.setCursor(Qt.SizeBDiagCursor)
+        elif direction == "left" or direction == "right":
+            self.setCursor(Qt.SizeHorCursor)
+        elif direction == "top" or direction == "bottom":
+            self.setCursor(Qt.SizeVerCursor)
+        else:
+            self.setCursor(Qt.ArrowCursor)
 
     # Remove the old hotkey methods and replace with:
     def restart_hotkey_listener(self):
@@ -215,12 +262,13 @@ class Launcher(QMainWindow):
         return QIcon(pixmap)
 
     def setup_ui(self):
-        # Remove window frame and title bar
+    # Remove window frame and title bar
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-
-        # Set initial size (compact mode)
-        self.setFixedSize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
+        
+        # Set initial size and allow resizing
+        self.resize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
+        self.setMinimumSize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)  # Set reasonable minimums
 
         # Create central widget and main layout
         central_widget = QWidget()
@@ -374,7 +422,8 @@ class Launcher(QMainWindow):
 
     def animate_resize(self, width, height, fast=False):
         """Animate window resize using AnimationManager with constants."""
-        self.animation_manager.animate_resize(self, width, height, fast)
+        # self.animation_manager.animate_resize(self, width, height, fast)
+        self.animation_manager.animate_window_resize(self, width, height, fast)
 
     def apply_modern_style(self):
         """Apply the modern stylesheet using StyleManager."""
@@ -657,21 +706,87 @@ class Launcher(QMainWindow):
             logger.debug("Application closing")
 
     def mousePressEvent(self, event):
-        """Enable window dragging."""
+        """Enable window dragging and resizing."""
         if event.button() == Qt.LeftButton:
-            self.drag_position = event.globalPos() - self.frameGeometry().topLeft()
+            self.resize_direction = self.get_resize_direction(event.pos())
+            
+            if self.resize_direction:
+                # Starting resize
+                self.resize_start_pos = event.globalPos()
+                self.resize_start_geometry = self.geometry()
+            else:
+                # Starting drag
+                self.drag_position = event.globalPos() - self.frameGeometry().topLeft()
+            
             event.accept()
 
     def mouseMoveEvent(self, event):
-        """Handle window dragging and trigger position save."""
-        if hasattr(self, 'drag_position') and event.buttons() == Qt.LeftButton:
-            self.move(event.globalPos() - self.drag_position)
+        """Handle window dragging and resizing."""
+        if event.buttons() == Qt.LeftButton:
+            if self.resize_direction and hasattr(self, 'resize_start_pos'):
+                # Handle resizing
+                self.handle_resize(event.globalPos())
+            elif hasattr(self, 'drag_position'):
+                # Handle dragging
+                self.move(event.globalPos() - self.drag_position)
+                self.position_save_timer.stop()
+                self.position_save_timer.start(500)
+            
+            event.accept()
+        else:
+            # Update cursor when hovering (not dragging)
+            direction = self.get_resize_direction(event.pos())
+            self.update_cursor(direction)
 
-            # Debounce the position saving - restart timer on each move
-            self.position_save_timer.stop()
-            # Save 500ms after dragging stops
-            self.position_save_timer.start(500)
 
+    def handle_resize(self, global_pos):
+        """Handle window resizing based on direction."""
+        if not self.resize_start_pos or not self.resize_start_geometry:
+            return
+        
+        delta = global_pos - self.resize_start_pos
+        start_geo = self.resize_start_geometry
+        
+        new_x = start_geo.x()
+        new_y = start_geo.y()
+        new_width = start_geo.width()
+        new_height = start_geo.height()
+        
+        # Apply minimum size constraints
+        min_size = self.minimumSize()
+        
+        if "left" in self.resize_direction:
+            new_width = max(min_size.width(), start_geo.width() - delta.x())
+            new_x = start_geo.x() + start_geo.width() - new_width
+        elif "right" in self.resize_direction:
+            new_width = max(min_size.width(), start_geo.width() + delta.x())
+        
+        if "top" in self.resize_direction:
+            new_height = max(min_size.height(), start_geo.height() - delta.y())
+            new_y = start_geo.y() + start_geo.height() - new_height
+        elif "bottom" in self.resize_direction:
+            new_height = max(min_size.height(), start_geo.height() + delta.y())
+        
+        # Apply the new geometry
+        self.setGeometry(new_x, new_y, new_width, new_height)
+        
+        # Reposition copy button if visible
+        if hasattr(self, 'copy_button') and self.copy_button.isVisible():
+            self.position_copy_button()
+
+    def leaveEvent(self, event):
+        """Reset cursor when mouse leaves window."""
+        if not self.resize_direction:  # Only reset if not currently resizing
+            self.setCursor(Qt.ArrowCursor)
+        super().leaveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        """Clean up after mouse release."""
+        if event.button() == Qt.LeftButton:
+            self.resize_direction = None
+            self.resize_start_pos = None
+            self.resize_start_geometry = None
+            self.setCursor(Qt.ArrowCursor)
             event.accept()
 
     def moveEvent(self, event):
