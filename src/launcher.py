@@ -12,7 +12,7 @@ from settings_dialog import SettingsDialog
 from managers.animation_manager import AnimationManager
 from managers.styles import StyleManager
 from managers.hotkey_manager import HotkeyManager
-from utils.constants import ElementSize, Style, WindowSize, Colors, Text, Timing, TrayIcon
+from utils.constants import ElementSize, Style, Theme, WindowSize, Colors, Text, Timing, TrayIcon
 from utils.markdown_render import MarkdownRenderer
 from managers.state_manager import StateManager
 
@@ -29,11 +29,15 @@ class Launcher(QMainWindow):
         self.api_client = ApiClient(self.config)
 
         # Initialize managers
-        self.style_manager = StyleManager()
+        self.style_manager:StyleManager = StyleManager()
         self.animation_manager = AnimationManager(self, self.style_manager)
         self.hotkey_manager = HotkeyManager(self.show_window, self.config)
         self.state_manager = StateManager(self.config)
         self.markdown_render = MarkdownRenderer()
+
+        # Set current theme
+        self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
+        self.style_manager.set_theme(self.current_theme)
 
         # Connect StateManager signals
         self.state_manager.state_changed.connect(self.on_state_changed)
@@ -353,7 +357,7 @@ class Launcher(QMainWindow):
 
     def apply_modern_style(self):
         """Apply the modern stylesheet using StyleManager."""
-        self.setStyleSheet(self.style_manager.get_complete_style())
+        self.setStyleSheet(self.style_manager.get_complete_style(self.current_theme))
 
     def _cleanup_worker(self):
         """Cleanup worker thread safely."""
@@ -550,9 +554,18 @@ class Launcher(QMainWindow):
         """No-op since we don't have a status label."""
         pass
 
+    def on_theme_changed(self, new_theme):
+        """Handle theme change signal from settings dialog."""
+        self.current_theme = new_theme
+        self.style_manager.set_theme(new_theme)
+        self.apply_modern_style()
+
     def open_settings(self):
         """Open the settings dialog."""
-        dialog = SettingsDialog(self.config, self)
+        dialog:SettingsDialog = SettingsDialog(self.config, self)
+
+        # Connect the theme change signal
+        dialog.theme_changed.connect(self.on_theme_changed)
 
         # Center the dialog relative to the main window
         main_rect = self.geometry()
@@ -562,6 +575,13 @@ class Launcher(QMainWindow):
         dialog.move(center_x, center_y)
 
         if dialog.exec_():
+            # Check if theme changed
+            new_theme = self.config.get('theme', Theme.DEFAULT_THEME)
+            if new_theme != self.current_theme:
+                self.current_theme = new_theme
+                self.style_manager.set_theme(self.current_theme)
+
+                self.apply_modern_style()
             # Show feedback with larger, visible status
             delay_seconds = self.config.get(
                 'request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)

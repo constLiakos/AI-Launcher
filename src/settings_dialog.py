@@ -1,17 +1,20 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                             QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox)
-from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, pyqtSignal
 from managers.styles import StyleManager
 from utils.constants import LLM, Hotkey, Text, Theme, Timing
 
 class SettingsDialog(QDialog):
+    
+    theme_changed = pyqtSignal(str)
+
     def __init__(self, config, parent=None):
         super().__init__(parent)
         self.config = config
         self.style_manager = StyleManager()
         self.setup_ui()
         self.apply_styles()
+        self.original_theme = self.config.get('theme', Theme.DEFAULT_THEME)
 
     def setup_ui(self):
         self.setWindowTitle(Text.SETTINGS_DIALOGUE_LABEL)
@@ -168,6 +171,12 @@ class SettingsDialog(QDialog):
             self.config.set('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)  # Default if empty
 
         self.config.set('clear_previous_response', self.clear_previous_checkbox.isChecked())
-        self.config.set('theme', self.theme_combo.currentText())
+        # Save theme
+        new_theme = self.theme_combo.currentText()
+        self.config.set('theme', new_theme)
+        
+        # Emit signal if theme changed
+        if new_theme != self.original_theme:
+            self.theme_changed.emit(new_theme)
             
         self.hide()
