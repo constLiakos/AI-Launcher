@@ -49,5 +49,5 @@ A modern, lightweight desktop AI assistant with a sleek interface that lives in 
 ### Setup
 1. Clone the repository:
 ```bash
-git clone https://github.com/constliakos/ai-launcher.git
-cd ai-launcher
+git clone https://github.com/constLiakos/AI-Launcher.git
+cd AI-Launcher
