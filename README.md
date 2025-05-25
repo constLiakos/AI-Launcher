@@ -51,3 +51,14 @@ A modern, lightweight desktop AI assistant with a sleek interface that lives in 
 ```bash
 git clone https://github.com/constLiakos/AI-Launcher.git
 cd AI-Launcher
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Run the application:
+```bash
+python src/main.py
+```
