@@ -1,9 +1,9 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox)
+                            QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox)
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve
 from PyQt5.QtGui import QFont
 from managers.styles import StyleManager
-from utils.constants import LLM, Hotkey, Text, Timing
+from utils.constants import LLM, Hotkey, Text, Theme, Timing
 
 class SettingsDialog(QDialog):
     def __init__(self, config, parent=None):
@@ -100,6 +100,22 @@ class SettingsDialog(QDialog):
         clear_label = QLabel("Auto Clear:")
         clear_label.setObjectName("fieldLabel")
         form_layout.addRow(clear_label, self.clear_previous_checkbox)
+
+        # Theme Selection
+        self.theme_combo = QComboBox()
+        self.theme_combo.addItems([Theme.CLASSIC, Theme.DARK])
+        current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
+        theme_index = self.theme_combo.findText(current_theme)
+        if theme_index >= 0:
+            self.theme_combo.setCurrentIndex(theme_index)
+        self.theme_combo.setObjectName("settingsComboBox")
+        self.theme_combo.setMinimumHeight(35)
+        
+        theme_label = QLabel("Theme:")
+        theme_label.setObjectName("fieldLabel")
+        form_layout.addRow(theme_label, self.theme_combo)
+        
+        layout.addLayout(form_layout)
         
         layout.addLayout(form_layout)
         layout.addStretch()
@@ -152,5 +168,6 @@ class SettingsDialog(QDialog):
             self.config.set('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)  # Default if empty
 
         self.config.set('clear_previous_response', self.clear_previous_checkbox.isChecked())
+        self.config.set('theme', self.theme_combo.currentText())
             
         self.hide()

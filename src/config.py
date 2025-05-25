@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-from utils.constants import LLM, Hotkey, Timing, WindowSize
+from utils.constants import LLM, Hotkey, Theme, Timing, WindowSize
 
 class Config:
     def __init__(self):
@@ -16,7 +16,8 @@ class Config:
             'position_x': WindowSize.DEFAULT_X,
             'position_y': WindowSize.DEFAULT_Y,
             'request_delay': Timing.DEFAULT_REQUEST_DELAY_SECONDS,
-            'hotkey': Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW
+            'hotkey': Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW,
+            'theme': Theme.DEFAULT_THEME
         }
         self.config = self.load_config()
 
