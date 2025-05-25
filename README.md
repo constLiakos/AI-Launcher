@@ -59,6 +59,33 @@ pip install -r requirements.txt
 ```
 
 3. Run the application:
+
+**Linux/macOS:**
 ```bash
 python src/main.py
 ```
+
+**Windows:**
+```cmd
+python src\main.py
+```
+
+### Building Executable
+
+To build a standalone executable:
+
+**Linux/macOS:**
+```bash
+chmod +x scripts/build.sh
+./scripts/build.sh
+```
+
+**Windows:**
+```cmd
+scripts\build.bat
+```
+
+The executable will be created in the `dist/` directory.
+```
+
+Added separate run commands for different platforms and included build instructions for both Linux/macOS and Windows.
