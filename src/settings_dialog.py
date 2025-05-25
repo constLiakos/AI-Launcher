@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                             QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox)
 from PyQt5.QtCore import Qt, pyqtSignal
 from managers.styles import StyleManager
-from utils.constants import LLM, Hotkey, Text, Theme, Timing
+from utils.constants import LLM, Hotkey, SettingsDialogSize, Text, Theme, Timing
 
 class SettingsDialog(QDialog):
     
@@ -18,13 +18,13 @@ class SettingsDialog(QDialog):
 
     def setup_ui(self):
         self.setWindowTitle(Text.SETTINGS_DIALOGUE_LABEL)
-        self.setFixedSize(500, 400)
+        self.setFixedSize(SettingsDialogSize.WINDOW_WIDTH, SettingsDialogSize.WINDOW_HEIGHT)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
         
         # Main layout
         layout = QVBoxLayout()
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(20)
+        layout.setContentsMargins(SettingsDialogSize.MAIN_LAYOUT_MARGIN, SettingsDialogSize.MAIN_LAYOUT_MARGIN, SettingsDialogSize.MAIN_LAYOUT_MARGIN, SettingsDialogSize.MAIN_LAYOUT_MARGIN)
+        layout.setSpacing(SettingsDialogSize.MAIN_LAYOUT_SPACING)
         
         # Title
         title_label = QLabel(Text.SETTINGS_DIALOGUE_LABEL)
@@ -34,7 +34,7 @@ class SettingsDialog(QDialog):
         
         # Form layout for settings
         form_layout = QFormLayout()
-        form_layout.setSpacing(20)
+        form_layout.setSpacing(SettingsDialogSize.FORM_LAYOUT_SPACING)
         form_layout.setVerticalSpacing(15)
         form_layout.setLabelAlignment(Qt.AlignLeft)
         
@@ -125,16 +125,16 @@ class SettingsDialog(QDialog):
         
         # Button layout
         button_layout = QHBoxLayout()
-        button_layout.setSpacing(15)
+        button_layout.setSpacing(SettingsDialogSize.BUTTON_LAYOUT_SPACING)
         
         cancel_btn = QPushButton("Cancel")
         cancel_btn.setObjectName("cancelButton")
-        cancel_btn.setMinimumHeight(40)
+        cancel_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
         cancel_btn.clicked.connect(self.reject)
         
         save_btn = QPushButton("Save")
         save_btn.setObjectName("saveButton")
-        save_btn.setMinimumHeight(40)
+        save_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
         save_btn.clicked.connect(self.save_settings)
         
         button_layout.addWidget(cancel_btn)

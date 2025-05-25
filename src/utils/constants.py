@@ -66,6 +66,29 @@ class ElementSize:
     COPY_BUTTON_MARGIN = 10
 
 # =============================================================================
+# SETTINGS DIALOG
+# =============================================================================
+
+class SettingsDialogSize:
+    """Settings dialog constants"""
+    # Window dimensions
+    WINDOW_WIDTH = 600
+    WINDOW_HEIGHT = 500
+    
+    # Layout spacing
+    MAIN_LAYOUT_MARGIN = 20
+    MAIN_LAYOUT_SPACING = 20
+    FORM_LAYOUT_SPACING = 20
+    FORM_LAYOUT_VERTICAL_SPACING = 15
+    BUTTON_LAYOUT_SPACING = 15
+    
+    # Input field dimensions
+    INPUT_FIELD_MIN_HEIGHT = 35
+    CHECKBOX_MIN_HEIGHT = 35
+    COMBO_BOX_MIN_HEIGHT = 35
+    BUTTON_MIN_HEIGHT = 40
+
+# =============================================================================
 # COLORS
 # =============================================================================
 
