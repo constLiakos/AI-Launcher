@@ -91,7 +91,7 @@ class ElementSize:
 class SettingsDialogSize:
     """Settings dialog constants"""
     # Window dimensions
-    WINDOW_WIDTH = 600
+    WINDOW_WIDTH = 700
     WINDOW_HEIGHT = 550
 
     # Layout spacing
@@ -107,6 +107,9 @@ class SettingsDialogSize:
     COMBO_BOX_MIN_HEIGHT = 35
     BUTTON_MIN_HEIGHT = 40
 
+    SYSTEM_PROMPT_MIN = 100
+    SYSTEM_PROMPT_MAX = 200
+
 # =============================================================================
 # ABOUT DIALOG
 # =============================================================================
@@ -115,7 +118,7 @@ class SettingsDialogSize:
 class AboutDialogSize:
     """About dialog constants"""
     # Window dimensions
-    WINDOW_WIDTH = 600
+    WINDOW_WIDTH = 650
     WINDOW_HEIGHT = 650
 
     # Layout spacing

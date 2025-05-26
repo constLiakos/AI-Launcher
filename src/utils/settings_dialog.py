@@ -40,6 +40,8 @@ class SettingsDialog(QDialog):
         layout.addWidget(self._create_title_label())
         
         scroll_area = self._create_scroll_area()
+        # Catchy this one, set transparent background
+        scroll_area.setObjectName("scroll_area1")
         layout.addWidget(scroll_area)
         
         layout.addLayout(self._create_button_layout())
@@ -70,16 +72,16 @@ class SettingsDialog(QDialog):
         scroll_area.setFrameShape(QFrame.NoFrame)
         scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
-        form_widget = QWidget()
-        form_widget.setObjectName("formWidget")
-        form_layout = self._create_form_layout(form_widget)
+        self.form_widget = QWidget()
+        self.form_widget.setObjectName("formWidget")
+        form_layout = self._create_form_layout(self.form_widget)
         
-        scroll_area.setWidget(form_widget)
+        scroll_area.setWidget(self.form_widget) # MODIFIED: Use self.form_widget
         return scroll_area
 
     def _create_form_layout(self, parent_widget):
         """Create and populate form layout with all settings fields."""
-        form_layout = QFormLayout(parent_widget)
+        form_layout:QFormLayout = QFormLayout(parent_widget)
         form_layout.setSpacing(SettingsDialogSize.FORM_LAYOUT_SPACING)
         form_layout.setVerticalSpacing(15)
         form_layout.setLabelAlignment(Qt.AlignLeft)
@@ -143,8 +145,10 @@ class SettingsDialog(QDialog):
         for config in field_configs:
             label = QLabel(config['label'])
             label.setObjectName("fieldLabel")
-            setattr(self, config['attr_name'], config['widget'])
-            form_layout.addRow(label, config['widget'])
+            widget_it:QWidget = config['widget']
+            widget_it.setContentsMargins(0, 0, 40, 0)
+            setattr(self, config['attr_name'], widget_it)
+            form_layout.addRow(label, widget_it)
         
         return form_layout
 
@@ -189,9 +193,10 @@ class SettingsDialog(QDialog):
         field.setPlainText(value)
         field.setObjectName("settingsTextArea")
         field.setPlaceholderText("Enter system prompt for the LLM")
-        field.setMinimumHeight(100)
-        field.setMaximumHeight(150)
-        field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        field.setMinimumHeight(SettingsDialogSize.SYSTEM_PROMPT_MIN)
+        field.setMaximumHeight(SettingsDialogSize.SYSTEM_PROMPT_MAX)
+        field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
         self.logger.debug(f"System prompt loaded: {value[:50]}...")
         return field
 
@@ -287,6 +292,15 @@ class SettingsDialog(QDialog):
     def apply_styles(self):
         """Apply styles using StyleManager."""
         self.logger.debug("Applying styles to SettingsDialog")
+
+        # Set the current theme in style manager
+        current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
+        self.style_manager.set_theme(current_theme)
+
+        # Apply settings dialog styles
+        settings_styles = self.style_manager.get_settings_dialog_styles()
+        self.setStyleSheet(settings_styles)
+            
         
         # Apply input field styles
         input_style = self.style_manager.get_settings_input_field_style()
@@ -302,6 +316,8 @@ class SettingsDialog(QDialog):
         self.system_prompt_input.setStyleSheet(self.style_manager.get_settings_textarea_style())
         self.theme_combo.setStyleSheet(self.style_manager.get_settings_combobox_style())
 
+        form_widget_style = self.style_manager.get_widget_style()
+        self.form_widget.setStyleSheet(form_widget_style)
 
     def save_settings(self):
         self.logger.info("Saving settings")

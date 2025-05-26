@@ -102,6 +102,11 @@ class StyleManager:
             margin-bottom: 10px;
         }}
         
+        #scroll_area1 {{
+            color: {colors['text_color']};
+            background: {colors['field_bg']};
+        }}
+        
         #fieldLabel {{
             font-size: 14px;
             font-weight: 500;
@@ -613,4 +618,12 @@ class StyleManager:
             outline: none;
             background: {colors['field_bg_focus']};
         }}
+        """
+
+    def get_widget_style(self):
+        """Get style for combo boxes."""
+        return """
+        QWidget#formWidget{
+            background-color: 'transparent';
+        }
         """
