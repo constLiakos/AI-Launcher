@@ -163,9 +163,7 @@ class SettingsDialog(QDialog):
         theme_label.setObjectName("fieldLabel")
         form_layout.addRow(theme_label, self.theme_combo)
         
-        layout.addLayout(form_layout)
-        
-        layout.addLayout(form_layout)
+        layout.addLayout(form_layout)        
         layout.addStretch()
         
         # Button layout
