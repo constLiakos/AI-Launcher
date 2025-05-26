@@ -282,9 +282,11 @@ class Text:
     SETTINGS_DIALOGUE_HOTKEY_TOGGLE_MINIMIZE_WINDOW_LABEL = "Global Hotkey:"
     SETTINGS_DIALOGUE_HOTKEY_TOGGLE_MINIMIZE_WINDOW_PLACEHOLDER = "e.g., <alt>+x, <ctrl>+<shift>+l..."
     # Clear Previous Response When Window Minimizes
-    SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_LABEL = "Clear previous response when window reopens"
+    SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_LABEL = "Clear Last Response:"
+    SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_MESSAGE = "Clear last response when window reopens"
     # Clear Conversation History on Hide
-    SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_LABEL = "Clear conversation history when window is hidden"
+    SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_LABEL = "Clear Conversation:"
+    SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_MESSAGE = "Clear conversation history when window reopens"
 
 
 # =============================================================================

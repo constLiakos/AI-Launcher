@@ -109,26 +109,26 @@ class SettingsDialog(QDialog):
         form_layout.addRow(hotkey_label, self.hotkey_input)
 
         # Clear Previous Response Checkbox
-        self.clear_previous_checkbox = QCheckBox(Text.SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_LABEL)
+        self.clear_previous_checkbox = QCheckBox(Text.SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_MESSAGE)
         clear_previous_value = self.config.get('clear_last_response_on_minimize', Conversation.DEFAULT_CLEAR_LAST_RESPONSE_ON_MINIMIZE)
         self.clear_previous_checkbox.setChecked(clear_previous_value)
         self.logger.debug(f"Clear previous response loaded: {clear_previous_value}")
         self.clear_previous_checkbox.setObjectName("settingsCheckBox")
         self.clear_previous_checkbox.setMinimumHeight(35)
         
-        clear_label = QLabel("Auto Clear:")
+        clear_label = QLabel(Text.SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_LABEL)
         clear_label.setObjectName("fieldLabel")
         form_layout.addRow(clear_label, self.clear_previous_checkbox)
 
         # Clear History on Hide Checkbox
-        self.clear_history_on_minimize_checkbox = QCheckBox(Text.SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_LABEL)
+        self.clear_history_on_minimize_checkbox = QCheckBox(Text.SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_MESSAGE)
         clear_history_on_minimize_value = self.config.get('clear_history_on_minimize', Conversation.DEFAULT_CLEAR_HISTORY_ON_MINIMIZE)
         self.clear_history_on_minimize_checkbox.setChecked(clear_history_on_minimize_value)
         self.logger.debug(f"Clear history on hide loaded: {clear_history_on_minimize_value}")
         self.clear_history_on_minimize_checkbox.setObjectName("settingsCheckBox")
         self.clear_history_on_minimize_checkbox.setMinimumHeight(35)
         
-        clear_history_label = QLabel("Clear on Hide:")
+        clear_history_label = QLabel(Text.SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_LABEL)
         clear_history_label.setObjectName("fieldLabel")
         form_layout.addRow(clear_history_label, self.clear_history_on_minimize_checkbox)
 
