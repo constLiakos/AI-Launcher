@@ -1,6 +1,8 @@
 import requests
 import json
 
+from utils.constants import LLM
+
 class ApiClient:
     def __init__(self, config):
         self.config = config
@@ -12,6 +14,7 @@ class ApiClient:
             api_key = self.config.get('api_key')
             api_base = self.config.get('api_base')
             model = self.config.get('model')
+            system_prompt = self.config.get('system_prompt', LLM.DEFAULT_SYSTEM_PROMPT)
             
             if not api_key:
                 raise Exception("API key not configured. Please check settings.")
@@ -29,12 +32,16 @@ class ApiClient:
                 # New format: use messages array directly
                 messages_data = messages
 
+            # Add system prompt if provided and not already present
+            if system_prompt and (not messages_data or messages_data[0].get("role") != "system"):
+                messages_data.insert(0, {"role": "system", "content": system_prompt})
+
             data = {
                 "model": model,
                 "messages": messages_data,
                 "max_tokens": self.config.get('max_tokens', 500),
                 "temperature": self.config.get('temperature', 0.7),
-                "stream": True  # Enable streaming
+                "stream": True
             }
 
             # Make streaming request

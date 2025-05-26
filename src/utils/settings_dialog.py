@@ -84,6 +84,20 @@ class SettingsDialog(QDialog):
         model_label = QLabel("Model:")
         model_label.setObjectName("fieldLabel")
         form_layout.addRow(model_label, self.model_input)
+
+        # System Prompt
+        self.system_prompt_input = QLineEdit()
+        system_prompt_value = self.config.get('system_prompt', LLM.DEFAULT_SYSTEM_PROMPT)
+        self.system_prompt_input.setText(system_prompt_value)
+        self.logger.debug(f"System prompt loaded: {system_prompt_value[:50]}...")
+        self.system_prompt_input.setObjectName("settingsInputField")
+        self.system_prompt_input.setPlaceholderText("Enter system prompt for the LLM")
+        self.system_prompt_input.setMinimumHeight(35)
+        
+        system_prompt_label = QLabel("System Prompt:")
+        system_prompt_label.setObjectName("fieldLabel")
+        form_layout.addRow(system_prompt_label, self.system_prompt_input)
+        
         
         # Request Delay
         self.delay_input = QLineEdit()
@@ -219,6 +233,11 @@ class SettingsDialog(QDialog):
         model = self.model_input.text()
         self.config.set('model', model)
         self.logger.debug(f"Model saved: {model}")
+
+        # System Prompt
+        system_prompt = self.system_prompt_input.text()
+        self.config.set('system_prompt', system_prompt)
+        self.logger.debug(f"System prompt saved: {system_prompt[:50]}...")
         
         # Save request delay with validation
         try:

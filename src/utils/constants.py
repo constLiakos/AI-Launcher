@@ -23,6 +23,7 @@ class Conversation:
 class LLM:
     DEFAULT_API_BASE = 'https://api.openai.com/v1'
     DEFAULT_LLM_MODEL = 'gpt-4.1-mini'
+    DEFAULT_SYSTEM_PROMPT = "You are a helpful AI assistant."
 
 
 # =============================================================================

@@ -21,6 +21,7 @@ class Config:
             'message_history_limit': Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT,
             'clear_last_response_on_minimize': Conversation.DEFAULT_CLEAR_LAST_RESPONSE_ON_MINIMIZE,
             'clear_history_on_minimize': Conversation.DEFAULT_CLEAR_HISTORY_ON_MINIMIZE,
+            'system_prompt': LLM.DEFAULT_SYSTEM_PROMPT,
         }
         self.config = self.load_config()
 
