@@ -160,7 +160,7 @@ class SettingsDialog(QDialog):
         cancel_btn = QPushButton("Cancel")
         cancel_btn.setObjectName("cancelButton")
         cancel_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
-        cancel_btn.clicked.connect(self.reject)
+        cancel_btn.clicked.connect(self.hide)
         
         save_btn = QPushButton("Save")
         save_btn.setObjectName("saveButton")
