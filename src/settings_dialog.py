@@ -110,7 +110,7 @@ class SettingsDialog(QDialog):
 
         # Clear Previous Response Checkbox
         self.clear_previous_checkbox = QCheckBox(Text.SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_LABEL)
-        clear_previous_value = self.config.get('clear_previous_response', Conversation.DEFAULT_CLEAR_LAST_RESPONSE_ON_MINIMIZE)
+        clear_previous_value = self.config.get('clear_last_response_on_minimize', Conversation.DEFAULT_CLEAR_LAST_RESPONSE_ON_MINIMIZE)
         self.clear_previous_checkbox.setChecked(clear_previous_value)
         self.logger.debug(f"Clear previous response loaded: {clear_previous_value}")
         self.clear_previous_checkbox.setObjectName("settingsCheckBox")
@@ -236,7 +236,7 @@ class SettingsDialog(QDialog):
 
        # Clear previous response
         clear_previous = self.clear_previous_checkbox.isChecked()
-        self.config.set('clear_previous_response', clear_previous)
+        self.config.set('clear_last_response_on_minimize', clear_previous)
         self.logger.debug(f"Clear previous response saved: {clear_previous}")
 
         # Clear history on hide
