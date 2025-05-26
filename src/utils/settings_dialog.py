@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                             QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox)
 from PyQt5.QtCore import Qt, pyqtSignal
 from managers.styles import StyleManager
+from utils.about_dialog import AboutDialog
 from utils.constants import LLM, Conversation, Hotkey, SettingsDialogSize, Text, Theme, Timing
 from utils.version import VERSION
 
@@ -15,6 +16,7 @@ class SettingsDialog(QDialog):
         self.logger = logger.getChild('settings_dialogue')
         self.config = config
         self.style_manager = StyleManager(logger)
+        self.about_dialog = None
         self.setup_ui()
         self.apply_styles()
         self.original_theme = self.config.get('theme', Theme.DEFAULT_THEME)
@@ -170,6 +172,12 @@ class SettingsDialog(QDialog):
         button_layout = QHBoxLayout()
         button_layout.setSpacing(SettingsDialogSize.BUTTON_LAYOUT_SPACING)
         
+        # About button (left side)
+        about_btn = QPushButton("About")
+        about_btn.setObjectName("aboutButton")
+        about_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
+        about_btn.clicked.connect(self.show_about_dialog)
+        
         cancel_btn = QPushButton("Cancel")
         cancel_btn.setObjectName("cancelButton")
         cancel_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
@@ -180,15 +188,12 @@ class SettingsDialog(QDialog):
         save_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
         save_btn.clicked.connect(self.save_settings)
         
+        button_layout.addWidget(about_btn)
+        button_layout.addStretch()  # Add space between About and Cancel/Save
         button_layout.addWidget(cancel_btn)
         button_layout.addWidget(save_btn)
         
         layout.addLayout(button_layout)
-
-        version_label = QLabel(f"Version {VERSION}")
-        version_label.setObjectName("versionLabel")
-        version_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(version_label)
 
         self.setLayout(layout)
 
@@ -279,3 +284,12 @@ class SettingsDialog(QDialog):
         
         self.logger.info("Settings saved successfully")
         self.hide()
+
+    def show_about_dialog(self):
+        """Show the About dialog."""
+        self.logger.debug("Opening About dialog")
+        if self.about_dialog is None:
+            self.about_dialog = AboutDialog(self.logger, self)
+        self.about_dialog.show()
+        self.about_dialog.raise_()
+        self.about_dialog.activateWindow()

@@ -107,6 +107,30 @@ class SettingsDialogSize:
     BUTTON_MIN_HEIGHT = 40
 
 # =============================================================================
+# ABOUT DIALOG
+# =============================================================================
+
+
+class AboutDialogSize:
+    """About dialog constants"""
+    # Window dimensions
+    WINDOW_WIDTH = 600
+    WINDOW_HEIGHT = 650
+
+    # Layout spacing
+    MAIN_LAYOUT_MARGIN = 20
+    MAIN_LAYOUT_SPACING = 20
+    FORM_LAYOUT_SPACING = 20
+    FORM_LAYOUT_VERTICAL_SPACING = 15
+    BUTTON_LAYOUT_SPACING = 15
+
+    # Input field dimensions
+    INPUT_FIELD_MIN_HEIGHT = 35
+    CHECKBOX_MIN_HEIGHT = 35
+    COMBO_BOX_MIN_HEIGHT = 35
+    BUTTON_MIN_HEIGHT = 40
+
+# =============================================================================
 # COLORS
 # =============================================================================
 
@@ -288,6 +312,23 @@ class Text:
     SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_LABEL = "Clear Conversation:"
     SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_MESSAGE = "Clear conversation history when window reopens"
 
+    ABOUT_DIALOGUE_LABEL = "About This Project"
+    ABOUT_DIALOGUE_TEXT = """
+<h3>🚀 AI Launcher</h3>
+<p>🖥️ A modern, lightweight desktop AI assistant with a sleek system tray interface offering quick access to AI conversations via global hotkeys ⌨️ and real-time streaming responses ⏳.</p>
+
+<h4>🛠️ Technologies:</h4>
+<ul>
+  <li>🐍 Python</li>
+  <li>🎨 PyQt5</li>
+  <li>🤖 OpenAI-compatible APIs</li>
+  <li>🎹 pynput (for global hotkeys)</li>
+</ul>
+
+<h4>👤 Author:</h4>
+<p>constLiakos (📧 <a href="mailto:constliakos@gmail.com">constliakos@gmail.com</a>)</p>
+<p>GitHub:  <a href="https://github.com/constLiakos/AI-Launcher" target="_blank" rel="noopener noreferrer">https://github.com/constLiakos/AI-Launcher</a></p>
+        """
 
 # =============================================================================
 # KEYBOARD SHORTCUTS
