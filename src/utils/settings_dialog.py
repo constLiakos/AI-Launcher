@@ -1,6 +1,6 @@
 import logging
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox, QTextEdit, QSizePolicy)
+                            QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox, QTextEdit, QSizePolicy, QWidget)
 from PyQt5.QtCore import Qt, pyqtSignal
 from managers.style_manager import StyleManager
 from utils.about_dialog import AboutDialog
@@ -86,9 +86,6 @@ class SettingsDialog(QDialog):
         form_layout.addRow(model_label, self.model_input)
 
         # System Prompt - use a container widget for better spacing
-        system_prompt_label = QLabel("System Prompt:")
-        system_prompt_label.setObjectName("fieldLabel")
-        
         self.system_prompt_input = QTextEdit()
         system_prompt_value = self.config.get('system_prompt', LLM.DEFAULT_SYSTEM_PROMPT)
         self.system_prompt_input.setPlainText(system_prompt_value)
@@ -97,12 +94,12 @@ class SettingsDialog(QDialog):
         self.system_prompt_input.setPlaceholderText("Enter system prompt for the LLM")
         self.system_prompt_input.setMinimumHeight(100)
         self.system_prompt_input.setMaximumHeight(150)
-        # Set size policy to allow expansion
         self.system_prompt_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        form_layout.addRow("System Prompt:", self.system_prompt_input)
         
-        # Add to form layout properly
-        form_layout.addRow(system_prompt_label, self.system_prompt_input)
-                
+        # Set stretch factor to prevent it from taking too much space
+        form_layout.setRowWrapPolicy(QFormLayout.DontWrapRows)
+                        
         # Request Delay
         self.delay_input = QLineEdit()
         delay_value = self.config.get('request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)
@@ -239,10 +236,10 @@ class SettingsDialog(QDialog):
         self.logger.debug(f"Model saved: {model}")
 
         # System Prompt
-        system_prompt = self.system_prompt_input.text()
+        system_prompt = self.system_prompt_input.toPlainText()
         self.config.set('system_prompt', system_prompt)
         self.logger.debug(f"System prompt saved: {system_prompt[:50]}...")
-        
+            
         # Save request delay with validation
         try:
             delay = float(self.delay_input.text())

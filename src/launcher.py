@@ -695,41 +695,45 @@ class Launcher(QMainWindow):
     def open_settings(self):
         """Open the settings dialog."""
         logger.debug("Opening settings dialog")
-        dialog:SettingsDialog = SettingsDialog(logger, self.config, self)
-
+        dialog: SettingsDialog = SettingsDialog(logger, self.config, self)
+        
         # Connect the theme change signal
         dialog.theme_changed.connect(self.on_theme_changed)
-
+        
+        # Let the dialog calculate its size first
+        dialog.adjustSize()
+        
         # Center the dialog relative to the main window
         main_rect = self.geometry()
         dialog_rect = dialog.geometry()
         center_x = main_rect.x() + (main_rect.width() - dialog_rect.width()) // 2
         center_y = main_rect.y() + (main_rect.height() - dialog_rect.height()) // 2
         dialog.move(center_x, center_y)
-
+        
         if dialog.exec_():
-            logger.debug(f"Settings saved, new theme: {new_theme}")
+            logger.debug("Settings dialog accepted")
             # Check if theme changed
             new_theme = self.config.get('theme', Theme.DEFAULT_THEME)
             if new_theme != self.current_theme:
+                logger.debug(f"Settings saved, new theme: {new_theme}")
                 self.current_theme = new_theme
                 self.style_manager.set_theme(self.current_theme)
-
                 self.apply_modern_style()
+            
             # Show feedback with larger, visible status
             delay_seconds = self.config.get(
                 'request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)
             status_msg = f"✓ Settings saved! Request delay: {delay_seconds}s"
             self.show_status(status_msg)
-
+            
             # Update API client
             self.api_client = ApiClient(self.config)
             self.restart_hotkey_listener()
-
+            
             # Hide status after longer delay
             QTimer.singleShot(
                 Timing.SETTINGS_FEEDBACK_DURATION, self.hide_status)
-
+            
     def restore_geometry(self):
         """Restore window position (top-left corner)."""
         x = self.config.get('position_x', WindowSize.DEFAULT_X)
