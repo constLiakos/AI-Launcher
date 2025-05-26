@@ -1,5 +1,6 @@
 # Add missing imports at the top
 import logging
+from pathlib import Path
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLineEdit, QPushButton, QLabel, QTextEdit, QFrame,
                              QApplication, QAction, QGraphicsDropShadowEffect, QSystemTrayIcon, QMenu, QAction, QShortcut, QSizePolicy)
@@ -20,16 +21,18 @@ from managers.state_manager import StateManager
 logger = logging.getLogger(__name__)
 
 class Launcher(QMainWindow):
-    def __init__(self, debug=False):
+    def __init__(self, logdir:str, debug=False):
         super().__init__()
         self.debug = debug
 
         log_level = logging.DEBUG if self.debug else logging.INFO
+        app_log_dir = Path.joinpath(logdir, 'ai_launcher.log')
+        print(f"AppLogDir: {app_log_dir}")
         logging.basicConfig(
             level=log_level,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             handlers=[
-                logging.FileHandler('ai_launcher.log'),
+                logging.FileHandler(app_log_dir),
                 logging.StreamHandler()  # Still shows in console
             ]
         )

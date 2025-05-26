@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import os
+from pathlib import Path
 import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt, QSharedMemory
@@ -64,6 +66,22 @@ class SingleInstanceApp:
             launcher.show_window()
         socket.disconnectFromHost()
 
+def get_log_directory():
+        """Get appropriate log directory for the OS"""
+        if sys.platform.startswith('win'):
+            # Windows: %APPDATA%\AI-Launcher\logs
+            appdata_dir = Path(os.environ.get('APPDATA', ''))
+            log_dir = Path.joinpath(appdata_dir, 'AI-Launcher', 'logs')
+        else:
+            # Linux: ~/.local/share/AI-Launcher/logs or /var/log/ai-launcher
+            if os.getuid() == 0:  # Running as root
+                log_dir = Path.joinpath('var','log','ai-launcher')
+            else:
+                log_dir = Path.joinpath(Path.home(), '.local', 'share', 'AI-Launcher', 'logs')
+        
+        # Create directory if it doesn't exist
+        log_dir.mkdir(parents=True, exist_ok=True)
+        return log_dir
 
 if __name__ == "__main__":
     # Parse command line arguments
@@ -85,7 +103,8 @@ if __name__ == "__main__":
             print("Failed to communicate with existing instance.")
         sys.exit(0)
     
-    launcher = Launcher(debug=args.debug)
+    logdir = get_log_directory()
+    launcher = Launcher(logdir=logdir, debug=args.debug)
     
     # Setup IPC server for this instance
     if not single_instance.setup_ipc_server(launcher):
