@@ -12,7 +12,7 @@ from utils.api_client import ApiClient
 from managers.conversation_manager import ConversationManager
 from utils.settings_dialog import SettingsDialog
 from managers.animation_manager import AnimationManager
-from managers.styles import StyleManager
+from managers.style_manager import StyleManager
 from managers.hotkey_manager import HotkeyManager
 from utils.constants import Conversation, ElementSize, Style, Theme, WindowSize, Colors, Text, Timing, TrayIcon
 from utils.markdown_render import MarkdownRenderer

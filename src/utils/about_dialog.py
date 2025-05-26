@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                             QPushButton, QFrame, QTextBrowser)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from managers.styles import StyleManager
+from managers.style_manager import StyleManager
 from utils.constants import AboutDialogSize, SettingsDialogSize, Text
 from PyQt5.QtGui import QFont, QFontDatabase
 

@@ -2,7 +2,7 @@ import logging
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                             QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox)
 from PyQt5.QtCore import Qt, pyqtSignal
-from managers.styles import StyleManager
+from managers.style_manager import StyleManager
 from utils.about_dialog import AboutDialog
 from utils.constants import LLM, Conversation, Hotkey, SettingsDialogSize, Text, Theme, Timing
 from utils.version import VERSION
