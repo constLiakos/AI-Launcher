@@ -62,11 +62,10 @@ class ElementSize:
     COPY_BUTTON_WIDTH = 40
     COPY_BUTTON_HEIGHT = 30
 
-
     # Response area
-    RESPONSE_MIN_HEIGHT = 250
-    RESPONSE_MAX_HEIGHT = 340
-    RESPONSE_MARGIN_BOTTOM = 100  # Space for input area
+    RESPONSE_MIN_HEIGHT = 350
+    RESPONSE_MAX_HEIGHT = 600
+    # RESPONSE_MARGIN_BOTTOM = 100  # Space for input area
 
     # Margins and spacing
     CONTAINER_MARGIN_HORIZONTAL = 20
