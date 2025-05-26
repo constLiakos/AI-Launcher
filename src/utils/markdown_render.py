@@ -34,6 +34,9 @@ class MarkdownRenderer:
         # Escape HTML
         text = text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
         
+        # Convert HTTP links
+        text = re.sub(r'\b(http[s]?://[^\s]+)', r'<a href="\1">\1</a>', text)
+        
         # Code blocks with language support
         text = re.sub(r'```(\w+)?\n(.*?)\n```', 
                      lambda m: f'<pre><code class="language-{m.group(1) or "text"}">{m.group(2)}</code></pre>', 
