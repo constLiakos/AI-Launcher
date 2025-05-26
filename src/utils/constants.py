@@ -62,6 +62,7 @@ class ElementSize:
     COPY_BUTTON_WIDTH = 40
     COPY_BUTTON_HEIGHT = 30
 
+
     # Response area
     RESPONSE_MIN_HEIGHT = 250
     RESPONSE_MAX_HEIGHT = 340
@@ -75,6 +76,11 @@ class ElementSize:
 
     # Copy button positioning
     COPY_BUTTON_MARGIN = 10
+    COPY_BUTTON_RIGHT_MARGIN = 12
+
+    SCROLLBAR_SIZE = 8
+    TRIGGER_EDGE_RESIZE_MARGIN_HORIZONTAL = 15
+    TRIGGER_EDGE_RESIZE_MARGIN_VERTICAL = 15
 
 # =============================================================================
 # SETTINGS DIALOG

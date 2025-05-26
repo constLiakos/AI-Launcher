@@ -87,7 +87,6 @@ class Launcher(QMainWindow):
         # Setup global hotkey
         self.hotkey_manager.setup_hotkey()
 
-        self.resize_margin = 20  # Pixels from edge to trigger resize
         self.resize_direction = None
         self.resize_start_pos = None
         self.resize_start_geometry = None
@@ -95,12 +94,11 @@ class Launcher(QMainWindow):
     def get_resize_direction(self, pos):
         """Determine resize direction based on mouse position."""
         rect = self.rect()
-        margin = self.resize_margin
-        
-        left = pos.x() <= margin
-        right = pos.x() >= rect.width() - margin
-        top = pos.y() <= margin
-        bottom = pos.y() >= rect.height() - margin
+
+        left = pos.x() <= ElementSize.TRIGGER_EDGE_RESIZE_MARGIN_HORIZONTAL
+        right = pos.x() >= rect.width() - ElementSize.TRIGGER_EDGE_RESIZE_MARGIN_HORIZONTAL
+        top = pos.y() <= 0
+        bottom = pos.y() >= rect.height() - ElementSize.TRIGGER_EDGE_RESIZE_MARGIN_VERTICAL
         
         if top and left:
             return "top-left"
@@ -377,13 +375,9 @@ class Launcher(QMainWindow):
             response_pos = self.response_area.pos()
             response_geometry = self.response_area.geometry()
             
-            # Account for the thin scrollbar and add some margin
-            scrollbar_width = 8  # Our thin scrollbar width
-            margin = 12
-            
             # Calculate position relative to main_container
-            button_x = response_pos.x() + response_geometry.width() - self.copy_button.width() - scrollbar_width - margin
-            button_y = response_pos.y() + margin
+            button_x = response_pos.x() + response_geometry.width() - self.copy_button.width() - ElementSize.SCROLLBAR_SIZE - ElementSize.COPY_BUTTON_RIGHT_MARGIN
+            button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
             
             self.copy_button.move(button_x, button_y)
             self.copy_button.raise_()  # Bring to front
