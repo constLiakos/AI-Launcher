@@ -232,7 +232,6 @@ class SettingsDialog(QDialog):
         self.logger.debug("Applying styles to SettingsDialog")
         
         # Apply dialog-level styles
-        self.setStyleSheet(self.style_manager.get_settings_dialog_styles())
         
         # Apply individual widget styles directly
         input_style = self.style_manager.get_settings_input_field_style()
