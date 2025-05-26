@@ -411,14 +411,21 @@ class Launcher(QMainWindow):
         if hasattr(self, 'response_area'):
             window_height = self.height()
             # Reserve space for input area, margins, and some padding
-            available_height = window_height - ElementSize.RESPONSE_MARGIN_BOTTOM  # Adjust this value as needed
+            available_height = window_height - ElementSize.RESPONSE_MARGIN_BOTTOM
+            
+            # Ensure available_height is positive
+            available_height = max(available_height, 50)  # Minimum 50px available
             
             # Set dynamic min/max based on available space
             min_response_height = min(ElementSize.RESPONSE_MIN_HEIGHT, available_height * 0.3)
             max_response_height = max(available_height * 0.9, min_response_height)
             
-            self.response_area.setMinimumHeight(int(min_response_height))
-            self.response_area.setMaximumHeight(int(max_response_height))
+            # Ensure both values are positive
+            min_response_height = max(int(min_response_height), 20)  # Minimum 20px
+            max_response_height = max(int(max_response_height), min_response_height)
+            
+            self.response_area.setMinimumHeight(min_response_height)
+            self.response_area.setMaximumHeight(max_response_height)
 
     def hide_response(self):
         """Hide response using StateManager."""
