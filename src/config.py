@@ -18,8 +18,9 @@ class Config:
             'request_delay': Timing.DEFAULT_REQUEST_DELAY_SECONDS,
             'hotkey': Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW,
             'theme': Theme.DEFAULT_THEME,
-            'clear_previous_response': True,
-            'message_history_limit': Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT
+            'clear_previous_response': Conversation.DEFAULT_CLEAR_LAST_RESPONSE_ON_MINIMIZE,
+            'message_history_limit': Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT,
+            'clear_history_on_minimize': Conversation.DEFAULT_CLEAR_HISTORY_ON_MINIMIZE,
         }
         self.config = self.load_config()
 

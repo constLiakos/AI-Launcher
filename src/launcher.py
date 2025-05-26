@@ -249,6 +249,10 @@ class Launcher(QMainWindow):
                 QSystemTrayIcon.Information,
                 Timing.TRAY_MESSAGE_DURATION
             )
+        clear_history_on_minimize = self.config.get('clear_history_on_minimize', Conversation.DEFAULT_CLEAR_HISTORY_ON_MINIMIZE)
+        if clear_history_on_minimize:
+            self.conversation_manager.clear_history()
+        
 
     def tray_icon_activated(self, reason):
         """Handle tray icon activation."""

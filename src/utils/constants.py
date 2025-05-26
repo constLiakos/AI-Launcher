@@ -13,7 +13,8 @@ from PyQt5.QtGui import QColor
 
 class Conversation:
     DEFAULT_CONVERSATION_HISTORY_LIMIT = 20
-
+    DEFAULT_CLEAR_HISTORY_ON_MINIMIZE = False
+    DEFAULT_CLEAR_LAST_RESPONSE_ON_MINIMIZE = True
 
 # =============================================================================
 # LLM Config
@@ -280,6 +281,11 @@ class Text:
     # Hotkey
     SETTINGS_DIALOGUE_HOTKEY_TOGGLE_MINIMIZE_WINDOW_LABEL = "Global Hotkey:"
     SETTINGS_DIALOGUE_HOTKEY_TOGGLE_MINIMIZE_WINDOW_PLACEHOLDER = "e.g., <alt>+x, <ctrl>+<shift>+l..."
+    # Clear Previous Response When Window Minimizes
+    SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_LABEL = "Clear previous response when window reopens"
+    # Clear Conversation History on Hide
+    SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_LABEL = "Clear conversation history when window is hidden"
+
 
 # =============================================================================
 # KEYBOARD SHORTCUTS

@@ -109,8 +109,8 @@ class SettingsDialog(QDialog):
         form_layout.addRow(hotkey_label, self.hotkey_input)
 
         # Clear Previous Response Checkbox
-        self.clear_previous_checkbox = QCheckBox("Clear previous response when window reopens")
-        clear_previous_value = self.config.get('clear_previous_response', False)
+        self.clear_previous_checkbox = QCheckBox(Text.SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_LABEL)
+        clear_previous_value = self.config.get('clear_previous_response', Conversation.DEFAULT_CLEAR_LAST_RESPONSE_ON_MINIMIZE)
         self.clear_previous_checkbox.setChecked(clear_previous_value)
         self.logger.debug(f"Clear previous response loaded: {clear_previous_value}")
         self.clear_previous_checkbox.setObjectName("settingsCheckBox")
@@ -119,6 +119,18 @@ class SettingsDialog(QDialog):
         clear_label = QLabel("Auto Clear:")
         clear_label.setObjectName("fieldLabel")
         form_layout.addRow(clear_label, self.clear_previous_checkbox)
+
+        # Clear History on Hide Checkbox
+        self.clear_history_on_minimize_checkbox = QCheckBox(Text.SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_LABEL)
+        clear_history_on_minimize_value = self.config.get('clear_history_on_minimize', Conversation.DEFAULT_CLEAR_HISTORY_ON_MINIMIZE)
+        self.clear_history_on_minimize_checkbox.setChecked(clear_history_on_minimize_value)
+        self.logger.debug(f"Clear history on hide loaded: {clear_history_on_minimize_value}")
+        self.clear_history_on_minimize_checkbox.setObjectName("settingsCheckBox")
+        self.clear_history_on_minimize_checkbox.setMinimumHeight(35)
+        
+        clear_history_label = QLabel("Clear on Hide:")
+        clear_history_label.setObjectName("fieldLabel")
+        form_layout.addRow(clear_history_label, self.clear_history_on_minimize_checkbox)
 
         # Message History Limit
         self.message_history_input = QLineEdit()
@@ -226,6 +238,12 @@ class SettingsDialog(QDialog):
         clear_previous = self.clear_previous_checkbox.isChecked()
         self.config.set('clear_previous_response', clear_previous)
         self.logger.debug(f"Clear previous response saved: {clear_previous}")
+
+        # Clear history on hide
+        clear_history_on_minimize = self.clear_history_on_minimize_checkbox.isChecked()
+        self.config.set('clear_history_on_minimize', clear_history_on_minimize)
+        self.logger.debug(f"Clear history on hide saved: {clear_history_on_minimize}")
+
 
         # Save message history limit with validation
         try:
