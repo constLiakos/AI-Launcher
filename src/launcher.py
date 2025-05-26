@@ -2,7 +2,7 @@
 import logging
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLineEdit, QPushButton, QLabel, QTextEdit, QFrame,
-                             QApplication, QAction, QGraphicsDropShadowEffect, QSystemTrayIcon, QMenu, QAction, QShortcut)
+                             QApplication, QAction, QGraphicsDropShadowEffect, QSystemTrayIcon, QMenu, QAction, QShortcut, QSizePolicy)
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence
 
@@ -322,9 +322,15 @@ class Launcher(QMainWindow):
         self.response_area.setObjectName("responseArea")
         self.response_area.setReadOnly(True)
         self.response_area.setVisible(False)
-        self.response_area.setMinimumHeight(ElementSize.RESPONSE_MIN_HEIGHT)
-        self.response_area.setMaximumHeight(ElementSize.RESPONSE_MAX_HEIGHT)
+        # self.response_area.setMinimumHeight(ElementSize.RESPONSE_MIN_HEIGHT)
+        # self.response_area.setMaximumHeight(ElementSize.RESPONSE_MAX_HEIGHT)
+
+        self.response_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         container_layout.addWidget(self.response_area)
+
+        # Set stretch factors - higher number gets more space (fix small response area)
+        container_layout.setStretchFactor(self.input_field, 0)  # Fixed size
+        container_layout.setStretchFactor(self.response_area, 1)  # Takes remaining space
 
         # Copy button positioned absolutely - make it a child of main_container instead
         self.copy_button = QPushButton(Text.COPY_BUTTON)
@@ -386,10 +392,25 @@ class Launcher(QMainWindow):
             self.copy_button.setVisible(True)
 
     def resizeEvent(self, event):
-        """Handle window resize to reposition copy button."""
+        """Handle window resize to reposition copy button and adjust response area."""
         super().resizeEvent(event)
+        
+        # Reposition copy button
         if hasattr(self, 'copy_button') and self.copy_button.isVisible():
             self.position_copy_button()
+        
+        # Dynamically adjust response area constraints based on window size
+        if hasattr(self, 'response_area'):
+            window_height = self.height()
+            # Reserve space for input area, margins, and some padding
+            available_height = window_height - 100  # Adjust this value as needed
+            
+            # Set dynamic min/max based on available space
+            min_response_height = min(ElementSize.RESPONSE_MIN_HEIGHT, available_height * 0.3)
+            max_response_height = max(available_height * 0.9, min_response_height)
+            
+            self.response_area.setMinimumHeight(int(min_response_height))
+            self.response_area.setMaximumHeight(int(max_response_height))
 
     def hide_response(self):
         """Hide response using StateManager."""

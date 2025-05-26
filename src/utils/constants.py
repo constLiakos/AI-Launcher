@@ -64,7 +64,7 @@ class ElementSize:
 
     # Response area
     RESPONSE_MIN_HEIGHT = 350
-    RESPONSE_MAX_HEIGHT = 600
+    RESPONSE_MAX_HEIGHT = 1000
     # RESPONSE_MARGIN_BOTTOM = 100  # Space for input area
 
     # Margins and spacing
