@@ -554,3 +554,63 @@ class StyleManager:
         self._font_families = font_families
         
         return font
+    
+    def get_settings_input_field_style(self):
+        """Get style for input fields."""
+        colors = self.get_theme_colors()
+        return f"""
+        QLineEdit {{
+            padding: 12px 16px;
+            border: 2px solid {colors['border_normal']};
+            border-radius: 12px;
+            font-size: 14px;
+            background: {colors['field_bg']};
+            color: {colors['text_color']};
+            min-height: 20px;
+        }}
+        QLineEdit:focus {{
+            border: 2px solid {colors['border_focus']};
+            outline: none;
+            background: {colors['field_bg_focus']};
+        }}
+        """
+
+    def get_settings_textarea_style(self):
+        """Get style for text areas."""
+        colors = self.get_theme_colors()
+        return f"""
+        QTextEdit {{
+            padding: 12px 16px;
+            border: 2px solid {colors['border_normal']};
+            border-radius: 12px;
+            font-size: 14px;
+            background: {colors['field_bg']};
+            color: {colors['text_color']};
+            font-family: monospace;
+        }}
+        QTextEdit:focus {{
+            border: 2px solid {colors['border_focus']};
+            outline: none;
+            background: {colors['field_bg_focus']};
+        }}
+        """
+
+    def get_settings_combobox_style(self):
+        """Get style for combo boxes."""
+        colors = self.get_theme_colors()
+        return f"""
+        QComboBox {{
+            padding: 12px 16px;
+            border: 2px solid {colors['border_normal']};
+            border-radius: 12px;
+            font-size: 14px;
+            background: {colors['field_bg']};
+            color: {colors['text_color']};
+            min-height: 20px;
+        }}
+        QComboBox:focus {{
+            border: 2px solid {colors['border_focus']};
+            outline: none;
+            background: {colors['field_bg_focus']};
+        }}
+        """

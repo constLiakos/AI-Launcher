@@ -92,7 +92,7 @@ class SettingsDialogSize:
     """Settings dialog constants"""
     # Window dimensions
     WINDOW_WIDTH = 600
-    WINDOW_HEIGHT = 900
+    WINDOW_HEIGHT = 550
 
     # Layout spacing
     MAIN_LAYOUT_MARGIN = 20

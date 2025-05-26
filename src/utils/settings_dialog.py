@@ -1,6 +1,6 @@
 import logging
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox, QTextEdit, QSizePolicy, QWidget)
+                            QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox, QTextEdit, QSizePolicy, QWidget, QScrollArea)
 from PyQt5.QtCore import Qt, pyqtSignal
 from managers.style_manager import StyleManager
 from utils.about_dialog import AboutDialog
@@ -38,9 +38,20 @@ class SettingsDialog(QDialog):
         title_label.setObjectName("titleLabel")
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
-        
-        # Form layout for settings
-        form_layout = QFormLayout()
+
+        # Create scroll area for the form
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setFrameShape(QFrame.NoFrame)
+        #  Set size policy for scroll area
+        scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        # Create widget to hold the form
+        form_widget = QWidget()
+        form_widget.setObjectName("formWidget")
+        form_layout = QFormLayout(form_widget)
         form_layout.setSpacing(SettingsDialogSize.FORM_LAYOUT_SPACING)
         form_layout.setVerticalSpacing(15)
         form_layout.setLabelAlignment(Qt.AlignLeft)
@@ -50,7 +61,6 @@ class SettingsDialog(QDialog):
         api_key_value = self.config.get('api_key', '')
         self.api_key_input.setText(api_key_value)
         self.logger.debug(f"API key loaded: {'***' if self.config.get('api_key', '') else 'empty'}")
-
         self.api_key_input.setEchoMode(QLineEdit.Password)
         self.api_key_input.setObjectName("settingsInputField")
         self.api_key_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_API_KEY_PLACEHOLDER)
@@ -181,7 +191,11 @@ class SettingsDialog(QDialog):
         layout.addLayout(form_layout)        
         layout.addStretch()
         
-        # Button layout
+        # Set the form widget as the scroll area's widget
+        scroll_area.setWidget(form_widget)
+        layout.addWidget(scroll_area)
+        
+        # Button layout stays outside the scroll area
         button_layout = QHBoxLayout()
         button_layout.setSpacing(SettingsDialogSize.BUTTON_LAYOUT_SPACING)
         
@@ -202,20 +216,38 @@ class SettingsDialog(QDialog):
         save_btn.clicked.connect(self.save_settings)
         
         button_layout.addWidget(about_btn)
-        button_layout.addStretch()  # Add space between About and Cancel/Save
+        button_layout.addStretch()
         button_layout.addWidget(cancel_btn)
         button_layout.addWidget(save_btn)
         
         layout.addLayout(button_layout)
+        layout.setStretchFactor(scroll_area, 1)  # Takes remaining space
 
         self.setLayout(layout)
-
+        
         self.logger.debug("SettingsDialog UI setup completed")
         
     def apply_styles(self):
         """Apply styles using StyleManager."""
         self.logger.debug("Applying styles to SettingsDialog")
+        
+        # Apply dialog-level styles
         self.setStyleSheet(self.style_manager.get_settings_dialog_styles())
+        
+        # Apply individual widget styles directly
+        input_style = self.style_manager.get_settings_input_field_style()
+        self.api_key_input.setStyleSheet(input_style)
+        self.api_base_input.setStyleSheet(input_style)
+        self.model_input.setStyleSheet(input_style)
+        self.delay_input.setStyleSheet(input_style)
+        self.hotkey_input.setStyleSheet(input_style)
+        self.message_history_input.setStyleSheet(input_style)
+        
+        # Apply text area style
+        self.system_prompt_input.setStyleSheet(self.style_manager.get_settings_textarea_style())
+        
+        # Apply combo box style
+        self.theme_combo.setStyleSheet(self.style_manager.get_settings_combobox_style())
 
     def save_settings(self):
         self.logger.info("Saving settings")
