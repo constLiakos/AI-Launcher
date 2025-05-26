@@ -4,6 +4,7 @@ import threading
 from PyQt5.QtCore import QTimer, pyqtSignal, QObject
 
 from utils.constants import Hotkey
+import time
 
 class HotkeyManager(QObject):
 
@@ -89,6 +90,11 @@ class HotkeyManager(QObject):
     def restart_listener(self):
         """Restart the hotkey listener with new settings."""
         self.logger.info("Restarting hotkey listener")
+        self.stop_listener()
+        
+        # Small delay to ensure cleanup is complete
+        time.sleep(2)
+        
         self.setup_hotkey()
 
     def cleanup(self):
