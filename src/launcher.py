@@ -3,9 +3,9 @@ import logging
 from pathlib import Path
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLineEdit, QPushButton, QLabel, QTextEdit, QFrame,
-                             QApplication, QAction, QGraphicsDropShadowEffect, QSystemTrayIcon, QMenu, QAction, QShortcut, QSizePolicy)
+                             QApplication, QAction, QGraphicsDropShadowEffect, QSystemTrayIcon, QMenu, QAction, QShortcut, QSizePolicy, QTextBrowser)
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence, QFont, QFontDatabase
 
 from utils.config import Config
 from utils.api_client import ApiClient
@@ -325,10 +325,13 @@ class Launcher(QMainWindow):
         container_layout.addLayout(input_layout)
 
         # Response area (appears below input, initially hidden)
-        self.response_area = QTextEdit()
+        self.response_area = QTextBrowser()
         self.response_area.setObjectName("responseArea")
         self.response_area.setReadOnly(True)
         self.response_area.setVisible(False)
+        self.response_area.setOpenExternalLinks(True)
+
+        self.setup_emoji_font(self.response_area)
 
         self.response_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         container_layout.addWidget(self.response_area)
@@ -880,3 +883,28 @@ class Launcher(QMainWindow):
         """Delegate to StateManager."""
         logger.debug("Force send request triggered (Enter key pressed)")
         self.state_manager.force_send_request()
+
+    def setup_emoji_font(self, widget):
+        """Configure font for better emoji support."""
+        font = QFont()
+        
+        # Try different fonts that support color emojis
+        emoji_fonts = [
+            "Segoe UI Emoji",      # Windows
+            "Apple Color Emoji",   # macOS
+            "Noto Color Emoji",    # Linux
+            "Twemoji",             # Web fallback
+            "Segoe UI",            # Windows fallback
+            "Arial",               # Universal fallback
+        ]
+        
+        font_db = QFontDatabase()
+        for font_name in emoji_fonts:
+            font.setFamily(font_name)
+            # Use families() method to check if font exists
+            if font_name in font_db.families():
+                logger.debug(f"Using font: {font_name}")
+                break
+        
+        font.setPointSize(12)
+        widget.setFont(font)
