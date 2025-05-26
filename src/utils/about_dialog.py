@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QPushButton, QFrame, QTextEdit)
+                            QPushButton, QFrame, QTextBrowser)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from managers.styles import StyleManager
@@ -39,11 +39,13 @@ class AboutDialog(QDialog):
         layout.addWidget(version_label)
         
         # Project info
-        info_text = QTextEdit()
-        info_text.setReadOnly(True)
+        info_text = QTextBrowser()
         info_text.setObjectName("aboutTextEdit")
         info_text.setAcceptRichText(True)
+
+        info_text.setOpenExternalLinks(True)
         self.setup_emoji_font(info_text)
+
         info_text.setHtml(Text.ABOUT_DIALOGUE_TEXT)
         layout.addWidget(info_text)
         
