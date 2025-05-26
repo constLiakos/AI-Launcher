@@ -64,7 +64,7 @@ class SingleInstanceApp:
         data = socket.readAll().data()
         if data == b"SHOW":
             launcher.show_window()
-        socket.disconnectFromHost()
+        socket.disconnectFromServer()
 
 def get_log_directory():
         """Get appropriate log directory for the OS"""
