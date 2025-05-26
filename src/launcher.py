@@ -208,7 +208,7 @@ class Launcher(QMainWindow):
             if self.config.get('clear_last_response', False):
                 logger.debug("Clearing previous response on window show")
                 # Clear the response area and hide it
-                self.response_area.setText("")
+                self.response_area.setHtml("")
                 self.response_area.setVisible(False)
                 self.copy_button.setVisible(False)
                 # Reset to compact size
@@ -603,7 +603,7 @@ class Launcher(QMainWindow):
                                 WindowSize.EXPANDED_HEIGHT)
 
         # Display error
-        self.response_area.setText(error_text)
+        self.response_area.setHtml(error_text)
 
         # Return UI to normal state
         self.set_input_state("normal")
@@ -866,7 +866,7 @@ class Launcher(QMainWindow):
     def on_response_ready(self, response):
         """Handle when response is ready to display."""
         logger.debug(f"Response ready, length: {len(response)} characters")
-        self.response_area.setText(response)
+        self.response_area.setHtml(response)
 
     def on_request_cancelled(self):
         """Handle request cancellation."""
