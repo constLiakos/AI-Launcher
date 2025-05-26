@@ -322,8 +322,6 @@ class Launcher(QMainWindow):
         self.response_area.setObjectName("responseArea")
         self.response_area.setReadOnly(True)
         self.response_area.setVisible(False)
-        # self.response_area.setMinimumHeight(ElementSize.RESPONSE_MIN_HEIGHT)
-        # self.response_area.setMaximumHeight(ElementSize.RESPONSE_MAX_HEIGHT)
 
         self.response_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         container_layout.addWidget(self.response_area)
@@ -403,7 +401,7 @@ class Launcher(QMainWindow):
         if hasattr(self, 'response_area'):
             window_height = self.height()
             # Reserve space for input area, margins, and some padding
-            available_height = window_height - 100  # Adjust this value as needed
+            available_height = window_height - ElementSize.RESPONSE_MARGIN_BOTTOM  # Adjust this value as needed
             
             # Set dynamic min/max based on available space
             min_response_height = min(ElementSize.RESPONSE_MIN_HEIGHT, available_height * 0.3)
