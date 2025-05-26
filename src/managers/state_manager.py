@@ -1,7 +1,7 @@
 import logging
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 
-from streaming_worker import StreamingWorker
+from utils.streaming_worker import StreamingWorker
 from utils.constants import Timing
 
 

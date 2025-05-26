@@ -7,10 +7,10 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence
 
-from config import Config
-from api_client import ApiClient
+from utils.config import Config
+from utils.api_client import ApiClient
 from managers.conversation_manager import ConversationManager
-from settings_dialog import SettingsDialog
+from utils.settings_dialog import SettingsDialog
 from managers.animation_manager import AnimationManager
 from managers.styles import StyleManager
 from managers.hotkey_manager import HotkeyManager
