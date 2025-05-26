@@ -1,5 +1,6 @@
 import logging
 from utils.constants import BackgroundColors, Theme
+from PyQt5.QtGui import QFont, QFontDatabase
 
 class StyleManager:
     """Manages all UI styles for the application."""
@@ -348,21 +349,24 @@ class StyleManager:
         """Get response area styles."""
         colors = self.get_theme_colors()
         self.logger.debug("Generated response area styles")
+
+        emoji_font = self.get_emoji_font()
+        font_size = emoji_font.pointSize()
+        
+        # Use the font families chain for better emoji support
+        font_families = getattr(self, '_font_families', "'Ubuntu', 'Noto Color Emoji'")
+        
         return f"""
         #responseArea {{
             background: {colors['response_bg']};
             border: 1px solid rgba(79, 156, 249, 0.2);
             border-radius: 15px;
             padding: 20px;
-            font-size: 14px;
+            font-size: {font_size}px;
             line-height: 1.6;
             color: {colors['text_color']};
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: {font_families};
         }}
-        #responseArea:focus {{
-            outline: none;
-        }}
-
         /* Modern thin scrollbar styles */
         #responseArea QScrollBar:vertical {{
             background: transparent;
@@ -483,3 +487,53 @@ class StyleManager:
                 padding: 8px 16px;
             }}
             """
+        
+    def get_emoji_font(self):
+        """Get emoji-compatible font for use in other components."""
+        font = QFont()
+        
+        # For text content, prioritize readability fonts
+        text_fonts = [
+            "Ubuntu",              
+            "Noto Sans",           
+            "DejaVu Sans",         
+            "Liberation Sans",     
+            "Cantarell",          
+            "Roboto",             
+            "Segoe UI",           
+            "Arial",              
+        ]
+        
+        # For emoji support, we need color emoji fonts
+        emoji_fonts = [
+            "Noto Color Emoji",    # Primary Linux color emoji
+            "Segoe UI Emoji",      # Windows
+            "Apple Color Emoji",   # macOS
+            "Twemoji",            # Web fallback
+        ]
+        
+        font_db = QFontDatabase()
+        
+        # First, set a good text font
+        for font_name in text_fonts:
+            if font_name in font_db.families():
+                font.setFamily(font_name)
+                self.logger.debug(f"Selected text font: {font_name}")
+                break
+        
+        # Build font families string to include emoji fallbacks
+        available_fonts = []
+        for font_name in text_fonts + emoji_fonts:
+            if font_name in font_db.families():
+                available_fonts.append(f"'{font_name}'")
+        
+        font_families = ", ".join(available_fonts)
+        self.logger.debug(f"Font fallback chain: {font_families}")
+        
+        font.setPointSize(14)
+        font.setStyleStrategy(QFont.PreferAntialias)
+        
+        # Store the font families string for CSS use
+        self._font_families = font_families
+        
+        return font
