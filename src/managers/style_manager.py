@@ -128,7 +128,24 @@ class StyleManager:
         #settingsInputField::placeholder {{
             color: {colors['placeholder']};
         }}
-        
+
+        #settingsTextArea {{
+            padding: 12px 16px;
+            border: 2px solid {colors['border_normal']};
+            border-radius: 12px;
+            font-size: 14px;
+            background: {colors['field_bg']};
+            color: {colors['text_color']};
+            min-height: 80px;
+            font-family: monospace;
+        }}
+
+        #settingsTextArea:focus {{
+            border: 2px solid {colors['border_focus']};
+            outline: none;
+            background: {colors['field_bg_focus']};
+        }}
+                
         QComboBox {{
             padding: 12px 16px;
             border: 2px solid {colors['border_normal']};

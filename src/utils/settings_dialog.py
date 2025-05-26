@@ -1,6 +1,6 @@
 import logging
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox)
+                            QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox, QTextEdit, QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSignal
 from managers.style_manager import StyleManager
 from utils.about_dialog import AboutDialog
@@ -85,20 +85,24 @@ class SettingsDialog(QDialog):
         model_label.setObjectName("fieldLabel")
         form_layout.addRow(model_label, self.model_input)
 
-        # System Prompt
-        self.system_prompt_input = QLineEdit()
-        system_prompt_value = self.config.get('system_prompt', LLM.DEFAULT_SYSTEM_PROMPT)
-        self.system_prompt_input.setText(system_prompt_value)
-        self.logger.debug(f"System prompt loaded: {system_prompt_value[:50]}...")
-        self.system_prompt_input.setObjectName("settingsInputField")
-        self.system_prompt_input.setPlaceholderText("Enter system prompt for the LLM")
-        self.system_prompt_input.setMinimumHeight(35)
-        
+        # System Prompt - use a container widget for better spacing
         system_prompt_label = QLabel("System Prompt:")
         system_prompt_label.setObjectName("fieldLabel")
+        
+        self.system_prompt_input = QTextEdit()
+        system_prompt_value = self.config.get('system_prompt', LLM.DEFAULT_SYSTEM_PROMPT)
+        self.system_prompt_input.setPlainText(system_prompt_value)
+        self.logger.debug(f"System prompt loaded: {system_prompt_value[:50]}...")
+        self.system_prompt_input.setObjectName("settingsTextArea")
+        self.system_prompt_input.setPlaceholderText("Enter system prompt for the LLM")
+        self.system_prompt_input.setMinimumHeight(100)
+        self.system_prompt_input.setMaximumHeight(150)
+        # Set size policy to allow expansion
+        self.system_prompt_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        
+        # Add to form layout properly
         form_layout.addRow(system_prompt_label, self.system_prompt_input)
-        
-        
+                
         # Request Delay
         self.delay_input = QLineEdit()
         delay_value = self.config.get('request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)
