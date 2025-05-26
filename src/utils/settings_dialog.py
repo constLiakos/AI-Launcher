@@ -8,194 +8,255 @@ from utils.constants import LLM, Conversation, Hotkey, SettingsDialogSize, Text,
 from utils.version import VERSION
 
 class SettingsDialog(QDialog):
-    
     theme_changed = pyqtSignal(str)
-
-    def __init__(self, logger:logging, config, parent=None):
+    
+    def __init__(self, logger: logging.Logger, config, parent=None):
         super().__init__(parent)
         self.logger = logger.getChild('settings_dialogue')
         self.config = config
         self.style_manager = StyleManager(logger)
         self.about_dialog = None
-        self.setup_ui()
-        self.apply_styles()
+        
+        # Store original theme for comparison
         self.original_theme = self.config.get('theme', Theme.DEFAULT_THEME)
         self.logger.debug(f"SettingsDialog initialized with theme: {self.original_theme}")
+        
+        self.setup_ui()
+        self.apply_styles()
 
     def setup_ui(self):
         self.logger.debug("Setting up SettingsDialog UI")
-        self.setWindowTitle(Text.SETTINGS_DIALOGUE_LABEL)
-        self.setFixedSize(SettingsDialogSize.WINDOW_WIDTH, SettingsDialogSize.WINDOW_HEIGHT)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+        self._setup_window()
         
         # Main layout
         layout = QVBoxLayout()
-        layout.setContentsMargins(SettingsDialogSize.MAIN_LAYOUT_MARGIN, SettingsDialogSize.MAIN_LAYOUT_MARGIN, SettingsDialogSize.MAIN_LAYOUT_MARGIN, SettingsDialogSize.MAIN_LAYOUT_MARGIN)
+        layout.setContentsMargins(
+            SettingsDialogSize.MAIN_LAYOUT_MARGIN, SettingsDialogSize.MAIN_LAYOUT_MARGIN,
+            SettingsDialogSize.MAIN_LAYOUT_MARGIN, SettingsDialogSize.MAIN_LAYOUT_MARGIN
+        )
         layout.setSpacing(SettingsDialogSize.MAIN_LAYOUT_SPACING)
         
-        # Title
+        # Add components
+        layout.addWidget(self._create_title_label())
+        
+        scroll_area = self._create_scroll_area()
+        layout.addWidget(scroll_area)
+        
+        layout.addLayout(self._create_button_layout())
+        layout.setStretchFactor(scroll_area, 1)
+        
+        self.setLayout(layout)
+        self.logger.debug("SettingsDialog UI setup completed")
+
+    def _setup_window(self):
+        """Configure window properties."""
+        self.setWindowTitle(Text.SETTINGS_DIALOGUE_LABEL)
+        self.setFixedSize(SettingsDialogSize.WINDOW_WIDTH, SettingsDialogSize.WINDOW_HEIGHT)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+
+    def _create_title_label(self):
+        """Create and configure title label."""
         title_label = QLabel(Text.SETTINGS_DIALOGUE_LABEL)
         title_label.setObjectName("titleLabel")
         title_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(title_label)
+        return title_label
 
-        # Create scroll area for the form
+    def _create_scroll_area(self):
+        """Create scroll area with form layout."""
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         scroll_area.setFrameShape(QFrame.NoFrame)
-        #  Set size policy for scroll area
         scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        # Create widget to hold the form
+        
         form_widget = QWidget()
         form_widget.setObjectName("formWidget")
-        form_layout = QFormLayout(form_widget)
+        form_layout = self._create_form_layout(form_widget)
+        
+        scroll_area.setWidget(form_widget)
+        return scroll_area
+
+    def _create_form_layout(self, parent_widget):
+        """Create and populate form layout with all settings fields."""
+        form_layout = QFormLayout(parent_widget)
         form_layout.setSpacing(SettingsDialogSize.FORM_LAYOUT_SPACING)
         form_layout.setVerticalSpacing(15)
         form_layout.setLabelAlignment(Qt.AlignLeft)
-        
-        # API Key
-        self.api_key_input = QLineEdit()
-        api_key_value = self.config.get('api_key', '')
-        self.api_key_input.setText(api_key_value)
-        self.logger.debug(f"API key loaded: {'***' if self.config.get('api_key', '') else 'empty'}")
-        self.api_key_input.setEchoMode(QLineEdit.Password)
-        self.api_key_input.setObjectName("settingsInputField")
-        self.api_key_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_API_KEY_PLACEHOLDER)
-        self.api_key_input.setMinimumHeight(35)
-        api_key_label = QLabel(Text.SETTINGS_DIALOGUE_API_KEY_LABEL)
-        api_key_label.setObjectName("fieldLabel")
-        form_layout.addRow(api_key_label, self.api_key_input)
-        
-        # API Base URL
-        self.api_base_input = QLineEdit()
-        api_base_value = self.config.get('api_base', LLM.DEFAULT_API_BASE)
-        self.api_base_input.setText(api_base_value)
-        self.logger.debug(f"API base URL loaded: {api_base_value}")
-        self.api_base_input.setObjectName("settingsInputField")
-        self.api_base_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_API_BASE_PLACEHOLDER)
-        self.api_base_input.setMinimumHeight(35)
-        
-        api_base_label = QLabel(Text.SETTINGS_DIALOGUE_API_BASE_LABEL)
-        api_base_label.setObjectName("fieldLabel")
-        form_layout.addRow(api_base_label, self.api_base_input)
-        
-        # Model Name
-        self.model_input = QLineEdit()
-        model_value = self.config.get('model', LLM.DEFAULT_LLM_MODEL)
-        self.model_input.setText(model_value)
-        self.logger.debug(f"Model loaded: {model_value}")
-        self.model_input.setObjectName("settingsInputField")
-        self.model_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_LLM_MODEL_PLACEHOLDER)
-        self.model_input.setMinimumHeight(35)
-        
-        model_label = QLabel("Model:")
-        model_label.setObjectName("fieldLabel")
-        form_layout.addRow(model_label, self.model_input)
-
-        # System Prompt - use a container widget for better spacing
-        self.system_prompt_input = QTextEdit()
-        system_prompt_value = self.config.get('system_prompt', LLM.DEFAULT_SYSTEM_PROMPT)
-        self.system_prompt_input.setPlainText(system_prompt_value)
-        self.logger.debug(f"System prompt loaded: {system_prompt_value[:50]}...")
-        self.system_prompt_input.setObjectName("settingsTextArea")
-        self.system_prompt_input.setPlaceholderText("Enter system prompt for the LLM")
-        self.system_prompt_input.setMinimumHeight(100)
-        self.system_prompt_input.setMaximumHeight(150)
-        self.system_prompt_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-        form_layout.addRow("System Prompt:", self.system_prompt_input)
-        
-        # Set stretch factor to prevent it from taking too much space
         form_layout.setRowWrapPolicy(QFormLayout.DontWrapRows)
-                        
-        # Request Delay
-        self.delay_input = QLineEdit()
-        delay_value = self.config.get('request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)
-        self.delay_input.setText(str(delay_value))
-        self.logger.debug(f"Request delay loaded: {delay_value}")
-        self.delay_input.setObjectName("settingsInputField")
-        self.delay_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_REQUEST_DELAY_PLACEHOLDER_PLACEHOLDER)
-        self.delay_input.setMinimumHeight(35)
         
-        delay_label = QLabel(Text.SETTINGS_DIALOGUE_REQUEST_DELAY_PLACEHOLDER_LABEL)
-        delay_label.setObjectName("fieldLabel")
-        form_layout.addRow(delay_label, self.delay_input)
-
-        # Hotkey Configuration
-        self.hotkey_input = QLineEdit()
-        hotkey_value = self.config.get('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)
-        self.hotkey_input.setText(hotkey_value)
-        self.logger.debug(f"Hotkey loaded: {hotkey_value}")
-        self.hotkey_input.setObjectName("settingsInputField")
-        self.hotkey_input.setPlaceholderText(Text.SETTINGS_DIALOGUE_HOTKEY_TOGGLE_MINIMIZE_WINDOW_PLACEHOLDER)
-        self.hotkey_input.setMinimumHeight(35)
+        # Define field configurations
+        field_configs = [
+            {
+                'widget': self._create_api_key_field(),
+                'label': Text.SETTINGS_DIALOGUE_API_KEY_LABEL,
+                'attr_name': 'api_key_input'
+            },
+            {
+                'widget': self._create_api_base_field(),
+                'label': Text.SETTINGS_DIALOGUE_API_BASE_LABEL,
+                'attr_name': 'api_base_input'
+            },
+            {
+                'widget': self._create_model_field(),
+                'label': "Model:",
+                'attr_name': 'model_input'
+            },
+            {
+                'widget': self._create_system_prompt_field(),
+                'label': "System Prompt:",
+                'attr_name': 'system_prompt_input'
+            },
+            {
+                'widget': self._create_delay_field(),
+                'label': Text.SETTINGS_DIALOGUE_REQUEST_DELAY_PLACEHOLDER_LABEL,
+                'attr_name': 'delay_input'
+            },
+            {
+                'widget': self._create_hotkey_field(),
+                'label': Text.SETTINGS_DIALOGUE_HOTKEY_TOGGLE_MINIMIZE_WINDOW_LABEL,
+                'attr_name': 'hotkey_input'
+            },
+            {
+                'widget': self._create_clear_previous_checkbox(),
+                'label': Text.SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_LABEL,
+                'attr_name': 'clear_previous_checkbox'
+            },
+            {
+                'widget': self._create_clear_history_checkbox(),
+                'label': Text.SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_LABEL,
+                'attr_name': 'clear_history_on_minimize_checkbox'
+            },
+            {
+                'widget': self._create_message_history_field(),
+                'label': "Message History Limit:",
+                'attr_name': 'message_history_input'
+            },
+            {
+                'widget': self._create_theme_combo(),
+                'label': "Theme:",
+                'attr_name': 'theme_combo'
+            }
+        ]
         
-        hotkey_label = QLabel(Text.SETTINGS_DIALOGUE_HOTKEY_TOGGLE_MINIMIZE_WINDOW_LABEL)
-        hotkey_label.setObjectName("fieldLabel")
-        form_layout.addRow(hotkey_label, self.hotkey_input)
-
-        # Clear Previous Response Checkbox
-        self.clear_previous_checkbox = QCheckBox(Text.SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_MESSAGE)
-        clear_previous_value = self.config.get('clear_last_response_on_minimize', Conversation.DEFAULT_CLEAR_LAST_RESPONSE_ON_MINIMIZE)
-        self.clear_previous_checkbox.setChecked(clear_previous_value)
-        self.logger.debug(f"Clear previous response loaded: {clear_previous_value}")
-        self.clear_previous_checkbox.setObjectName("settingsCheckBox")
-        self.clear_previous_checkbox.setMinimumHeight(35)
+        # Add all fields to form
+        for config in field_configs:
+            label = QLabel(config['label'])
+            label.setObjectName("fieldLabel")
+            setattr(self, config['attr_name'], config['widget'])
+            form_layout.addRow(label, config['widget'])
         
-        clear_label = QLabel(Text.SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_LABEL)
-        clear_label.setObjectName("fieldLabel")
-        form_layout.addRow(clear_label, self.clear_previous_checkbox)
+        return form_layout
 
-        # Clear History on Hide Checkbox
-        self.clear_history_on_minimize_checkbox = QCheckBox(Text.SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_MESSAGE)
-        clear_history_on_minimize_value = self.config.get('clear_history_on_minimize', Conversation.DEFAULT_CLEAR_HISTORY_ON_MINIMIZE)
-        self.clear_history_on_minimize_checkbox.setChecked(clear_history_on_minimize_value)
-        self.logger.debug(f"Clear history on hide loaded: {clear_history_on_minimize_value}")
-        self.clear_history_on_minimize_checkbox.setObjectName("settingsCheckBox")
-        self.clear_history_on_minimize_checkbox.setMinimumHeight(35)
-        
-        clear_history_label = QLabel(Text.SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_LABEL)
-        clear_history_label.setObjectName("fieldLabel")
-        form_layout.addRow(clear_history_label, self.clear_history_on_minimize_checkbox)
+    def _create_input_field(self, config_key, default_value, placeholder, object_name="settingsInputField"):
+        """Create a standard input field with common properties."""
+        field = QLineEdit()
+        value = self.config.get(config_key, default_value)
+        field.setText(str(value))
+        field.setObjectName(object_name)
+        field.setPlaceholderText(placeholder)
+        field.setMinimumHeight(35)
+        self.logger.debug(f"{config_key} loaded: {value}")
+        return field
 
-        # Message History Limit
-        self.message_history_input = QLineEdit()
-        history_limit_value = self.config.get('message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT)
-        self.message_history_input.setText(str(history_limit_value))
-        self.logger.debug(f"Message history limit loaded: {history_limit_value}")
-        self.message_history_input.setObjectName("settingsInputField")
-        self.message_history_input.setPlaceholderText("Enter number of messages to keep (1-100)")
-        self.message_history_input.setMinimumHeight(35)
-        
-        history_label = QLabel("Message History Limit:")
-        history_label.setObjectName("fieldLabel")
-        form_layout.addRow(history_label, self.message_history_input)
+    def _create_api_key_field(self):
+        """Create API key input field."""
+        field = self._create_input_field(
+            'api_key', '', Text.SETTINGS_DIALOGUE_API_KEY_PLACEHOLDER
+        )
+        field.setEchoMode(QLineEdit.Password)
+        # Log masked value for security
+        api_key_value = self.config.get('api_key', '')
+        self.logger.debug(f"API key loaded: {'***' if api_key_value else 'empty'}")
+        return field
 
-        # Theme Selection
-        self.theme_combo = QComboBox()
-        self.theme_combo.addItems([Theme.CLASSIC, Theme.DARK])
+    def _create_api_base_field(self):
+        """Create API base URL input field."""
+        return self._create_input_field(
+            'api_base', LLM.DEFAULT_API_BASE, Text.SETTINGS_DIALOGUE_API_BASE_PLACEHOLDER
+        )
+
+    def _create_model_field(self):
+        """Create model name input field."""
+        return self._create_input_field(
+            'model', LLM.DEFAULT_LLM_MODEL, Text.SETTINGS_DIALOGUE_LLM_MODEL_PLACEHOLDER
+        )
+
+    def _create_system_prompt_field(self):
+        """Create system prompt text area."""
+        field = QTextEdit()
+        value = self.config.get('system_prompt', LLM.DEFAULT_SYSTEM_PROMPT)
+        field.setPlainText(value)
+        field.setObjectName("settingsTextArea")
+        field.setPlaceholderText("Enter system prompt for the LLM")
+        field.setMinimumHeight(100)
+        field.setMaximumHeight(150)
+        field.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.logger.debug(f"System prompt loaded: {value[:50]}...")
+        return field
+
+    def _create_delay_field(self):
+        """Create request delay input field."""
+        return self._create_input_field(
+            'request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS,
+            Text.SETTINGS_DIALOGUE_REQUEST_DELAY_PLACEHOLDER_PLACEHOLDER
+        )
+
+    def _create_hotkey_field(self):
+        """Create hotkey input field."""
+        return self._create_input_field(
+            'hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW,
+            Text.SETTINGS_DIALOGUE_HOTKEY_TOGGLE_MINIMIZE_WINDOW_PLACEHOLDER
+        )
+
+    def _create_checkbox_field(self, config_key, default_value, text, object_name="settingsCheckBox"):
+        """Create a standard checkbox field."""
+        checkbox = QCheckBox(text)
+        value = self.config.get(config_key, default_value)
+        checkbox.setChecked(value)
+        checkbox.setObjectName(object_name)
+        checkbox.setMinimumHeight(35)
+        self.logger.debug(f"{config_key} loaded: {value}")
+        return checkbox
+
+    def _create_clear_previous_checkbox(self):
+        """Create clear previous response checkbox."""
+        return self._create_checkbox_field(
+            'clear_last_response_on_minimize',
+            Conversation.DEFAULT_CLEAR_LAST_RESPONSE_ON_MINIMIZE,
+            Text.SETTINGS_DIALOGUE_CLEAR_LAST_RESPONSE_ON_MINIMIZE_MESSAGE
+        )
+
+    def _create_clear_history_checkbox(self):
+        """Create clear history on minimize checkbox."""
+        return self._create_checkbox_field(
+            'clear_history_on_minimize',
+            Conversation.DEFAULT_CLEAR_HISTORY_ON_MINIMIZE,
+            Text.SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_MESSAGE
+        )
+
+    def _create_message_history_field(self):
+        """Create message history limit input field."""
+        return self._create_input_field(
+            'message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT,
+            "Enter number of messages to keep (1-100)"
+        )
+
+    def _create_theme_combo(self):
+        """Create theme selection combo box."""
+        combo = QComboBox()
+        combo.addItems([Theme.CLASSIC, Theme.DARK])
         current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
-        theme_index = self.theme_combo.findText(current_theme)
+        theme_index = combo.findText(current_theme)
         if theme_index >= 0:
-            self.theme_combo.setCurrentIndex(theme_index)
+            combo.setCurrentIndex(theme_index)
+        combo.setObjectName("settingsComboBox")
+        combo.setMinimumHeight(35)
         self.logger.debug(f"Theme loaded: {current_theme}")
-        self.theme_combo.setObjectName("settingsComboBox")
-        self.theme_combo.setMinimumHeight(35)
-        
-        theme_label = QLabel("Theme:")
-        theme_label.setObjectName("fieldLabel")
-        form_layout.addRow(theme_label, self.theme_combo)
-        
-        layout.addLayout(form_layout)        
-        layout.addStretch()
-        
-        # Set the form widget as the scroll area's widget
-        scroll_area.setWidget(form_widget)
-        layout.addWidget(scroll_area)
-        
-        # Button layout stays outside the scroll area
+        return combo
+
+    def _create_button_layout(self):
+        """Create button layout with About, Cancel, and Save buttons."""
         button_layout = QHBoxLayout()
         button_layout.setSpacing(SettingsDialogSize.BUTTON_LAYOUT_SPACING)
         
@@ -205,6 +266,7 @@ class SettingsDialog(QDialog):
         about_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
         about_btn.clicked.connect(self.show_about_dialog)
         
+        # Cancel and Save buttons (right side)
         cancel_btn = QPushButton("Cancel")
         cancel_btn.setObjectName("cancelButton")
         cancel_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
@@ -220,33 +282,26 @@ class SettingsDialog(QDialog):
         button_layout.addWidget(cancel_btn)
         button_layout.addWidget(save_btn)
         
-        layout.addLayout(button_layout)
-        layout.setStretchFactor(scroll_area, 1)  # Takes remaining space
+        return button_layout
 
-        self.setLayout(layout)
-        
-        self.logger.debug("SettingsDialog UI setup completed")
-        
     def apply_styles(self):
         """Apply styles using StyleManager."""
         self.logger.debug("Applying styles to SettingsDialog")
         
-        # Apply dialog-level styles
-        
-        # Apply individual widget styles directly
+        # Apply input field styles
         input_style = self.style_manager.get_settings_input_field_style()
-        self.api_key_input.setStyleSheet(input_style)
-        self.api_base_input.setStyleSheet(input_style)
-        self.model_input.setStyleSheet(input_style)
-        self.delay_input.setStyleSheet(input_style)
-        self.hotkey_input.setStyleSheet(input_style)
-        self.message_history_input.setStyleSheet(input_style)
+        input_fields = [
+            self.api_key_input, self.api_base_input, self.model_input,
+            self.delay_input, self.hotkey_input, self.message_history_input
+        ]
         
-        # Apply text area style
+        for field in input_fields:
+            field.setStyleSheet(input_style)
+        
+        # Apply specialized styles
         self.system_prompt_input.setStyleSheet(self.style_manager.get_settings_textarea_style())
-        
-        # Apply combo box style
         self.theme_combo.setStyleSheet(self.style_manager.get_settings_combobox_style())
+
 
     def save_settings(self):
         self.logger.info("Saving settings")
