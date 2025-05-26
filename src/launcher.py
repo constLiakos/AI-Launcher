@@ -327,11 +327,11 @@ class Launcher(QMainWindow):
         # Response area (appears below input, initially hidden)
         self.response_area = QTextBrowser()
         self.response_area.setObjectName("responseArea")
-        self.response_area.setReadOnly(True)
-        self.response_area.setVisible(False)
+        self.response_area.setAcceptRichText(True)
         self.response_area.setOpenExternalLinks(True)
 
         self.setup_emoji_font(self.response_area)
+        self.response_area.setVisible(False)
 
         self.response_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         container_layout.addWidget(self.response_area)
