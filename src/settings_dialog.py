@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
 from PyQt5.QtCore import Qt, pyqtSignal
 from managers.styles import StyleManager
 from utils.constants import LLM, Conversation, Hotkey, SettingsDialogSize, Text, Theme, Timing
+from utils.version import VERSION
 
 class SettingsDialog(QDialog):
     
@@ -183,6 +184,12 @@ class SettingsDialog(QDialog):
         button_layout.addWidget(save_btn)
         
         layout.addLayout(button_layout)
+
+        version_label = QLabel(f"Version {VERSION}")
+        version_label.setObjectName("versionLabel")
+        version_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(version_label)
+
         self.setLayout(layout)
 
         self.logger.debug("SettingsDialog UI setup completed")
