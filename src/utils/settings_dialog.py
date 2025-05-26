@@ -338,7 +338,10 @@ class SettingsDialog(QDialog):
         self.logger.debug(f"Model saved: {model}")
 
         # System Prompt
-        system_prompt = self.system_prompt_input.toPlainText()
+        system_prompt = self.system_prompt_input.toPlainText().strip()
+        if not system_prompt:
+            system_prompt = LLM.DEFAULT_SYSTEM_PROMPT
+            self.logger.debug("Empty system prompt, using default.")
         self.config.set('system_prompt', system_prompt)
         self.logger.debug(f"System prompt saved: {system_prompt[:50]}...")
             
