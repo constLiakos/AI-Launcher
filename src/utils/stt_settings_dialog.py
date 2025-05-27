@@ -1,12 +1,15 @@
 import logging
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                             QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QSizePolicy, QWidget)
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal, QTimer
+
 from managers.style_manager import StyleManager
 # Assuming you will add STT related constants here
 from utils.constants import Text, STTDialogSize, STT # Placeholder for STT constants
 
 class STTSettingsDialog(QDialog):
+    settings_changed = pyqtSignal()
+
     def __init__(self, logger: logging.Logger, config, parent=None):
         super().__init__(parent)
         self.logger = logger.getChild('stt_settings_dialog')
@@ -152,35 +155,47 @@ class STTSettingsDialog(QDialog):
 
     def save_stt_settings(self):
         self.logger.info("Saving STT settings")
-        
+
         stt_enabled = self.enable_stt_checkbox.isChecked()
         self.config.set('stt_enabled', stt_enabled)
         self.logger.debug(f"STT enabled saved: {stt_enabled}")
 
+        stt_api_key = self.stt_api_key_input.text()
+        stt_api_base = self.stt_api_base_input.text()
+        stt_model = self.stt_model_input.text()
+        stt_hotkey = self.stt_hotkey_input.text().strip()
+
         if stt_enabled:
-            stt_api_key = self.stt_api_key_input.text()
+            # Check if any essential fields are not set
+            if not stt_api_key or not stt_api_base or not stt_model or not self.stt_request_timeout_input.text():
+                self.show_message("Please fill in all required STT fields.", 5000)
+                self.logger.warning("Required STT fields not set, saving cancelled.")
+                return  # Cancel the save operation
+                
             self.config.set('stt_api_key', stt_api_key)
             self.logger.debug(f"STT API key saved: {'***' if stt_api_key else 'empty'}")
 
-            self.config.set('stt_api_base', self.stt_api_base_input.text())
-            self.config.set('stt_model', self.stt_model_input.text())
-            self.config.set('stt_hotkey', self.stt_hotkey_input.text().strip())
-            try:
-                timeout = int(self.stt_request_timeout_input.text())
-                self.config.set('stt_request_timeout', timeout)
-            except ValueError:
-                self.logger.warning("Invalid STT request timeout value, using default.")
-                default_timeout = STT.DEFAULT_REQUEST_TIMEOUT if hasattr(STT, 'DEFAULT_REQUEST_TIMEOUT') else 30
-                self.config.set('stt_request_timeout', default_timeout)
-                self.stt_request_timeout_input.setText(str(default_timeout)) # Update UI with default
-        else:
-            # Optionally clear or retain disabled fields
-            self.config.set('stt_api_key', '') # Example: clear if disabled
-            self.config.set('stt_api_base', STT.DEFAULT_API_BASE if hasattr(STT, 'DEFAULT_API_BASE') else '')
-            self.config.set('stt_model', STT.DEFAULT_MODEL if hasattr(STT, 'DEFAULT_MODEL') else '')
-            self.config.set('stt_hotkey', STT.DEFAULT_HOTKEY if hasattr(STT, 'DEFAULT_HOTKEY') else '')
-            self.config.set('stt_request_timeout', STT.DEFAULT_REQUEST_TIMEOUT if hasattr(STT, 'DEFAULT_REQUEST_TIMEOUT') else 30)
-            self.logger.debug("STT disabled, related fields reset to default/empty.")
+            if stt_enabled:
+                self.config.set('stt_api_base', stt_api_base)
+                self.config.set('stt_model', stt_model)
+                self.config.set('stt_hotkey', stt_hotkey)
+                
+                try:
+                    timeout = int(self.stt_request_timeout_input.text())
+                    self.config.set('stt_request_timeout', timeout)
+                except ValueError:
+                    self.logger.warning("Invalid STT request timeout value, using default.")
+                    default_timeout = STT.DEFAULT_REQUEST_TIMEOUT if hasattr(STT, 'DEFAULT_REQUEST_TIMEOUT') else 30
+                    self.config.set('stt_request_timeout', default_timeout)
+                    self.stt_request_timeout_input.setText(str(default_timeout)) # Update UI with default
+            else:
+                # There is no need to reset fields, just save the enabled state
+                self.logger.debug("STT disabled; no fields reset.")
+
+
+        self.config.set('stt_enabled', stt_enabled)
+
+        self.settings_changed.emit()
 
         self.logger.info("STT settings saved successfully")
         self.hide()
@@ -206,3 +221,28 @@ class STTSettingsDialog(QDialog):
         super().showEvent(event)
         self.load_settings() # Reload settings each time it's shown
         self.logger.debug("STTSettingsDialog shown and settings reloaded.")
+
+    def show_message(self, message, duration):
+        # Create a temporary QLabel to show the message
+        message_label = QLabel(message, self)
+        message_label.setAlignment(Qt.AlignCenter)
+        
+        # Apply modern style to the message label
+        message_label.setStyleSheet("""
+            background-color: #f8d7da;  /* Light red background */
+            color: #721c24;  /* Dark red text */
+            border: 1px solid #f5c6cb;  /* Border color */
+            border-radius: 5px;  /* Rounded corners */
+            font-weight: bold;  /* Make the text bold */
+            padding: 10px;  /* Padding around text */
+            margin: 0 auto;  /* Center the label horizontally */
+            width: calc(100% - 20px);   /* Width adjusted for padding */
+        """)
+
+        # Set geometry to position the message label below the title
+        title_height = self.layout().itemAt(0).widget().height()  # Height of the title label
+        message_label.setGeometry(10, title_height + 10, self.width() - 20, 40)  # Position it below the title
+        
+        message_label.show()
+        
+        QTimer.singleShot(duration, message_label.hide)  # Hide after the specified duration

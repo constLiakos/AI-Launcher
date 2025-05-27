@@ -436,14 +436,15 @@ class SettingsDialog(QDialog):
         """Show the STT Settings dialog."""
         self.logger.debug("Opening STT Settings dialog")
         if self.stt_settings_dialog is None:
-            # Pass the main application logger (self.logger.parent) and config
             self.stt_settings_dialog = STTSettingsDialog(self.logger.parent, self.config, self)
-        
-        current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
-        self.stt_settings_dialog.style_manager.set_theme(current_theme)
-        self.stt_settings_dialog.apply_styles() # Re-apply styles based on current theme
-        self.stt_settings_dialog.load_settings() # Load current STT settings
+            current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
+            self.stt_settings_dialog.style_manager.set_theme(current_theme)
+            self.stt_settings_dialog.apply_styles() 
+            self.stt_settings_dialog.load_settings()
 
-        self.stt_settings_dialog.show()
-        self.stt_settings_dialog.raise_()
-        self.stt_settings_dialog.activateWindow()
+            # Connect the settings_changed signal to the desired slot in Launcher
+            self.stt_settings_dialog.settings_changed.connect(self.parent().on_stt_settings_changed)
+
+            self.stt_settings_dialog.show()
+            self.stt_settings_dialog.raise_()
+            self.stt_settings_dialog.activateWindow()

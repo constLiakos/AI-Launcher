@@ -4,9 +4,10 @@ from pathlib import Path
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                              QLineEdit, QPushButton, QLabel, QTextEdit, QFrame,
                              QApplication, QAction, QGraphicsDropShadowEffect, QSystemTrayIcon, QMenu, QAction, QShortcut, QSizePolicy, QTextBrowser)
-from PyQt5.QtCore import Qt, QTimer, pyqtSlot
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence, QFont, QFontDatabase
+from PyQt5.QtCore import Qt, QTimer, QSize, pyqtSlot
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence, QFont, QFontDatabase, QIcon
 
+from managers.recording_manager import Recording_Manager
 from utils.config import Config
 from utils.api_client import ApiClient
 from managers.conversation_manager import ConversationManager
@@ -14,9 +15,10 @@ from utils.settings_dialog import SettingsDialog
 from managers.animation_manager import AnimationManager
 from managers.style_manager import StyleManager
 from managers.hotkey_manager import HotkeyManager
-from utils.constants import Conversation, ElementSize, Style, Theme, WindowSize, Colors, Text, Timing, TrayIcon
+from utils.constants import STT, Conversation, ElementSize, Style, Theme, WindowSize, Colors, Text, Timing, TrayIcon
 from utils.markdown_render import MarkdownRenderer
 from managers.state_manager import StateManager
+from utils.stt_api_client import SttApiClient
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +55,7 @@ class Launcher(QMainWindow):
         self.state_manager = StateManager(self.config, logger)
         self.markdown_render = MarkdownRenderer(logger)
         self.hotkey_manager = HotkeyManager(logger, self.show_window, self.config)
+        self.recording_manager = Recording_Manager(logger, state_manager=self.state_manager, config=self.config)
 
 
         # Set current theme
@@ -69,7 +72,7 @@ class Launcher(QMainWindow):
         self.state_manager.expanded_changed.connect(
             self.on_expanded_changed)
         self.state_manager.stt_state_changed.connect(self.on_stt_state_changed)
-
+        self.state_manager.recording_completed_sg.connect(self.on_recording_completed)
 
         # Add a timer to debounce position saving (prevent excessive saves during dragging)
         self.position_save_timer = QTimer()
@@ -78,6 +81,12 @@ class Launcher(QMainWindow):
 
         # UI setup
         self.setup_ui()
+
+        # Initialize STT API client
+        self.stt_api_client = None
+        self.stt_configure()
+        self.update_stt_button_visibility()
+
         self.apply_modern_style()
 
         # Restore window position
@@ -95,6 +104,19 @@ class Launcher(QMainWindow):
         self.resize_direction = None
         self.resize_start_pos = None
         self.resize_start_geometry = None
+
+    def stt_configure(self):
+        # Initialize STT API client
+        self.stt_enabled = self.config.get('stt_enabled', STT.DEFAULT_ENABLED)
+        if self.stt_enabled:
+            try:
+                if self.stt_api_client == None:
+                    self.stt_api_client = SttApiClient(logger, self.config)       
+            except Exception as e:
+                logger.error(f"Error in stt_api_client, cannot be created:  {e}")
+                self.stt_enabled = False
+        else:
+            self.stt_enabled = False
 
     def get_resize_direction(self, pos):
         """Determine resize direction based on mouse position."""
@@ -316,11 +338,13 @@ class Launcher(QMainWindow):
         input_layout.addWidget(self.input_field)
 
         # Speech-to-text button
-        self.stt_button = QPushButton("🎤")
+        self.stt_button = QPushButton()
         self.stt_button.setObjectName("sttButton")
+        self.stt_button.setIcon(QIcon("src/assets/mic_idle.png"))  # Add this li
+        self.stt_button.setIconSize(QSize(24, 24))  # Adjust size as needed
         self.stt_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
-        self.stt_button.clicked.connect(self.toggle_recording)
+        self.stt_button.clicked.connect(self.recording_manager.toggle_recording)
         # self.stt_button.setToolTip("Speech to Text")
         input_layout.addWidget(self.stt_button)
 
@@ -373,6 +397,13 @@ class Launcher(QMainWindow):
 
         # Setup keyboard shortcuts
         self.setup_shortcuts()
+
+
+    def update_stt_button_visibility(self):
+        """Update mic button visibility based on STT enabled state."""
+        self.stt_enabled = self.config.get('stt_enabled', STT.DEFAULT_ENABLED)
+        self.stt_button.setVisible(self.stt_enabled)
+        self.stt_button.setEnabled(self.stt_enabled)
 
     def set_input_state(self, state):
         """Set visual state of input field: 'normal', 'thinking' """
@@ -544,17 +575,33 @@ class Launcher(QMainWindow):
     def on_stt_state_changed(self, state):
         """Handle STT state changes."""
         logger.debug(f"STT state changed to: {state}")
-        self.update_stt_button_style(state)
 
-    def update_stt_button_style(self, state):
-        """Update STT button appearance based on state."""
         if state == "recording":
             self.stt_button.setObjectName("sttButtonRecording")
-        else:
+            self.update_stt_button(state)
+        elif state == "idle":
             self.stt_button.setObjectName("sttButton")
-        
-        # Reapply stylesheet
-        self.stt_button.setStyle(self.stt_button.style())
+            self.update_stt_button(state)
+        else:
+            logger.info("Wrong State when updating stt button")
+
+    @pyqtSlot()
+    def on_recording_completed(self):
+        # Get transcribed text and fill the input field
+        transcribed_text = self.stt_api_client.transcribe()
+        if transcribed_text and transcribed_text.strip():
+            self.input_field.setText(transcribed_text)
+            # Optionally set focus back to input field
+            self.input_field.setFocus()
+
+    def update_stt_button(self, state):
+        """Update STT button appearance based on state."""
+        # self.stt_button.setStyle(self.stt_button.style())
+        if state == "recording":
+            self.stt_button.setIcon(QIcon("src/assets/mic_recording.png"))
+        elif state == "idle":
+            self.stt_button.setIcon(QIcon("src/assets/mic_idle.png"))
+        self.update_stt_button_visibility()
 
     def _update_response_display(self):
         """Update response display with basic markdown formatting."""
@@ -719,11 +766,18 @@ class Launcher(QMainWindow):
         self.style_manager.set_theme(new_theme)
         self.apply_modern_style()
 
+    def on_stt_settings_changed(self):
+        """STT settings change"""
+        logger.info("STT Settings Changed")
+        self.stt_configure()
+        self.update_stt_button_visibility()
+        self.stt_api_client = SttApiClient(logger, self.config)    
+
     def open_settings(self):
         """Open the settings dialog."""
         logger.debug("Opening settings dialog")
         dialog: SettingsDialog = SettingsDialog(logger, self.config, self)
-        
+
         # Connect the theme change signal
         dialog.theme_changed.connect(self.on_theme_changed)
         
@@ -916,64 +970,6 @@ class Launcher(QMainWindow):
         """Simplified input handling - delegate to StateManager."""
         logger.debug(f"Input changed, length: {len(text)} characters")
         self.state_manager.set_prompt(text)
-
-    # Recording
-    def toggle_recording(self):
-        """Toggle speech-to-text recording."""
-        current_state = self.state_manager.get_stt_state()
-        
-        if current_state == "idle":
-            self.start_recording()
-        elif current_state == "recording":
-            self.stop_recording()
-
-    def start_recording(self):
-        """Start recording audio for speech-to-text."""
-        if not self.state_manager.start_recording():
-            return
-        
-        logger.debug("Starting audio recording")
-        # TODO: Start actual audio recording
-        # This would typically use pyaudio or similar
-        # For now, placeholder
-        print("Recording started...")
-
-    def stop_recording(self):
-        """Stop recording and process speech-to-text."""
-        if not self.state_manager.stop_recording():
-            return
-        
-        logger.debug("Stopping audio recording and processing STT")
-        # TODO: Stop actual audio recording and save to temp file
-        # For now, placeholder
-        print("Recording stopped...")
-        
-        # Process the recorded audio
-        QTimer.singleShot(100, self.process_recorded_audio)
-
-    def process_recorded_audio(self):
-        """Process recorded audio through STT API."""
-        try:
-            # TODO: Replace with actual audio file path
-            audio_file_path = "/tmp/recorded_audio.wav"  # Placeholder
-            
-            # Call STT API
-            transcribed_text = self.stt_api_client.transcribe(audio_file_path)
-            
-            if transcribed_text:
-                # Add transcribed text to input field
-                current_text = self.input_field.text()
-                separator = " " if current_text else ""
-                self.input_field.setText(current_text + separator + transcribed_text)
-                
-                # Trigger input processing
-                self.on_input_changed(self.input_field.text())
-                
-            logger.debug(f"STT transcription: {transcribed_text}")
-            
-        except Exception as e:
-            logger.error(f"STT processing failed: {e}")
-            # TODO: Show error feedback to user
 
     def force_send_request(self):
         """Delegate to StateManager."""

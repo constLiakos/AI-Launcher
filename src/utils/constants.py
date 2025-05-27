@@ -2,10 +2,22 @@
 Constants for the AI Launcher application.
 Contains all UI dimensions, colors, timings, and text constants.
 """
-
+from os import path
 from PyQt5.QtCore import Qt, QEasingCurve
 from PyQt5.QtGui import QColor
+from pathlib import Path
 
+# =============================================================================
+# Directories
+# =============================================================================
+
+class Directories:
+    DEFAULT_TMP = path.join(str(Path.home()), '.tmp', 'ai_launcher')
+    CONFIG = path.join(str(Path.home()), '.config', 'ai_launcher', 'config.json')
+
+class Files:
+    RECORDING_FILE_NAME = "recorded_audio.wav"
+    RECORDING_FILE_PATH = path.join(Directories.DEFAULT_TMP, "recorded_audio.wav")
 
 # =============================================================================
 # LLM Config

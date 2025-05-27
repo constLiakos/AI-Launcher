@@ -2,11 +2,11 @@ import json
 import os
 from pathlib import Path
 
-from utils.constants import LLM, STT, Conversation, Hotkey, Theme, Timing, WindowSize
+from utils.constants import LLM, STT, Conversation, Directories, Hotkey, Theme, Timing, WindowSize
 
 class Config:
     def __init__(self):
-        self.config_path = os.path.join(str(Path.home()), '.config', 'ai_launcher', 'config.json')
+        self.config_path = Directories.CONFIG
         self.default_config = {
             'api_key': '',
             'api_base': LLM.DEFAULT_API_BASE,
@@ -26,7 +26,8 @@ class Config:
             'stt_model': STT.DEFAULT_MODEL,
             'stt_request_timeout': STT.DEFAULT_REQUEST_TIMEOUT,
             'stt_hotkey': STT.DEFAULT_HOTKEY,
-            'stt_enabled': STT.DEFAULT_ENABLED
+            'stt_enabled': STT.DEFAULT_ENABLED,
+            'tmp_dir': Directories.DEFAULT_TMP
         }
         self.config = self.load_config()
 

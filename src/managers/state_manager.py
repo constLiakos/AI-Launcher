@@ -16,6 +16,7 @@ class StateManager(QObject):
     request_ready = pyqtSignal(str)
     expanded_changed = pyqtSignal(bool)
     stt_state_changed = pyqtSignal(str)
+    recording_completed_sg = pyqtSignal()
 
     def __init__(self, config, logger:logging.Logger):
         super().__init__()
@@ -188,6 +189,15 @@ class StateManager(QObject):
             self.logger.debug("UI expanded")
         self.response_visible = True
 
+    def change_stt_button_visibility(self):
+        """Mark response as visible and expanded."""
+        self.logger.debug(f"Showing response - current expanded state: {self.is_expanded}")
+        if not self.is_expanded:  # Only emit if state actually changes
+            self.is_expanded = True
+            self.expanded_changed.emit(True)
+            self.logger.debug("UI expanded")
+        self.response_visible = True
+
     def hide_response(self):
         """Mark response as hidden and contracted."""
         self.logger.debug(f"Hiding response - current expanded state: {self.is_expanded}")
@@ -280,7 +290,7 @@ class StateManager(QObject):
     def is_response_currently_visible(self):
         return self.response_visible
 
-    def start_recording(self):
+    def stt_start_recording(self):
         """Start speech-to-text recording."""
         if self.stt_state != "idle":
             return False
@@ -290,7 +300,7 @@ class StateManager(QObject):
         self.stt_state_changed.emit("recording")
         return True
     
-    def stop_recording(self):
+    def stt_stop_recording(self):
         """Stop speech-to-text recording."""
         if self.stt_state != "recording":
             return False
@@ -299,7 +309,10 @@ class StateManager(QObject):
         self.is_recording = False
         self.stt_state_changed.emit("idle")
         return True
-    
+
     def get_stt_state(self):
-        """Get current STT state."""
+        """Get STT State"""
         return self.stt_state
+    
+    def recording_completed(self):
+        self.recording_completed_sg.emit()
