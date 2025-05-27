@@ -33,7 +33,7 @@ class StyleManager:
     def _get_classic_theme(self):
         """Classic theme colors."""
         return {
-            'primary': '#4F9CF9',
+            'primary': "#5CA1F7",
             'secondary': '#8B5CF6',
             'success': '#22C55E',
             'error': '#EF4444',
@@ -59,6 +59,7 @@ class StyleManager:
             'button_stt_recording_bg': "#8AB1F3",
             'button_stt_idle_border': "#A7C8FF",
             'button_stt_recording_border': "#779FE6",
+            'button_stt_hover_bg': "#5A84CC"
         }
     
     def _get_dark_theme(self):
@@ -90,6 +91,7 @@ class StyleManager:
             'button_stt_recording_bg': '#A7C8FF',
             'button_stt_idle_border': "#A7C8FF",
             'button_stt_recording_border': '#74A1EE',
+            'button_stt_hover_bg': "#5A84CC"
         }
 
     # === SETTINGS DIALOG STYLES ===
@@ -375,13 +377,25 @@ class StyleManager:
         #sttButton {{
                 background: {colors['button_stt_idle_bg']};
                 color: {colors['white']};
-                border: 2px solid {colors['button_stt_idle_border']};
+                border: none;
+                border-radius: 12px;
+        }}
+        #sttButton:hover {{
+                background: {colors['button_stt_hover_bg']};
+                color: {colors['white']};
+                border: none;
                 border-radius: 12px;
         }}
         #sttButtonRecording {{
             background: {colors['button_stt_recording_bg']};
             color: {colors['white']};
-            border: 1px solid {colors['button_stt_recording_border']};
+            border: none;
+            border-radius: 12px;
+        }}
+        #sttButtonRecording:hover {{
+            background: {colors['button_stt_hover_bg']};
+            color: {colors['white']};
+            border: none;
             border-radius: 12px;
         }}
         """
