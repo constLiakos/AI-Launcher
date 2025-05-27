@@ -169,6 +169,7 @@ class STT:
     DEFAULT_MODEL = "whisper-1"                             
     DEFAULT_HOTKEY = "Ctrl+Shift+R"
     DEFAULT_REQUEST_TIMEOUT = 10
+    DEFAULT_ENABLED = False
 
 # =============================================================================
 # COLORS

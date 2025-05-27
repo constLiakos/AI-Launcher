@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-from utils.constants import LLM, Conversation, Hotkey, Theme, Timing, WindowSize
+from utils.constants import LLM, STT, Conversation, Hotkey, Theme, Timing, WindowSize
 
 class Config:
     def __init__(self):
@@ -22,6 +22,11 @@ class Config:
             'clear_last_response_on_minimize': Conversation.DEFAULT_CLEAR_LAST_RESPONSE_ON_MINIMIZE,
             'clear_history_on_minimize': Conversation.DEFAULT_CLEAR_HISTORY_ON_MINIMIZE,
             'system_prompt': LLM.DEFAULT_SYSTEM_PROMPT,
+            'stt_api_base': STT.DEFAULT_API_BASE,
+            'stt_model': STT.DEFAULT_MODEL,
+            'stt_request_timeout': STT.DEFAULT_REQUEST_TIMEOUT,
+            'stt_hotkey': STT.DEFAULT_HOTKEY,
+            'stt_enabled': STT.DEFAULT_ENABLED
         }
         self.config = self.load_config()
 
