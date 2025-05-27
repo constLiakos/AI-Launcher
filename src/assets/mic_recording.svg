@@ -1,0 +1,15 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Microphone body -->
+  <rect x="12" y="4" width="8" height="14" rx="4" fill="#4F46E5" stroke="none"/>
+  
+  <!-- Microphone stand -->
+  <path d="M8 16C8 20.4183 11.5817 24 16 24C20.4183 24 24 20.4183 24 16" 
+        stroke="#4F46E5" stroke-width="2" stroke-linecap="round" fill="none"/>
+  
+  <!-- Base line -->
+  <line x1="16" y1="24" x2="16" y2="28" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+  <line x1="12" y1="28" x2="20" y2="28" stroke="#4F46E5" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Recording indicator (optional - can be animated) -->
+  <circle cx="26" cy="6" r="3" fill="#EF4444" opacity="0.8"/>
+</svg>
