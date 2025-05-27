@@ -12,12 +12,15 @@ from pathlib import Path
 # =============================================================================
 
 class Directories:
-    DEFAULT_TMP = path.join(str(Path.home()), '.tmp', 'ai_launcher')
-    CONFIG = path.join(str(Path.home()), '.config', 'ai_launcher', 'config.json')
+    DEFAULT_TMP = Path.home() / '.tmp' / 'ai_launcher'
+    CONFIG = Path.home() / '.config' / 'ai_launcher' / 'config.json'
 
 class Files:
     RECORDING_FILE_NAME = "recorded_audio.wav"
-    RECORDING_FILE_PATH = path.join(Directories.DEFAULT_TMP, "recorded_audio.wav")
+    RECORDING_FILE_PATH = Directories.DEFAULT_TMP / RECORDING_FILE_NAME
+    SETTINGS_GEAR_ICON_PATH = Path(__file__).parent.parent / "assets" / "settings.png"
+    MIC_IDLE_ICON_PATH = Path(__file__).parent.parent / "assets" / "mic_white_idle.png"
+    MIC_RECORDING_ICON_PATH = Path(__file__).parent.parent / "assets" / "mic_white_recording.png"
 
 # =============================================================================
 # LLM Config

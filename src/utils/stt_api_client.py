@@ -43,7 +43,7 @@ class SttApiClient:
             requests.exceptions.RequestException: For network or request-related errors.
             Exception: For API errors or other issues during transcription.
         """
-        audio_file_path = Files.RECORDING_FILE_PATH
+        audio_file_path = str(Files.RECORDING_FILE_PATH)
         self.logger.debug(f"Starting transcription for audio file: {audio_file_path}")
         
         if not os.path.exists(audio_file_path):

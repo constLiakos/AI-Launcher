@@ -19,7 +19,7 @@ class Recording_Manager:
         self.tmp_dir = self.config.get('tmp_dir', Directories.DEFAULT_TMP)
         os.makedirs(self.tmp_dir, exist_ok=True)
 
-        self.audio_file_path = Files.RECORDING_FILE_PATH
+        self.audio_file_path = str(Files.RECORDING_FILE_PATH)
         
         # Initialize audio recording attributes
         self.frames = []

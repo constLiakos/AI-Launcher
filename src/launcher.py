@@ -15,7 +15,7 @@ from utils.settings_dialog import SettingsDialog
 from managers.animation_manager import AnimationManager
 from managers.style_manager import StyleManager
 from managers.hotkey_manager import HotkeyManager
-from utils.constants import STT, Conversation, ElementSize, Style, Theme, WindowSize, Colors, Text, Timing, TrayIcon
+from utils.constants import STT, Conversation, ElementSize, Files, Style, Theme, WindowSize, Colors, Text, Timing, TrayIcon
 from utils.markdown_render import MarkdownRenderer
 from managers.state_manager import StateManager
 from utils.stt_api_client import SttApiClient
@@ -340,8 +340,8 @@ class Launcher(QMainWindow):
         # Speech-to-text button
         self.stt_button = QPushButton()
         self.stt_button.setObjectName("sttButton")
-        self.stt_button.setIcon(QIcon("src/assets/mic_white_idle.png"))  # Add this li
-        self.stt_button.setIconSize(QSize(24, 24))  # Adjust size as needed
+        self.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
+        self.stt_button.setIconSize(QSize(24, 24))
         self.stt_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
         self.stt_button.clicked.connect(self.recording_manager.toggle_recording)
@@ -349,8 +349,10 @@ class Launcher(QMainWindow):
         input_layout.addWidget(self.stt_button)
 
         # Settings button (gear icon)
-        self.settings_button = QPushButton(Text.SETTINGS_BUTTON)
+        self.settings_button = QPushButton()
         self.settings_button.setObjectName("settingsButton")
+        self.settings_button.setIcon(QIcon(str(Files.SETTINGS_GEAR_ICON_PATH)))
+        self.settings_button.setIconSize(QSize(24, 24))
         self.settings_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
         self.settings_button.clicked.connect(self.open_settings)
@@ -598,11 +600,11 @@ class Launcher(QMainWindow):
         """Update STT button appearance based on state."""
         # self.stt_button.setStyle(self.stt_button.style())
         if state == "recording":
-            self.stt_button.setIcon(QIcon("src/assets/mic_white_recording.png"))
+            self.stt_button.setIcon(QIcon(str(Files.MIC_RECORDING_ICON_PATH)))
             self.stt_button.style().unpolish(self.stt_button)
             self.stt_button.style().polish(self.stt_button)
         elif state == "idle":
-            self.stt_button.setIcon(QIcon("src/assets/mic_white_idle.png"))
+            self.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
             self.stt_button.style().unpolish(self.stt_button)
             self.stt_button.style().polish(self.stt_button)
 
