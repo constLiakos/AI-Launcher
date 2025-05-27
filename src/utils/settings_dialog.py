@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from managers.style_manager import StyleManager
 from utils.about_dialog import AboutDialog
 from utils.constants import LLM, Conversation, Hotkey, SettingsDialogSize, Text, Theme, Timing
+from utils.stt_settings_dialog import STTSettingsDialog
 from utils.version import VERSION
 
 class SettingsDialog(QDialog):
@@ -16,6 +17,7 @@ class SettingsDialog(QDialog):
         self.config = config
         self.style_manager = StyleManager(logger)
         self.about_dialog = None
+        self.stt_settings_dialog = None
         
         # Store original theme for comparison
         self.original_theme = self.config.get('theme', Theme.DEFAULT_THEME)
@@ -270,6 +272,12 @@ class SettingsDialog(QDialog):
         about_btn.setObjectName("aboutButton")
         about_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
         about_btn.clicked.connect(self.show_about_dialog)
+
+        # STT Settings button (middle-left)
+        stt_settings_btn = QPushButton("STT Settings")
+        stt_settings_btn.setObjectName("sttSettingsButton")
+        stt_settings_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
+        stt_settings_btn.clicked.connect(self.show_stt_settings_dialog)
         
         # Cancel and Save buttons (right side)
         cancel_btn = QPushButton("Cancel")
@@ -283,6 +291,7 @@ class SettingsDialog(QDialog):
         save_btn.clicked.connect(self.save_settings)
         
         button_layout.addWidget(about_btn)
+        button_layout.addWidget(stt_settings_btn)
         button_layout.addStretch()
         button_layout.addWidget(cancel_btn)
         button_layout.addWidget(save_btn)
@@ -315,6 +324,12 @@ class SettingsDialog(QDialog):
         # Apply specialized styles
         self.system_prompt_input.setStyleSheet(self.style_manager.get_settings_textarea_style())
         self.theme_combo.setStyleSheet(self.style_manager.get_settings_combobox_style())
+
+        stt_button = self.findChild(QPushButton, "sttSettingsButton")
+        if stt_button:
+            button_style = self.style_manager.button_styles.get_stt_button()
+            if button_style:
+                 stt_button.setStyleSheet(button_style)
 
         form_widget_style = self.style_manager.get_widget_style()
         self.form_widget.setStyleSheet(form_widget_style)
@@ -416,3 +431,19 @@ class SettingsDialog(QDialog):
         self.about_dialog.show()
         self.about_dialog.raise_()
         self.about_dialog.activateWindow()
+
+    def show_stt_settings_dialog(self):
+        """Show the STT Settings dialog."""
+        self.logger.debug("Opening STT Settings dialog")
+        if self.stt_settings_dialog is None:
+            # Pass the main application logger (self.logger.parent) and config
+            self.stt_settings_dialog = STTSettingsDialog(self.logger.parent, self.config, self)
+        
+        current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
+        self.stt_settings_dialog.style_manager.set_theme(current_theme)
+        self.stt_settings_dialog.apply_styles() # Re-apply styles based on current theme
+        self.stt_settings_dialog.load_settings() # Load current STT settings
+
+        self.stt_settings_dialog.show()
+        self.stt_settings_dialog.raise_()
+        self.stt_settings_dialog.activateWindow()

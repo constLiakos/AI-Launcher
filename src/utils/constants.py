@@ -135,6 +135,42 @@ class AboutDialogSize:
     BUTTON_MIN_HEIGHT = 40
 
 # =============================================================================
+# STT DIALOG
+# =============================================================================
+
+
+class STTDialogSize:
+    """About dialog constants"""
+    # Window dimensions
+    WINDOW_WIDTH = 650
+    WINDOW_HEIGHT = 650
+
+    # Layout spacing
+    MAIN_LAYOUT_MARGIN = 20
+    MAIN_LAYOUT_SPACING = 20
+    FORM_LAYOUT_SPACING = 20
+    FORM_LAYOUT_VERTICAL_SPACING = 15
+    BUTTON_LAYOUT_SPACING = 15
+
+    # Input field dimensions
+    INPUT_FIELD_MIN_HEIGHT = 35
+    CHECKBOX_MIN_HEIGHT = 35
+    COMBO_BOX_MIN_HEIGHT = 35
+    BUTTON_MIN_HEIGHT = 40
+
+
+# =============================================================================
+# STT DIALOG
+# =============================================================================
+
+class STT:
+    """Constants related to Speech-to-Text functionality."""
+    DEFAULT_API_BASE = "https://api.example-stt.com/v1"
+    DEFAULT_MODEL = "whisper-1"                             
+    DEFAULT_HOTKEY = "Ctrl+Shift+R"
+    DEFAULT_REQUEST_TIMEOUT = 10
+
+# =============================================================================
 # COLORS
 # =============================================================================
 

@@ -477,6 +477,41 @@ class StyleManager:
                 background: #3b82f6;
             }}
             """
+        def get_about_button(self):
+            colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("Generated about button style")
+            return f"""
+            QPushButton {{
+                background: {colors['primary']};
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                padding: 8px 16px;
+            }}
+            QPushButton:hover {{
+                background: #3b82f6;
+            }}
+            """
+        
+        def get_stt_button(self):
+            colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("Generated stt button style")
+            return f"""
+            QPushButton {{
+                background: {colors['primary']};
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                padding: 8px 16px;
+            }}
+            QPushButton:hover {{
+                background: #3b82f6;
+            }}
+            """
         
         def get_copy_button_default_style(self):
             colors = self.parent.get_theme_colors()
