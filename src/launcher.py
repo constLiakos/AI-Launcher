@@ -229,7 +229,7 @@ class Launcher(QMainWindow):
         """Show and raise the window to front."""
         try:
             # Check if we should clear previous response when reopening
-            if self.config.get('clear_last_response', False):
+            if self.config.get('clear_last_response_on_minimize', False):
                 logger.debug("Clearing previous response on window show")
                 # Clear the response area and hide it
                 self.response_area.setHtml("")
