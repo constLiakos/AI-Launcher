@@ -578,10 +578,10 @@ class Launcher(QMainWindow):
 
         if state == "recording":
             self.stt_button.setObjectName("sttButtonRecording")
-            self.update_stt_button(state)
+            self.update_stt_button_appearance(state)
         elif state == "idle":
             self.stt_button.setObjectName("sttButton")
-            self.update_stt_button(state)
+            self.update_stt_button_appearance(state)
         else:
             logger.info("Wrong State when updating stt button")
 
@@ -594,14 +594,13 @@ class Launcher(QMainWindow):
             # Optionally set focus back to input field
             self.input_field.setFocus()
 
-    def update_stt_button(self, state):
+    def update_stt_button_appearance(self, state):
         """Update STT button appearance based on state."""
         # self.stt_button.setStyle(self.stt_button.style())
         if state == "recording":
             self.stt_button.setIcon(QIcon("src/assets/mic_recording.png"))
         elif state == "idle":
             self.stt_button.setIcon(QIcon("src/assets/mic_idle.png"))
-        self.update_stt_button_visibility()
 
     def _update_response_display(self):
         """Update response display with basic markdown formatting."""
