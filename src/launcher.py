@@ -67,7 +67,9 @@ class Launcher(QMainWindow):
         self.state_manager.request_cancelled.connect(self.on_request_cancelled)
         self.state_manager.request_ready.connect(self.send_request)
         self.state_manager.expanded_changed.connect(
-            self.on_expanded_changed)  # New connection
+            self.on_expanded_changed)
+        self.state_manager.stt_state_changed.connect(self.on_stt_state_changed)
+
 
         # Add a timer to debounce position saving (prevent excessive saves during dragging)
         self.position_save_timer = QTimer()
@@ -313,6 +315,15 @@ class Launcher(QMainWindow):
         self.input_field.returnPressed.connect(self.force_send_request)
         input_layout.addWidget(self.input_field)
 
+        # Speech-to-text button
+        self.stt_button = QPushButton("🎤")
+        self.stt_button.setObjectName("sttButton")
+        self.stt_button.setFixedSize(
+            ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
+        self.stt_button.clicked.connect(self.toggle_recording)
+        # self.stt_button.setToolTip("Speech to Text")
+        input_layout.addWidget(self.stt_button)
+
         # Settings button (gear icon)
         self.settings_button = QPushButton(Text.SETTINGS_BUTTON)
         self.settings_button.setObjectName("settingsButton")
@@ -528,6 +539,22 @@ class Launcher(QMainWindow):
 
         # Execute request
         QTimer.singleShot(50, lambda: self._execute_request(request_id))
+
+    @pyqtSlot(str)
+    def on_stt_state_changed(self, state):
+        """Handle STT state changes."""
+        logger.debug(f"STT state changed to: {state}")
+        self.update_stt_button_style(state)
+
+    def update_stt_button_style(self, state):
+        """Update STT button appearance based on state."""
+        if state == "recording":
+            self.stt_button.setObjectName("sttButtonRecording")
+        else:
+            self.stt_button.setObjectName("sttButton")
+        
+        # Reapply stylesheet
+        self.stt_button.setStyle(self.stt_button.style())
 
     def _update_response_display(self):
         """Update response display with basic markdown formatting."""
@@ -889,6 +916,64 @@ class Launcher(QMainWindow):
         """Simplified input handling - delegate to StateManager."""
         logger.debug(f"Input changed, length: {len(text)} characters")
         self.state_manager.set_prompt(text)
+
+    # Recording
+    def toggle_recording(self):
+        """Toggle speech-to-text recording."""
+        current_state = self.state_manager.get_stt_state()
+        
+        if current_state == "idle":
+            self.start_recording()
+        elif current_state == "recording":
+            self.stop_recording()
+
+    def start_recording(self):
+        """Start recording audio for speech-to-text."""
+        if not self.state_manager.start_recording():
+            return
+        
+        logger.debug("Starting audio recording")
+        # TODO: Start actual audio recording
+        # This would typically use pyaudio or similar
+        # For now, placeholder
+        print("Recording started...")
+
+    def stop_recording(self):
+        """Stop recording and process speech-to-text."""
+        if not self.state_manager.stop_recording():
+            return
+        
+        logger.debug("Stopping audio recording and processing STT")
+        # TODO: Stop actual audio recording and save to temp file
+        # For now, placeholder
+        print("Recording stopped...")
+        
+        # Process the recorded audio
+        QTimer.singleShot(100, self.process_recorded_audio)
+
+    def process_recorded_audio(self):
+        """Process recorded audio through STT API."""
+        try:
+            # TODO: Replace with actual audio file path
+            audio_file_path = "/tmp/recorded_audio.wav"  # Placeholder
+            
+            # Call STT API
+            transcribed_text = self.stt_api_client.transcribe(audio_file_path)
+            
+            if transcribed_text:
+                # Add transcribed text to input field
+                current_text = self.input_field.text()
+                separator = " " if current_text else ""
+                self.input_field.setText(current_text + separator + transcribed_text)
+                
+                # Trigger input processing
+                self.on_input_changed(self.input_field.text())
+                
+            logger.debug(f"STT transcription: {transcribed_text}")
+            
+        except Exception as e:
+            logger.error(f"STT processing failed: {e}")
+            # TODO: Show error feedback to user
 
     def force_send_request(self):
         """Delegate to StateManager."""

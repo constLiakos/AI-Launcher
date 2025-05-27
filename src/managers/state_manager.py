@@ -15,6 +15,7 @@ class StateManager(QObject):
     request_cancelled = pyqtSignal()
     request_ready = pyqtSignal(str)
     expanded_changed = pyqtSignal(bool)
+    stt_state_changed = pyqtSignal(str)
 
     def __init__(self, config, logger:logging.Logger):
         super().__init__()
@@ -43,6 +44,10 @@ class StateManager(QObject):
             'request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)
         self.request_delay_ms = int(delay_seconds * 1000)
         
+        # STT States
+        self.stt_state = "idle"
+        self.is_recording = False
+
         self.logger.debug(f"StateManager initialized with request delay: {self.request_delay_ms}ms")
 
     def handle_first_chunk(self):
@@ -274,3 +279,27 @@ class StateManager(QObject):
 
     def is_response_currently_visible(self):
         return self.response_visible
+
+    def start_recording(self):
+        """Start speech-to-text recording."""
+        if self.stt_state != "idle":
+            return False
+        
+        self.stt_state = "recording"
+        self.is_recording = True
+        self.stt_state_changed.emit("recording")
+        return True
+    
+    def stop_recording(self):
+        """Stop speech-to-text recording."""
+        if self.stt_state != "recording":
+            return False
+        
+        self.stt_state = "idle"
+        self.is_recording = False
+        self.stt_state_changed.emit("idle")
+        return True
+    
+    def get_stt_state(self):
+        """Get current STT state."""
+        return self.stt_state

@@ -325,11 +325,11 @@ class SettingsDialog(QDialog):
         self.system_prompt_input.setStyleSheet(self.style_manager.get_settings_textarea_style())
         self.theme_combo.setStyleSheet(self.style_manager.get_settings_combobox_style())
 
-        stt_button = self.findChild(QPushButton, "sttSettingsButton")
-        if stt_button:
-            button_style = self.style_manager.button_styles.get_stt_button()
+        stt_settings_button = self.findChild(QPushButton, "sttSettingsButton")
+        if stt_settings_button:
+            button_style = self.style_manager.button_styles.get_stt_settings_button()
             if button_style:
-                 stt_button.setStyleSheet(button_style)
+                 stt_settings_button.setStyleSheet(button_style)
 
         form_widget_style = self.style_manager.get_widget_style()
         self.form_widget.setStyleSheet(form_widget_style)

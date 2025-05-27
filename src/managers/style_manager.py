@@ -54,7 +54,11 @@ class StyleManager:
             'dialog_bg_end': '#e2e8f0',
             'response_bg': 'rgba(248, 250, 252, 0.9)',
             'button_secondary_bg': '#f3f4f6',
-            'button_secondary_text': '#374151'
+            'button_secondary_text': '#374151',
+            'button_stt_idle_bg': "#4F9CF9",
+            'button_stt_recording_bg': '#4F9CF9',
+            'button_stt_idle_border': '#f3f4f6',
+            'button_stt_recording_border': '#f3f4f6',
         }
     
     def _get_dark_theme(self):
@@ -81,7 +85,11 @@ class StyleManager:
             'dialog_bg_end': '#1a1d29',
             'response_bg': 'rgba(55, 65, 81, 0.9)',
             'button_secondary_bg': '#4b5563',
-            'button_secondary_text': '#ffffff'
+            'button_secondary_text': '#ffffff',
+            'button_stt_idle_bg': '#f3f4f6',
+            'button_stt_recording_bg': '#f3f4f6',
+            'button_stt_idle_border': '#f3f4f6',
+            'button_stt_recording_border': '#f3f4f6',
         }
 
     # === SETTINGS DIALOG STYLES ===
@@ -364,6 +372,19 @@ class StyleManager:
             background: rgba(79, 156, 249, 0.1);
             border: 1px solid rgba(79, 156, 249, 0.5);
         }}
+        #sttButton {{
+                background: {colors['button_stt_idle_bg']};
+                color: {colors['white']};
+                border: 2px solid {colors['button_stt_idle_border']};
+                border-radius: 12px;
+        }}
+
+        #sttButtonRecording {{
+                background: {colors['button_stt_recording_bg']};
+                color: {colors['white']};
+                border: 2px solid {colors['button_stt_recording_border']};
+                border-radius: 12px;
+        }}
         """
     
     
@@ -495,24 +516,6 @@ class StyleManager:
             }}
             """
         
-        def get_stt_button(self):
-            colors = self.parent.get_theme_colors()
-            self.parent.logger.debug("Generated stt button style")
-            return f"""
-            QPushButton {{
-                background: {colors['primary']};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 500;
-                padding: 8px 16px;
-            }}
-            QPushButton:hover {{
-                background: #3b82f6;
-            }}
-            """
-        
         def get_copy_button_default_style(self):
             colors = self.parent.get_theme_colors()
             self.parent.logger.debug("Generated copy button default style")
@@ -540,6 +543,56 @@ class StyleManager:
                 background: {colors['success']};
                 color: {colors['white']};
                 border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+            }}
+            """
+        def get_stt_settings_button(self):
+            colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("Generated stt button style")
+            return f"""
+            QPushButton {{
+                background: {colors['primary']};
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                padding: 8px 16px;
+            }}
+            QPushButton:hover {{
+                background: #3b82f6;
+            }}
+            """
+        
+        # Add to ButtonStyles class
+        def get_stt_button_style(self):
+            """Get STT button style for current theme."""
+            # Call style_manager method for STT button
+            colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("Generated stt button idle style")
+            return f"""
+            QPushButton {{
+                background: {colors['button_stt_idle_bg']};
+                color: {colors['white']};
+                border: 2px solid {colors['button_stt_idle_border']};
+                border-radius: 12px;
+                border-radius: 8px;
+                padding: 8px 16px;
+            }}
+            """
+
+        def get_stt_button_recording_style(self):
+            """Get STT button recording state style."""
+            # Call style_manager method for recording state
+            colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("Generated stt button recording state style")
+            return f"""
+            QPushButton {{
+                background: {colors['button_stt_recording_bg']};
+                color: {colors['white']};
+                border: 2px solid {colors['button_stt_recording_border']};
+                border-radius: 12px;
                 border-radius: 8px;
                 padding: 8px 16px;
             }}
