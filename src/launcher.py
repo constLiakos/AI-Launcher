@@ -599,8 +599,12 @@ class Launcher(QMainWindow):
         # self.stt_button.setStyle(self.stt_button.style())
         if state == "recording":
             self.stt_button.setIcon(QIcon("src/assets/mic_recording.png"))
+            self.stt_button.style().unpolish(self.stt_button)
+            self.stt_button.style().polish(self.stt_button)
         elif state == "idle":
             self.stt_button.setIcon(QIcon("src/assets/mic_idle.png"))
+            self.stt_button.style().unpolish(self.stt_button)
+            self.stt_button.style().polish(self.stt_button)
 
     def _update_response_display(self):
         """Update response display with basic markdown formatting."""
