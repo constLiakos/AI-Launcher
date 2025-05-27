@@ -340,7 +340,7 @@ class Launcher(QMainWindow):
         # Speech-to-text button
         self.stt_button = QPushButton()
         self.stt_button.setObjectName("sttButton")
-        self.stt_button.setIcon(QIcon("src/assets/mic_idle.png"))  # Add this li
+        self.stt_button.setIcon(QIcon("src/assets/mic_white_idle.png"))  # Add this li
         self.stt_button.setIconSize(QSize(24, 24))  # Adjust size as needed
         self.stt_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
@@ -598,11 +598,11 @@ class Launcher(QMainWindow):
         """Update STT button appearance based on state."""
         # self.stt_button.setStyle(self.stt_button.style())
         if state == "recording":
-            self.stt_button.setIcon(QIcon("src/assets/mic_recording.png"))
+            self.stt_button.setIcon(QIcon("src/assets/mic_white_recording.png"))
             self.stt_button.style().unpolish(self.stt_button)
             self.stt_button.style().polish(self.stt_button)
         elif state == "idle":
-            self.stt_button.setIcon(QIcon("src/assets/mic_idle.png"))
+            self.stt_button.setIcon(QIcon("src/assets/mic_white_idle.png"))
             self.stt_button.style().unpolish(self.stt_button)
             self.stt_button.style().polish(self.stt_button)
 

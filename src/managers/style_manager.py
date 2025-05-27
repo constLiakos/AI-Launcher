@@ -55,11 +55,9 @@ class StyleManager:
             'response_bg': 'rgba(248, 250, 252, 0.9)',
             'button_secondary_bg': '#f3f4f6',
             'button_secondary_text': '#374151',
-            'button_stt_idle_bg': "#A7C8FF",
-            'button_stt_recording_bg': "#8AB1F3",
-            'button_stt_idle_border': "#A7C8FF",
-            'button_stt_recording_border': "#779FE6",
-            'button_stt_hover_bg': "#5A84CC"
+            'button_stt_idle_bg': "#5CA1F7",
+            'button_stt_recording_bg': "#f8baba",
+            'button_stt_hover_bg': "#4A8AE8"
         }
     
     def _get_dark_theme(self):
@@ -87,11 +85,9 @@ class StyleManager:
             'response_bg': 'rgba(55, 65, 81, 0.9)',
             'button_secondary_bg': '#4b5563',
             'button_secondary_text': '#ffffff',
-            'button_stt_idle_bg': "#A7C8FF",
-            'button_stt_recording_bg': '#A7C8FF',
-            'button_stt_idle_border': "#A7C8FF",
-            'button_stt_recording_border': '#74A1EE',
-            'button_stt_hover_bg': "#5A84CC"
+            'button_stt_idle_bg': "#5CA1F7",
+            'button_stt_recording_bg': "#f8baba",
+            'button_stt_hover_bg': "#4A8AE8"
         }
 
     # === SETTINGS DIALOG STYLES ===
@@ -375,28 +371,40 @@ class StyleManager:
             border: 1px solid rgba(79, 156, 249, 0.5);
         }}
         #sttButton {{
-                background: {colors['button_stt_idle_bg']};
-                color: {colors['white']};
-                border: none;
-                border-radius: 12px;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 {colors['button_stt_idle_bg']}, stop:1 #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
         }}
         #sttButton:hover {{
-                background: {colors['button_stt_hover_bg']};
-                color: {colors['white']};
-                border: none;
-                border-radius: 12px;
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 {colors['button_stt_hover_bg']}, stop:1 #2563eb);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
         }}
         #sttButtonRecording {{
-            background: {colors['button_stt_recording_bg']};
-            color: {colors['white']};
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 {colors['button_stt_recording_bg']}, stop:1 #ef5350);
+            color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
         }}
         #sttButtonRecording:hover {{
-            background: {colors['button_stt_hover_bg']};
-            color: {colors['white']};
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 {colors['button_stt_hover_bg']}, stop:1 #d32f2f);
+            color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: bold;
         }}
         """
     
@@ -494,58 +502,58 @@ class StyleManager:
         def __init__(self, parent_instance):
             self.parent = parent_instance
 
-        def get_primary_button(self):
-            colors = self.parent.get_theme_colors()
-            self.parent.logger.debug("Generated primary button style")
-            return f"""
-            QPushButton {{
-                background: {colors['primary']};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 500;
-                padding: 8px 16px;
-            }}
-            QPushButton:hover {{
-                background: #3b82f6;
-            }}
-            """
-        def get_about_button(self):
-            colors = self.parent.get_theme_colors()
-            self.parent.logger.debug("Generated about button style")
-            return f"""
-            QPushButton {{
-                background: {colors['primary']};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 500;
-                padding: 8px 16px;
-            }}
-            QPushButton:hover {{
-                background: #3b82f6;
-            }}
-            """
+        # def get_primary_button(self):
+        #     colors = self.parent.get_theme_colors()
+        #     self.parent.logger.debug("Generated primary button style")
+        #     return f"""
+        #     QPushButton {{
+        #         background: {colors['primary']};
+        #         color: white;
+        #         border: none;
+        #         border-radius: 8px;
+        #         font-size: 14px;
+        #         font-weight: 500;
+        #         padding: 8px 16px;
+        #     }}
+        #     QPushButton:hover {{
+        #         background: #3b82f6;
+        #     }}
+        #     """
+        # def get_about_button(self):
+        #     colors = self.parent.get_theme_colors()
+        #     self.parent.logger.debug("Generated about button style")
+        #     return f"""
+        #     QPushButton {{
+        #         background: {colors['primary']};
+        #         color: white;
+        #         border: none;
+        #         border-radius: 8px;
+        #         font-size: 14px;
+        #         font-weight: 500;
+        #         padding: 8px 16px;
+        #     }}
+        #     QPushButton:hover {{
+        #         background: #3b82f6;
+        #     }}
+        #     """
         
-        def get_copy_button_default_style(self):
-            colors = self.parent.get_theme_colors()
-            self.parent.logger.debug("Generated copy button default style")
-            return f"""
-            QPushButton {{
-                background: {colors['primary']};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 500;
-                padding: 8px 16px;
-            }}
-            QPushButton:hover {{
-                background: #3b82f6;
-            }}
-            """
+        # def get_copy_button_default_style(self):
+        #     colors = self.parent.get_theme_colors()
+        #     self.parent.logger.debug("Generated copy button default style")
+        #     return f"""
+        #     QPushButton {{
+        #         background: {colors['primary']};
+        #         color: white;
+        #         border: none;
+        #         border-radius: 8px;
+        #         font-size: 14px;
+        #         font-weight: 500;
+        #         padding: 8px 16px;
+        #     }}
+        #     QPushButton:hover {{
+        #         background: #3b82f6;
+        #     }}
+        #     """
         
         def get_copy_button_success_style(self):
             """Get success style for copy button."""
