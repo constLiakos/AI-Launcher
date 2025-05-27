@@ -55,8 +55,8 @@ class StyleManager:
             'response_bg': 'rgba(248, 250, 252, 0.9)',
             'button_secondary_bg': '#f3f4f6',
             'button_secondary_text': '#374151',
-            'button_stt_idle_bg': "#4F9CF9",
-            'button_stt_recording_bg': '#4F9CF9',
+            'button_stt_idle_bg': "#A7C8FF",
+            'button_stt_recording_bg': '#FF3B30',
             'button_stt_idle_border': '#f3f4f6',
             'button_stt_recording_border': '#f3f4f6',
         }
