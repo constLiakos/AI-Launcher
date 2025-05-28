@@ -45,6 +45,12 @@ A modern, lightweight desktop AI assistant with a sleek interface that lives in 
 
 ## Installation
 
+### Quick Start (Recommended)
+
+Download the latest pre-built executable from the [releases page](https://github.com/constLiakos/AI-Launcher/releases).
+
+No Python installation required - just download and run!
+
 ### Prerequisites
 
 - Python 3.7+
