@@ -1,6 +1,10 @@
 #!/bin/bash
 
-pyinstaller --onefile --windowed --name "AI-Launcher" \
+pyinstaller \
+    --onefile \
+    --windowed \
+    --add-data "src/assets:assets" \
+    --name "AI-Launcher" \
     --hidden-import "pynput.keyboard" \
     --hidden-import "pynput.keyboard._xorg" \
     --hidden-import "pynput._util.xorg" \
