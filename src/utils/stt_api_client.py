@@ -3,7 +3,7 @@ import requests
 import json
 import os
 
-from utils.constants import Files  # Used for os.path.basename
+from utils.constants import Files
 
 
 class SttApiClient:
@@ -20,7 +20,7 @@ class SttApiClient:
         self.api_token = config.get('stt_api_key')
         self.model_name = config.get('stt_model')
         self.timeout = config.get(
-            'stt_request_timeout', 30)  # Default timeout 30s
+            'stt_request_timeout', 30)
 
         self.logger.debug(f"Initializing STT API client with base URL: {self.api_base_url}, model: {self.model_name}, timeout: {self.timeout}s")
 

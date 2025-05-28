@@ -349,6 +349,7 @@ class Launcher(QMainWindow):
         input_layout.addWidget(self.stt_button)
 
         # Settings button (gear icon)
+        logger.debug(f"Settings Gear Icon Path: {str(Files.SETTINGS_GEAR_ICON_PATH)}")
         self.settings_button = QPushButton()
         self.settings_button.setObjectName("settingsButton")
         self.settings_button.setIcon(QIcon(str(Files.SETTINGS_GEAR_ICON_PATH)))

@@ -2,25 +2,37 @@
 Constants for the AI Launcher application.
 Contains all UI dimensions, colors, timings, and text constants.
 """
-from os import path
+import sys
 from PyQt5.QtCore import Qt, QEasingCurve
 from PyQt5.QtGui import QColor
 from pathlib import Path
+
+def get_base_path():
+    """Get the base path for resources, works in both dev and PyInstaller."""
+    if getattr(sys, 'frozen', False):
+        # Running in PyInstaller bundle
+        return Path(sys._MEIPASS)
+    else:
+        # Running in development
+        return Path(__file__).parent.parent
 
 # =============================================================================
 # Directories
 # =============================================================================
 
 class Directories:
+    # These use user's home directory - will work fine with PyInstaller
     DEFAULT_TMP = Path.home() / '.tmp' / 'ai_launcher'
     CONFIG = Path.home() / '.config' / 'ai_launcher' / 'config.json'
 
 class Files:
     RECORDING_FILE_NAME = "recorded_audio.wav"
     RECORDING_FILE_PATH = Directories.DEFAULT_TMP / RECORDING_FILE_NAME
-    SETTINGS_GEAR_ICON_PATH = Path(__file__).parent.parent / "assets" / "settings.png"
-    MIC_IDLE_ICON_PATH = Path(__file__).parent.parent / "assets" / "mic_white_idle.png"
-    MIC_RECORDING_ICON_PATH = Path(__file__).parent.parent / "assets" / "mic_white_recording.png"
+    
+    _base_path = get_base_path()
+    SETTINGS_GEAR_ICON_PATH = _base_path / "assets" / "settings.png"
+    MIC_IDLE_ICON_PATH = _base_path / "assets" / "mic_white_idle.png"
+    MIC_RECORDING_ICON_PATH = _base_path / "assets" / "mic_white_recording.png"
 
 # =============================================================================
 # LLM Config
