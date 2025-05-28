@@ -412,19 +412,14 @@ class Launcher(QMainWindow):
         if state == "typing":
             self.animation_manager.stop_thinking_animation()
             self.input_field.setObjectName("inputFieldTyping")
+            self.input_field.setStyle(self.input_field.style())
         elif state == "thinking":
             self.input_field.setObjectName("inputFieldThinking")
             self.animation_manager.start_thinking_animation(self.input_field)
-        elif state == "streaming":
-            self.animation_manager.stop_thinking_animation()
-            self.input_field.setObjectName("inputFieldStreaming")
         else:  # normal
             self.animation_manager.stop_thinking_animation()
             self.input_field.setObjectName("inputField")
-
-        # Reapply stylesheet to update appearance
-        self.input_field.setStyle(self.input_field.style())
-
+            self.input_field.setStyle(self.input_field.style())
 
     def position_copy_button(self):
         """Position the copy button in the top-right corner of the response area, accounting for scrollbar."""
