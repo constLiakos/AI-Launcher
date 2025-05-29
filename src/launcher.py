@@ -363,36 +363,31 @@ class Launcher(QMainWindow):
             response_text)
         self.response_area.setHtml(html_content)
 
+    def _handle_request_lifecycle(self, request_id, action):
+        """Centralized request lifecycle management."""
+        if not self.state_manager.is_request_valid(request_id):
+            logger.debug(f"Invalid request_id {request_id}, ignoring {action}")
+            return False
+        return True
+
     def _handle_chunk(self, chunk, request_id):
         """Handle incoming response chunks with validation."""
-        logger.debug(
-            f"Received chunk for request {request_id}, size: {len(chunk)}")
-        if not self.state_manager.is_request_valid(request_id):
-            logger.debug(f"Invalid request_id {request_id}, ignoring chunk")
+        if not self._handle_request_lifecycle(request_id, "chunk"):
             return
-
         try:
-            # Check if this is the first chunk and handle UI expansion
             self.state_manager.handle_first_chunk()
-
-            # Add chunk to accumulated response
             self.state_manager.add_response_chunk(chunk)
             self._update_response_display()
-
-            # Auto-scroll to bottom to show latest content
-            cursor = self.response_area.textCursor()
-            cursor.movePosition(cursor.End)
-            self.response_area.setTextCursor(cursor)
-
+            self._auto_scroll_response()
         except Exception as e:
-            print(f"Error handling chunk: {e}")
-            self._handle_error(
-                f"Error processing response: {str(e)}", request_id)
+            logger.error(f"Error handling chunk: {e}")
+            self._handle_error(f"Error processing response: {str(e)}", request_id)
 
-        except Exception as e:
-            print(f"Error handling chunk: {e}")
-            self._handle_error(
-                f"Error processing response: {str(e)}", request_id)
+    def _auto_scroll_response(self):
+        """Separate auto-scroll logic."""
+        cursor = self.response_area.textCursor()
+        cursor.movePosition(cursor.End)
+        self.response_area.setTextCursor(cursor)
 
     def _handle_completion(self, request_id):
         """Handle request completion with conversation storage."""
