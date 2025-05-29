@@ -43,7 +43,7 @@ class Launcher(QMainWindow):
         self.config = Config()
 
         # Initialize API client
-        self.api_client = ApiClient(self.config)
+        self.api_client = ApiClient(logger, self.config)
 
         # Initialize managers
         # Check if we should clear previous response when reopening
@@ -809,7 +809,7 @@ class Launcher(QMainWindow):
             self.show_status(status_msg)
             
             # Update API client
-            self.api_client = ApiClient(self.config)
+            self.api_client = ApiClient(logger, self.config)
             self.restart_hotkey_listener()
             
             # Hide status after longer delay

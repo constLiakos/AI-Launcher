@@ -4,19 +4,26 @@ import json
 from utils.constants import LLM
 
 class ApiClient:
-    def __init__(self, config):
+    def __init__(self, logger, config):
+        self.logger = logger.getChild('api_client')
         self.config = config
-        self.current_request = None  # Track current request for cancellation
+        self.current_request = None
+        self.logger.debug("ApiClient initialized")
 
     def send_streaming_request(self, messages):
         """Send a streaming request to the OpenAI compatible API."""
+        self.logger.info("Starting streaming request")
+        
         try:
             api_key = self.config.get('api_key')
             api_base = self.config.get('api_base')
             model = self.config.get('model')
             system_prompt = self.config.get('system_prompt', LLM.DEFAULT_SYSTEM_PROMPT)
             
+            self.logger.debug(f"Using model: {model}, API base: {api_base}")
+            
             if not api_key:
+                self.logger.error("API key not configured")
                 raise Exception("API key not configured. Please check settings.")
 
             headers = {
@@ -26,14 +33,15 @@ class ApiClient:
 
             # Handle both old format (single prompt string) and new format (messages array)
             if isinstance(messages, str):
-                # Legacy support: convert string prompt to messages format
+                self.logger.debug("Converting legacy string prompt to messages format")
                 messages_data = [{"role": "user", "content": messages}]
             else:
-                # New format: use messages array directly
+                self.logger.debug(f"Using messages array with {len(messages)} messages")
                 messages_data = messages
 
             # Add system prompt if provided and not already present
             if system_prompt and (not messages_data or messages_data[0].get("role") != "system"):
+                self.logger.debug("Adding system prompt to messages")
                 messages_data.insert(0, {"role": "system", "content": system_prompt})
 
             data = {
@@ -44,20 +52,30 @@ class ApiClient:
                 "stream": True
             }
 
+            self.logger.debug(f"Request payload prepared with {len(messages_data)} messages")
+
             # Make streaming request
+            self.logger.info("Sending streaming request to API")
             self.current_request = requests.post(
                 f"{api_base}/chat/completions",
                 headers=headers,
                 data=json.dumps(data),
                 timeout=30,
-                stream=True  # Enable response streaming
+                stream=True
             )
 
+            self.logger.debug(f"Received response with status code: {self.current_request.status_code}")
+
             if self.current_request.status_code != 200:
+                self.logger.error(f"API returned error status: {self.current_request.status_code}")
                 error_info = self.current_request.json()
                 error_message = error_info.get("error", {}).get("message", "Unknown API error")
+                self.logger.error(f"API error message: {error_message}")
                 raise Exception(f"API Error: {error_message}")
 
+            self.logger.info("Processing streaming response")
+            chunk_count = 0
+            
             # Process streaming response
             for line in self.current_request.iter_lines():
                 if line:
@@ -72,6 +90,7 @@ class ApiClient:
                         
                         # Check for end of stream
                         if data_str.strip() == '[DONE]':
+                            self.logger.debug("Received end of stream marker")
                             break
                         
                         try:
@@ -83,23 +102,41 @@ class ApiClient:
                                 'delta' in chunk['choices'][0]):
                                 delta = chunk['choices'][0]['delta']
                                 if 'content' in delta:
+                                    chunk_count += 1
+                                    if chunk_count % 10 == 0:  # Log every 10th chunk to avoid spam
+                                        self.logger.debug(f"Processed {chunk_count} content chunks")
                                     yield delta['content']
-                        except json.JSONDecodeError:
-                            # Skip malformed JSON chunks
+                        except json.JSONDecodeError as json_err:
+                            self.logger.warning(f"Skipping malformed JSON chunk: {json_err}")
                             continue
 
+            self.logger.info(f"Streaming completed successfully. Total chunks processed: {chunk_count}")
+
+        except requests.exceptions.Timeout as e:
+            self.logger.error(f"Request timeout: {str(e)}")
+            raise Exception(f"Request timeout: {str(e)}")
+        except requests.exceptions.ConnectionError as e:
+            self.logger.error(f"Connection error: {str(e)}")
+            raise Exception(f"Connection error: {str(e)}")
         except requests.exceptions.RequestException as e:
+            self.logger.error(f"Network error: {str(e)}")
             raise Exception(f"Network error: {str(e)}")
         except Exception as e:
+            self.logger.error(f"Streaming request failed: {str(e)}")
             raise Exception(f"Streaming request failed: {str(e)}")
         finally:
             self.current_request = None
+            self.logger.debug("Streaming request cleanup completed")
 
     def cancel_request(self):
         """Cancel ongoing streaming request."""
         if self.current_request:
+            self.logger.info("Cancelling ongoing streaming request")
             try:
                 self.current_request.close()
                 self.current_request = None
-            except:
-                pass  # Ignore errors during cancellation
+                self.logger.debug("Request cancelled successfully")
+            except Exception as e:
+                self.logger.warning(f"Error during request cancellation: {str(e)}")
+        else:
+            self.logger.debug("No active request to cancel")
