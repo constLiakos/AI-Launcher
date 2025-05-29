@@ -1,7 +1,7 @@
 import json
 import os
 
-from utils.constants import LLM, STT, Conversation, Directories, Hotkey, Theme, Timing, WindowSize
+from utils.constants import LLM, STT, Conversation, Directories, Hotkey, InputSettings, Theme, Timing, WindowSize
 
 class Config:
     def __init__(self):
@@ -28,7 +28,8 @@ class Config:
             'stt_enabled': STT.DEFAULT_ENABLED,
             'tmp_dir': Directories.DEFAULT_TMP,
             'max_tokens': LLM.MAX_TOKENS,
-            'temperature': LLM.TEMPERATURE
+            'temperature': LLM.TEMPERATURE,
+            'multiline_input': InputSettings.MULTILINE_INPUT
         }
         self.config = self.load_config()
 

@@ -17,7 +17,7 @@ from utils.settings_dialog import SettingsDialog
 from managers.animation_manager import AnimationManager
 from managers.style_manager import StyleManager
 from managers.hotkey_manager import HotkeyManager
-from utils.constants import STT, Conversation, ElementSize, Files, Theme, WindowSize, Text, Timing
+from utils.constants import STT, Conversation, ElementSize, Files, InputSettings, Theme, WindowSize, Text, Timing
 from utils.markdown_render import MarkdownRenderer
 from managers.state_manager import StateManager
 from utils.stt_api_client import SttApiClient
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class Launcher(QMainWindow):
     def __init__(self, logdir: str, debug=False):
         super().__init__()
-
+        
         self._setup_logging(logdir, debug)
         self._initialize_core_components()
         self._initialize_managers()
@@ -69,6 +69,8 @@ class Launcher(QMainWindow):
         self.window_manager = WindowManager(self, self.config, logger)
         self.api_client = ApiClient(logger, self.config)
         self.stt_api_client = None
+        self.multiline_input = self.config.get('multiline_input', InputSettings.MULTILINE_INPUT)
+
 
     def _initialize_managers(self):
         "Initialize managers"
@@ -141,7 +143,7 @@ class Launcher(QMainWindow):
 
     def setup_ui(self):
         """Setup UI using UIManager."""
-        self.ui_manager.setup_ui()
+        self.ui_manager.setup_ui(multiline_input=self.multiline_input)
 
         # Connect signals
         callbacks = {
@@ -533,9 +535,27 @@ class Launcher(QMainWindow):
         center_y = main_rect.y() + (main_rect.height() - dialog_rect.height()) // 2
         dialog.move(center_x, center_y)
 
+
         if dialog.exec_():
             logger.debug("Settings dialog accepted")
-            # Check if theme changed
+            
+            # Check if multiline setting changed
+            new_multiline = self.config.get('multiline_input', False)
+            if new_multiline != self.multiline_input:
+                self.multiline_input = new_multiline
+                # Recreate UI with new input mode
+                self.ui_manager.recreate_input_field(self.multiline_input)
+                # Reconnect signals
+                callbacks = {
+                    'input_changed': self.on_input_changed,
+                    'return_pressed': self.force_send_request,
+                    'stt_clicked': self.recording_manager.toggle_recording,
+                    'settings_clicked': self.open_settings,
+                    'copy_clicked': self.copy_response
+                }
+                self.ui_manager.connect_signals(callbacks)
+                self.input_field = self.ui_manager.input_field
+
             new_theme = self.config.get('theme', Theme.DEFAULT_THEME)
             if new_theme != self.current_theme:
                 logger.debug(f"Settings saved, new theme: {new_theme}")
@@ -621,3 +641,20 @@ class Launcher(QMainWindow):
         """Delegate to StateManager."""
         logger.debug("Force send request triggered (Enter key pressed)")
         self.state_manager.force_send_request()
+
+
+    # Add event filter for handling key presses
+    def eventFilter(self, obj, event):
+        """Handle key events for input field."""
+        if obj == self.input_field and event.type() == event.KeyPress:
+            if self.multiline_input:
+                # Multi-line mode: Ctrl+Enter submits
+                if (event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter) and event.modifiers() == Qt.ControlModifier:
+                    self.force_send_request()
+                    return True
+            else:
+                # Single-line mode: Enter submits
+                if (event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter) and event.modifiers() == Qt.NoModifier:
+                    self.force_send_request()
+                    return True
+        return super().eventFilter(obj, event)

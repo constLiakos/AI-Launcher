@@ -1,12 +1,12 @@
 import logging
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit,
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit,
                              QPushButton, QTextBrowser, QFrame, QShortcut,
                              QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
 from managers.animation_manager import AnimationManager
 from managers.style_manager import StyleManager
-from utils.constants import (ElementSize, Files, Text, WindowSize)
+from utils.constants import (ElementSize, Files, InputSettings, Text, WindowSize)
 
 
 class UIManager:
@@ -17,16 +17,18 @@ class UIManager:
         self.style_manager:StyleManager = style_manager
         self.animation_manager:AnimationManager = animation_manager
 
-        # UI Components (will be created in setup_ui)
         self.main_container = None
         self.input_field = None
         self.response_area = None
         self.stt_button = None
         self.settings_button = None
         self.copy_button = None
+        self.multiline_input = False
 
-    def setup_ui(self):
+
+    def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
+        self.multiline_input = multiline_input
         self._setup_window_properties()
         self._create_main_container()
         self._create_input_section()
@@ -69,10 +71,8 @@ class UIManager:
         input_layout = QHBoxLayout()
         input_layout.setSpacing(ElementSize.CONTAINER_SPACING)
 
-        # Input field
-        self.input_field = QLineEdit()
-        self.input_field.setObjectName("inputField")
-        self.input_field.setPlaceholderText(Text.INPUT_PLACEHOLDER)
+        # Create input field based on multiline setting
+        self._create_input_field()
         input_layout.addWidget(self.input_field)
 
         # STT button
@@ -133,18 +133,46 @@ class UIManager:
         quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self.parent)
         quit_shortcut.activated.connect(self.parent.quit_application)
 
+
     def connect_signals(self, callbacks):
         """Connect UI signals to callbacks."""
         if 'input_changed' in callbacks:
-            self.input_field.textChanged.connect(callbacks['input_changed'])
+            if hasattr(self.input_field, 'toPlainText'):
+                # QTextEdit - textChanged doesn't pass text
+                self.input_field.textChanged.connect(lambda: callbacks['input_changed'](self.get_input_text()))
+            else:
+                # QLineEdit - textChanged passes text
+                self.input_field.textChanged.connect(callbacks['input_changed'])
+        
         if 'return_pressed' in callbacks:
-            self.input_field.returnPressed.connect(callbacks['return_pressed'])
+            # Install event filter on parent to handle key events
+            self.input_field.installEventFilter(self.parent)
+        
         if 'stt_clicked' in callbacks:
             self.stt_button.clicked.connect(callbacks['stt_clicked'])
         if 'settings_clicked' in callbacks:
             self.settings_button.clicked.connect(callbacks['settings_clicked'])
         if 'copy_clicked' in callbacks:
             self.copy_button.clicked.connect(callbacks['copy_clicked'])
+
+    def get_input_text(self):
+        """Get text from input field regardless of type."""
+        if hasattr(self.input_field, 'toPlainText'):
+            return self.input_field.toPlainText()
+        else:
+            return self.input_field.text()
+
+    def set_input_text(self, text):
+        """Set text in input field regardless of type."""
+        if hasattr(self.input_field, 'setPlainText'):
+            self.input_field.setPlainText(text)
+        else:
+            self.input_field.setText(text)
+
+    def clear_input(self):
+        """Clear input field regardless of type."""
+        if hasattr(self.input_field, 'clear'):
+            self.input_field.clear()
 
     def update_stt_button_visibility(self, enabled):
         """Update STT button visibility."""
@@ -216,3 +244,46 @@ class UIManager:
 
         font.setPointSize(12)
         widget.setFont(font)
+
+    def _create_input_field(self):
+        """Create appropriate input field based on multiline setting."""
+        if self.multiline_input:
+            # Multi-line input
+            self.input_field = QTextEdit()
+            self.input_field.setPlaceholderText(f"{Text.INPUT_PLACEHOLDER}\n(Ctrl+Enter to send)")
+            self.input_field.setMaximumHeight(InputSettings.MAX_HEIGHT)
+            self.input_field.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            self.input_field.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        else:
+            # Single-line input
+            self.input_field = QLineEdit()
+            self.input_field.setPlaceholderText(f"{Text.INPUT_PLACEHOLDER} (Enter to send)")
+        
+        self.input_field.setObjectName("inputField")
+
+    def recreate_input_field(self, multiline_input):
+        """Recreate input field when mode changes."""
+        if self.input_field:
+            # Store current text
+            if hasattr(self.input_field, 'toPlainText'):
+                current_text = self.input_field.toPlainText()
+            else:
+                current_text = self.input_field.text()
+            
+            # Remove old input field
+            layout = self.input_field.parent().layout()
+            layout.removeWidget(self.input_field)
+            self.input_field.deleteLater()
+            
+            # Update mode and create new field
+            self.multiline_input = multiline_input
+            self._create_input_field()
+            
+            # Insert new field at the beginning of the layout
+            layout.insertWidget(0, self.input_field)
+            
+            # Restore text
+            if hasattr(self.input_field, 'setText'):
+                self.input_field.setText(current_text)
+            elif hasattr(self.input_field, 'setPlainText'):
+                self.input_field.setPlainText(current_text)

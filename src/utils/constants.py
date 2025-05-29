@@ -460,3 +460,9 @@ class Animation:
     """Animation-related constants"""
     THINKING_PHASES = 6
     EASING_CURVE = "OutCubic"  # For QEasingCurve
+
+
+class InputSettings:
+    """Input Area Settings"""
+    MULTILINE_INPUT = True
+    MAX_HEIGHT = 300
