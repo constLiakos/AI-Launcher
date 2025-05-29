@@ -7,14 +7,13 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QFont, QIcon
 from utils.constants import Style, Colors, Text, Timing, TrayIcon
 
 class TrayManager(QSystemTrayIcon):
-    def __init__(self, parent, logger: logging.Logger, show_window, hide_window, open_settings, quit_application, tray_icon_activated):
+    def __init__(self, parent, logger: logging.Logger, show_window, hide_window, open_settings, quit_application):
         super().__init__()
         self.parent = parent
         self.show_window = show_window
         self.hide_window = hide_window
         self.open_settings = open_settings
         self.quit_application = quit_application
-        self.tray_icon_activated =tray_icon_activated
 
     def setup_system_tray(self):
         """Setup system tray icon and menu."""
@@ -85,3 +84,8 @@ class TrayManager(QSystemTrayIcon):
         painter.end()
 
         return QIcon(pixmap)
+
+    def tray_icon_activated(self, reason):
+        """Handle tray icon activation."""
+        if reason == QSystemTrayIcon.DoubleClick:
+            self.show_window()

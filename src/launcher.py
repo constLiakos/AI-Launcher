@@ -57,7 +57,7 @@ class Launcher(QMainWindow):
         self.markdown_render = MarkdownRenderer(logger)
         self.hotkey_manager = HotkeyManager(logger, self.show_window, self.config)
         self.recording_manager = Recording_Manager(logger, state_manager=self.state_manager, config=self.config)
-        self.tray_manager = TrayManager(self, logger, self.show_window, self.hide_window, self.open_settings, self.quit_application, self.tray_icon_activated)
+        self.tray_manager = TrayManager(self, logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
 
         # Set current theme
         self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
@@ -226,11 +226,6 @@ class Launcher(QMainWindow):
         if clear_history_on_minimize:
             self.conversation_manager.clear_history()
         
-
-    def tray_icon_activated(self, reason):
-        """Handle tray icon activation."""
-        if reason == QSystemTrayIcon.DoubleClick:
-            self.show_window()
 
     def setup_ui(self):
     # Remove window frame and title bar
