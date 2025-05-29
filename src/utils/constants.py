@@ -51,7 +51,7 @@ class LLM:
     DEFAULT_API_BASE = 'https://api.openai.com/v1'
     DEFAULT_LLM_MODEL = 'gpt-4.1-mini'
     DEFAULT_SYSTEM_PROMPT = "You’re a friendly assistant delivering clear, concise answers for everyday learning and fun facts. Keep replies brief, use tables for clarity, and make learning quick and enjoyable."
-
+    DEFAULT_REQUEST_TIMEOUT = 60
 
 # =============================================================================
 # Hotkey
@@ -195,7 +195,7 @@ class STT:
     DEFAULT_API_BASE = "https://api.example-stt.com/v1"
     DEFAULT_MODEL = "whisper-1"                             
     DEFAULT_HOTKEY = "Ctrl+Shift+R"
-    DEFAULT_REQUEST_TIMEOUT = 10
+    DEFAULT_REQUEST_TIMEOUT = 20
     DEFAULT_ENABLED = False
 
 # =============================================================================
