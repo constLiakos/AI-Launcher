@@ -4,15 +4,18 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit,
                              QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
+from managers.animation_manager import AnimationManager
+from managers.style_manager import StyleManager
 from utils.constants import (ElementSize, Files, Text, WindowSize)
 
 
 class UIManager:
-    def __init__(self, parent_window, logger, config, style_manager):
+    def __init__(self, parent_window, logger, config, style_manager, animation_manager):
         self.parent = parent_window
         self.logger = logger
         self.config = config
-        self.style_manager = style_manager
+        self.style_manager:StyleManager = style_manager
+        self.animation_manager:AnimationManager = animation_manager
 
         # UI Components (will be created in setup_ui)
         self.main_container = None
@@ -159,15 +162,18 @@ class UIManager:
         self.stt_button.style().polish(self.stt_button)
 
     def set_input_state(self, state):
-        """Set visual state of input field."""
-        if state == "thinking":
-            self.input_field.setObjectName("inputFieldThinking")
-        elif state == "typing":
+        """Set visual state of input field: 'normal', 'thinking' """
+        if state == "typing":
+            self.animation_manager.stop_thinking_animation()
             self.input_field.setObjectName("inputFieldTyping")
-        else:
+            self.input_field.setStyle(self.input_field.style())
+        elif state == "thinking":
+            self.input_field.setObjectName("inputFieldThinking")
+            self.animation_manager.start_thinking_animation(self.input_field)
+        else:  # normal
+            self.animation_manager.stop_thinking_animation()
             self.input_field.setObjectName("inputField")
-
-        self.input_field.setStyle(self.input_field.style())
+            self.input_field.setStyle(self.input_field.style())
 
     def position_copy_button(self):
         """Position copy button in response area."""

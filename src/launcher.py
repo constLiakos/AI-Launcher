@@ -1,7 +1,8 @@
 # Add missing imports at the top
 import logging
 from pathlib import Path
-from PyQt5.QtWidgets import (QMainWindow, QApplication, QAction, QAction, QShortcut)
+from PyQt5.QtWidgets import (
+    QMainWindow, QApplication, QAction, QAction, QShortcut)
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot
 from PyQt5.QtGui import QIcon, QKeySequence, QIcon
 
@@ -66,7 +67,7 @@ class Launcher(QMainWindow):
         self.tray_manager = TrayManager(
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
         self.ui_manager = UIManager(
-            self, logger, self.config, self.style_manager)
+            self, logger, self.config, self.style_manager, self.animation_manager)
 
         self.window_manager.setup_window_properties()
 
