@@ -28,9 +28,29 @@ logger = logging.getLogger(__name__)
 class Launcher(QMainWindow):
     def __init__(self, logdir: str, debug=False):
         super().__init__()
-        self.debug = debug
 
-        log_level = logging.DEBUG if self.debug else logging.INFO
+        self._setup_logging(logdir, debug)
+        self._initialize_core_components()
+        self._initialize_managers()
+        self._setup_connections()
+        self._finalize_setup()
+
+        # Set current theme
+        self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
+        self.style_manager.set_theme(self.current_theme)
+        self.setup_ui()
+        self.stt_configure()
+        self.update_stt_button_visibility()
+        self.apply_modern_style()
+        self.window_manager.restore_geometry()
+        self.tray_manager.setup_system_tray()
+        # Flag to track if app should really quit
+        self.should_quit = False
+        self.hotkey_manager.setup_hotkey()
+
+    def _setup_logging(self, logdir, debug):
+        """Setup logging configuration."""
+        log_level = logging.DEBUG if debug else logging.INFO
         app_log_dir = Path.joinpath(logdir, 'ai_launcher.log')
         print(f"AppLogDir: {app_log_dir}")
         logging.basicConfig(
@@ -41,18 +61,32 @@ class Launcher(QMainWindow):
                 logging.StreamHandler()  # Still shows in console
             ]
         )
+    def _setup_connections(self):
+        """Setup Connection Signals"""
+        self.state_manager.state_changed.connect(self.on_state_changed)
+        self.state_manager.processing_changed.connect(
+            self.on_processing_changed)
+        self.state_manager.response_ready.connect(self.on_response_ready)
+        self.state_manager.request_cancelled.connect(self.on_request_cancelled)
+        self.state_manager.request_ready.connect(self.send_request)
+        self.state_manager.expanded_changed.connect(
+            self.on_expanded_changed)
+        self.state_manager.stt_state_changed.connect(self.on_stt_state_changed)
+        self.state_manager.recording_completed_sg.connect(
+            self.on_recording_completed)
 
-        # Initialize configuration
+    def _initialize_core_components(self):
+        """Initialize config, API client, etc."""
         self.config = Config()
         self.window_manager = WindowManager(self, self.config, logger)
-
-        # Initialize API client
         self.api_client = ApiClient(logger, self.config)
+        self.stt_api_client = None
 
-        # Initialize managers
+    def _initialize_managers(self):
+        "Initialize managers"
         convrestation_history_limit = self.config.get(
             'message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT)
-
+        # Initialize managers
         self.conversation_manager = ConversationManager(
             logger, max_conversations=convrestation_history_limit)
         self.style_manager = StyleManager(logger)
@@ -68,54 +102,13 @@ class Launcher(QMainWindow):
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
         self.ui_manager = UIManager(
             self, logger, self.config, self.style_manager, self.animation_manager)
-
         self.window_manager.setup_window_properties()
 
-        # Set current theme
-        self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
-        self.style_manager.set_theme(self.current_theme)
-
-        # Connect StateManager signals
-        self.state_manager.state_changed.connect(self.on_state_changed)
-        self.state_manager.processing_changed.connect(
-            self.on_processing_changed)
-        self.state_manager.response_ready.connect(self.on_response_ready)
-        self.state_manager.request_cancelled.connect(self.on_request_cancelled)
-        self.state_manager.request_ready.connect(self.send_request)
-        self.state_manager.expanded_changed.connect(
-            self.on_expanded_changed)
-        self.state_manager.stt_state_changed.connect(self.on_stt_state_changed)
-        self.state_manager.recording_completed_sg.connect(
-            self.on_recording_completed)
-
-        # UI setup
-        self.setup_ui()
-
-        # Initialize STT API client
-        self.stt_api_client = None
-        self.stt_configure()
-        self.update_stt_button_visibility()
-
-        self.apply_modern_style()
-
-        # Restore window position
-        self.window_manager.restore_geometry()
-
-        # Setup system tray
-        self.tray_manager.setup_system_tray()
-
-        # Flag to track if app should really quit
-        self.should_quit = False
-
-        # Setup global hotkey
-        self.hotkey_manager.setup_hotkey()
-
-        self.resize_direction = None
-        self.resize_start_pos = None
-        self.resize_start_geometry = None
+    def _finalize_setup(self):
+        pass
 
     def stt_configure(self):
-        # Initialize STT API client
+        """ Initialize STT API client """
         self.stt_enabled = self.config.get('stt_enabled', STT.DEFAULT_ENABLED)
         if self.stt_enabled:
             try:
@@ -460,7 +453,6 @@ class Launcher(QMainWindow):
             if not worker:
                 return
 
-            # Connect signals - FIXED: Use consistent method names
             worker.chunk_received.connect(
                 lambda chunk: self._handle_chunk(chunk, request_id)
             )
@@ -508,7 +500,6 @@ class Launcher(QMainWindow):
 
     def show_status(self, message):
         """Print status instead of showing in UI."""
-        # print(f"Status: {message}")
         pass
 
     def hide_status(self):
