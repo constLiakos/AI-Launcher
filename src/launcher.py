@@ -32,21 +32,8 @@ class Launcher(QMainWindow):
         self._setup_logging(logdir, debug)
         self._initialize_core_components()
         self._initialize_managers()
-        self._setup_connections()
+        self._setup_signal_connections()
         self._finalize_setup()
-
-        # Set current theme
-        self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
-        self.style_manager.set_theme(self.current_theme)
-        self.setup_ui()
-        self.stt_configure()
-        self.update_stt_button_visibility()
-        self.apply_modern_style()
-        self.window_manager.restore_geometry()
-        self.tray_manager.setup_system_tray()
-        # Flag to track if app should really quit
-        self.should_quit = False
-        self.hotkey_manager.setup_hotkey()
 
     def _setup_logging(self, logdir, debug):
         """Setup logging configuration."""
@@ -62,7 +49,7 @@ class Launcher(QMainWindow):
             ]
         )
 
-    def _setup_connections(self):
+    def _setup_signal_connections(self):
         """Setup Connection Signals"""
         self.state_manager.state_changed.connect(self.on_state_changed)
         self.state_manager.processing_changed.connect(
@@ -106,7 +93,17 @@ class Launcher(QMainWindow):
         self.window_manager.setup_window_properties()
 
     def _finalize_setup(self):
-        pass
+        self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
+        self.style_manager.set_theme(self.current_theme)
+        self.setup_ui()
+        self.stt_configure()
+        self.update_stt_button_visibility()
+        self.apply_modern_style()
+        self.window_manager.restore_geometry()
+        self.tray_manager.setup_system_tray()
+        # Flag to track if app should really quit
+        self.should_quit = False
+        self.hotkey_manager.setup_hotkey()
 
     def stt_configure(self):
         """Initialize STT API client with better error handling."""
