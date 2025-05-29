@@ -2,9 +2,9 @@
 import logging
 from pathlib import Path
 from PyQt5.QtWidgets import (
-    QMainWindow, QApplication, QAction, QAction, QShortcut)
+    QMainWindow, QApplication, QAction, QShortcut)
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot
-from PyQt5.QtGui import QIcon, QKeySequence, QIcon
+from PyQt5.QtGui import QIcon, QKeySequence
 
 from managers.recording_manager import Recording_Manager
 from managers.tray_manager import TrayManager
@@ -61,6 +61,7 @@ class Launcher(QMainWindow):
                 logging.StreamHandler()  # Still shows in console
             ]
         )
+
     def _setup_connections(self):
         """Setup Connection Signals"""
         self.state_manager.state_changed.connect(self.on_state_changed)
