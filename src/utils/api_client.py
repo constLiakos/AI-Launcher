@@ -47,8 +47,8 @@ class ApiClient:
             data = {
                 "model": model,
                 "messages": messages_data,
-                "max_tokens": self.config.get('max_tokens', 500),
-                "temperature": self.config.get('temperature', 0.7),
+                "max_tokens": self.config.get('max_tokens', LLM.MAX_TOKENS),
+                "temperature": self.config.get('temperature', LLM.TEMPERATURE),
                 "stream": True
             }
 

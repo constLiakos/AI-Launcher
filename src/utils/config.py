@@ -27,7 +27,9 @@ class Config:
             'stt_request_timeout': STT.DEFAULT_REQUEST_TIMEOUT,
             'stt_hotkey': STT.DEFAULT_HOTKEY,
             'stt_enabled': STT.DEFAULT_ENABLED,
-            'tmp_dir': Directories.DEFAULT_TMP
+            'tmp_dir': Directories.DEFAULT_TMP,
+            'max_tokens': LLM.MAX_TOKENS,
+            'temperature': LLM.TEMPERATURE
         }
         self.config = self.load_config()
 
