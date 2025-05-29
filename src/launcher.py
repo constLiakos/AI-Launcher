@@ -99,7 +99,7 @@ class Launcher(QMainWindow):
         self.apply_modern_style()
 
         # Restore window position
-        self.restore_geometry()
+        self.window_manager.restore_geometry()
 
         # Setup system tray
         self.tray_manager.setup_system_tray()
@@ -569,10 +569,6 @@ class Launcher(QMainWindow):
             # Hide status after longer delay
             QTimer.singleShot(
                 Timing.SETTINGS_FEEDBACK_DURATION, self.hide_status)
-
-    def restore_geometry(self):
-        """Restore window position using WindowManager."""
-        self.window_manager.restore_geometry()
 
     def closeEvent(self, event):
         """Override close event to hide to tray instead of quitting."""
