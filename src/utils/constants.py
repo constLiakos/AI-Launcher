@@ -194,7 +194,7 @@ class STTDialogSize:
 
 class STT:
     """Constants related to Speech-to-Text functionality."""
-    DEFAULT_API_BASE = "https://api.example-stt.com/v1"
+    DEFAULT_API_BASE = 'https://api.openai.com/v1'
     DEFAULT_MODEL = "whisper-1"                             
     DEFAULT_HOTKEY = "Ctrl+Shift+R"
     DEFAULT_REQUEST_TIMEOUT = 20
