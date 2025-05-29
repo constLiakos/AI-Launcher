@@ -289,17 +289,3 @@ class WindowManager:
             
         except Exception as e:
             self.logger.error(f"Error saving geometry: {e}")
-
-
-    # def save_geometry(self):
-    #     """Save window position."""
-    #     self.config.set('position_x', self.parent.x())
-    #     self.config.set('position_y', self.parent.y())
-    #     self.logger.debug(f"Position saved: ({self.parent.x()}, {self.parent.y()})")
-    
-    # def restore_geometry(self):
-    #     """Restore window position."""
-    #     x = self.config.get('position_x', WindowSize.DEFAULT_X)
-    #     y = self.config.get('position_y', WindowSize.DEFAULT_Y)
-    #     self.logger.debug(f"Restoring window position to ({x}, {y})")
-    #     self.parent.move(x, y)

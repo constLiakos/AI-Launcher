@@ -574,10 +574,6 @@ class Launcher(QMainWindow):
         """Restore window position using WindowManager."""
         self.window_manager.restore_geometry()
 
-    def save_geometry(self):
-        """Save window position using WindowManager."""
-        self.window_manager.save_geometry()
-
     def closeEvent(self, event):
         """Override close event to hide to tray instead of quitting."""
         self.window_manager.handle_close_event(event)
