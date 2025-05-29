@@ -60,7 +60,7 @@ class ApiClient:
                 f"{api_base}/chat/completions",
                 headers=headers,
                 data=json.dumps(data),
-                timeout=30,
+                timeout=LLM.DEFAULT_REQUEST_TIMEOUT,
                 stream=True
             )
 
