@@ -27,7 +27,7 @@ class StyleManager:
     def get_theme_colors(self):
         """Get colors for current theme."""
         colors = self.themes[self.current_theme]
-        self.logger.debug(f"Retrieved colors for theme: {self.current_theme}")
+        # self.logger.debug(f"Retrieved colors for theme: {self.current_theme}")
         return colors
     
     def _get_classic_theme(self):
@@ -317,7 +317,7 @@ class StyleManager:
     def get_animated_thinking_style(self, color):
         """Get animated thinking style with specific color."""
         colors = self.get_theme_colors()
-        self.logger.debug(f"Generated animated thinking style with color: {color}")
+        # self.logger.debug(f"Generated animated thinking style with color: {color}")
         return f"""
         QLineEdit#inputFieldThinking {{
             background: {colors['field_bg']};
