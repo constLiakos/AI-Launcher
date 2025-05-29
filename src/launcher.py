@@ -109,18 +109,21 @@ class Launcher(QMainWindow):
         pass
 
     def stt_configure(self):
-        """ Initialize STT API client """
+        """Initialize STT API client with better error handling."""
         self.stt_enabled = self.config.get('stt_enabled', STT.DEFAULT_ENABLED)
-        if self.stt_enabled:
-            try:
-                if self.stt_api_client == None:
-                    self.stt_api_client = SttApiClient(logger, self.config)
-            except Exception as e:
-                logger.error(
-                    f"Error in stt_api_client, cannot be created:  {e}")
-                self.stt_enabled = False
-        else:
+        
+        if not self.stt_enabled:
+            self.stt_api_client = None
+            return
+        
+        try:
+            if self.stt_api_client is None:  # Use 'is None' instead of '== None'
+                self.stt_api_client = SttApiClient(logger, self.config)
+            logger.info("STT API client initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize STT API client: {e}")
             self.stt_enabled = False
+            self.stt_api_client = None
 
     # Remove the old hotkey methods and replace with:
     def restart_hotkey_listener(self):
