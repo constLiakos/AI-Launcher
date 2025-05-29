@@ -10,6 +10,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence, QFont, QF
 from managers.recording_manager import Recording_Manager
 from managers.tray_manager import TrayManager
 from managers.ui_manager import UIManager
+from managers.window_manager import WindowManager
 from utils.config import Config
 from utils.api_client import ApiClient
 from managers.conversation_manager import ConversationManager
@@ -43,6 +44,7 @@ class Launcher(QMainWindow):
         
         # Initialize configuration
         self.config = Config()
+        self.window_manager = WindowManager(self, self.config, logger)
 
         # Initialize API client
         self.api_client = ApiClient(logger, self.config)
@@ -61,6 +63,8 @@ class Launcher(QMainWindow):
         self.tray_manager = TrayManager(logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
         self.ui_manager = UIManager(self, logger, self.config, self.style_manager)
 
+        self.window_manager.setup_window_properties()
+
         # Set current theme
         self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
         self.style_manager.set_theme(self.current_theme)
@@ -76,11 +80,6 @@ class Launcher(QMainWindow):
             self.on_expanded_changed)
         self.state_manager.stt_state_changed.connect(self.on_stt_state_changed)
         self.state_manager.recording_completed_sg.connect(self.on_recording_completed)
-
-        # Add a timer to debounce position saving (prevent excessive saves during dragging)
-        self.position_save_timer = QTimer()
-        self.position_save_timer.setSingleShot(True)
-        self.position_save_timer.timeout.connect(self.save_geometry)
 
         # UI setup
         self.setup_ui()
@@ -121,112 +120,22 @@ class Launcher(QMainWindow):
         else:
             self.stt_enabled = False
 
-    def get_resize_direction(self, pos):
-        """Determine resize direction based on mouse position."""
-        rect = self.rect()
-
-        left = pos.x() <= ElementSize.TRIGGER_EDGE_RESIZE_MARGIN_HORIZONTAL
-        right = pos.x() >= rect.width() - ElementSize.TRIGGER_EDGE_RESIZE_MARGIN_HORIZONTAL
-        top = pos.y() <= 0
-        bottom = pos.y() >= rect.height() - ElementSize.TRIGGER_EDGE_RESIZE_MARGIN_VERTICAL
-        
-        if top and left:
-            return "top-left"
-        elif top and right:
-            return "top-right"
-        elif bottom and left:
-            return "bottom-left"
-        elif bottom and right:
-            return "bottom-right"
-        elif left:
-            return "left"
-        elif right:
-            return "right"
-        elif top:
-            return "top"
-        elif bottom:
-            return "bottom"
-        else:
-            return None
-
-
-    def update_cursor(self, direction):
-        """Update cursor based on resize direction."""
-        if direction == "top-left" or direction == "bottom-right":
-            self.setCursor(Qt.SizeFDiagCursor)
-        elif direction == "top-right" or direction == "bottom-left":
-            self.setCursor(Qt.SizeBDiagCursor)
-        elif direction == "left" or direction == "right":
-            self.setCursor(Qt.SizeHorCursor)
-        elif direction == "top" or direction == "bottom":
-            self.setCursor(Qt.SizeVerCursor)
-        else:
-            self.setCursor(Qt.ArrowCursor)
-
     # Remove the old hotkey methods and replace with:
     def restart_hotkey_listener(self):
         """Restart the global hotkey listener with new settings."""
         self.hotkey_manager.restart_listener()
 
     def quit_application(self):
-        """Properly quit the application."""
-        self.should_quit = True
-        if hasattr(self, 'tray_icon'):
-            self.tray_icon.hide()
-        QApplication.quit()
-
-
+        """Quit application using WindowManager."""
+        self.window_manager.quit_application()
+    
     def show_window(self):
-        """Show and raise the window to front."""
-        try:
-            # Check if we should clear previous response when reopening
-            if self.config.get('clear_last_response_on_minimize', False):
-                logger.debug("Clearing previous response on window show")
-                # Clear the response area and hide it
-                self.response_area.setHtml("")
-                self.response_area.setVisible(False)
-                self.copy_button.setVisible(False)
-                # Reset to compact size
-                self.animate_resize(WindowSize.COMPACT_WIDTH,
-                                    WindowSize.COMPACT_HEIGHT, fast=True)
-                # Clear the state manager's accumulated response
-                if hasattr(self.state_manager, 'accumulated_response'):
-                    self.state_manager.accumulated_response = ""
-                # Clear input field
-                self.input_field.clear()
-
-                # Optionally clear conversation history when window reopens
-                self.conversation_manager.clear_history()
-
-            logger.debug(f"Window shown, position: ({self.x()}, {self.y()})")
-            # First, ensure the window is visible
-            if self.isMinimized():
-                self.setWindowState(self.windowState() & ~Qt.WindowMinimized)
-            self.show()
-            self.raise_()
-            self.activateWindow()
-
-            # Focus on the input field
-            self.input_field.setFocus()
-        except Exception as e:
-            print(f"Error showing window: {e}")
-            # Fallback - just show normally
-            self.show()
-            self.input_field.setFocus()
+        """Show window using WindowManager."""
+        self.window_manager.show_window()
 
     def hide_window(self):
-        """Hide the window to system tray."""
-        self.hide()
-        if hasattr(self, 'tray_icon'):
-            self.tray_icon.showMessage(
-                Text.TRAY_BACKGROUND_TITLE,
-                Text.TRAY_BACKGROUND_MESSAGE,
-                QSystemTrayIcon.Information,
-                Timing.TRAY_MESSAGE_DURATION
-            )
-        clear_history_on_minimize = self.config.get('clear_history_on_minimize', Conversation.DEFAULT_CLEAR_HISTORY_ON_MINIMIZE)
-        if clear_history_on_minimize:
-            self.conversation_manager.clear_history()
+        """Hide window using WindowManager."""
+        self.window_manager.hide_window()
         
 
     def setup_ui(self):
@@ -331,9 +240,8 @@ class Launcher(QMainWindow):
             self.show_status(Text.STATUS_COPY_FAILED)
 
     def animate_resize(self, width, height, fast=False):
-        """Animate window resize using AnimationManager with constants."""
-        # self.animation_manager.animate_resize(self, width, height, fast)
-        self.animation_manager.animate_window_resize(self, width, height, fast)
+        """Animate window resize using WindowManager."""
+        self.window_manager.animate_resize(width, height, fast)
 
     def apply_modern_style(self):
         """Apply the modern stylesheet using StyleManager."""
@@ -648,122 +556,38 @@ class Launcher(QMainWindow):
                 Timing.SETTINGS_FEEDBACK_DURATION, self.hide_status)
             
     def restore_geometry(self):
-        """Restore window position."""
-        self.ui_manager.restore_geometry()
+        """Restore window position using WindowManager."""
+        self.window_manager.restore_geometry()
 
     def save_geometry(self):
-        """Save window position."""
-        self.ui_manager.save_geometry()
+        """Save window position using WindowManager."""
+        self.window_manager.save_geometry()
 
     def closeEvent(self, event):
         """Override close event to hide to tray instead of quitting."""
-        logger.debug("Close event triggered")
-        
-        if not self.should_quit and hasattr(self, 'tray_icon') and self.tray_icon.isVisible():
-            logger.debug("Hiding to tray instead of quitting")
-            event.ignore()
-            self.hide_window()
-        else:
-            logger.debug(f"Actually quitting - should_quit: {self.should_quit}, "
-                        f"has_tray: {hasattr(self, 'tray_icon')}, "
-                        f"tray_visible: {self.tray_icon.isVisible() if hasattr(self, 'tray_icon') else 'N/A'}")
-            self.hotkey_manager.cleanup()
-            logger.debug("Hotkey manager cleaned up")
-            event.accept()
-            logger.debug("Application closing")
+        self.window_manager.handle_close_event(event)
 
     def mousePressEvent(self, event):
         """Enable window dragging and resizing."""
-        if event.button() == Qt.LeftButton:
-            self.resize_direction = self.get_resize_direction(event.pos())
-            
-            if self.resize_direction:
-                # Starting resize
-                self.resize_start_pos = event.globalPos()
-                self.resize_start_geometry = self.geometry()
-            else:
-                # Starting drag
-                self.drag_position = event.globalPos() - self.frameGeometry().topLeft()
-            
-            event.accept()
+        self.window_manager.handle_mouse_press(event)
 
     def mouseMoveEvent(self, event):
         """Handle window dragging and resizing."""
-        if event.buttons() == Qt.LeftButton:
-            if self.resize_direction and hasattr(self, 'resize_start_pos'):
-                # Handle resizing
-                self.handle_resize(event.globalPos())
-            elif hasattr(self, 'drag_position'):
-                # Handle dragging
-                self.move(event.globalPos() - self.drag_position)
-                self.position_save_timer.stop()
-                self.position_save_timer.start(500)
-            
-            event.accept()
-        else:
-            # Update cursor when hovering (not dragging)
-            direction = self.get_resize_direction(event.pos())
-            self.update_cursor(direction)
-
-
-    def handle_resize(self, global_pos):
-        """Handle window resizing based on direction."""
-        if not self.resize_start_pos or not self.resize_start_geometry:
-            return
-        
-        delta = global_pos - self.resize_start_pos
-        start_geo = self.resize_start_geometry
-        
-        new_x = start_geo.x()
-        new_y = start_geo.y()
-        new_width = start_geo.width()
-        new_height = start_geo.height()
-        
-        # Apply minimum size constraints
-        min_size = self.minimumSize()
-        
-        if "left" in self.resize_direction:
-            new_width = max(min_size.width(), start_geo.width() - delta.x())
-            new_x = start_geo.x() + start_geo.width() - new_width
-        elif "right" in self.resize_direction:
-            new_width = max(min_size.width(), start_geo.width() + delta.x())
-        
-        if "top" in self.resize_direction:
-            new_height = max(min_size.height(), start_geo.height() - delta.y())
-            new_y = start_geo.y() + start_geo.height() - new_height
-        elif "bottom" in self.resize_direction:
-            new_height = max(min_size.height(), start_geo.height() + delta.y())
-        
-        # Apply the new geometry
-        self.setGeometry(new_x, new_y, new_width, new_height)
-        
-        # Reposition copy button if visible
-        if hasattr(self, 'copy_button') and self.copy_button.isVisible():
-            self.position_copy_button()
+        self.window_manager.handle_mouse_move(event)
 
     def leaveEvent(self, event):
         """Reset cursor when mouse leaves window."""
-        if not self.resize_direction:  # Only reset if not currently resizing
-            self.setCursor(Qt.ArrowCursor)
+        self.window_manager.handle_leave_event(event)
         super().leaveEvent(event)
 
     def mouseReleaseEvent(self, event):
         """Clean up after mouse release."""
-        if event.button() == Qt.LeftButton:
-            self.resize_direction = None
-            self.resize_start_pos = None
-            self.resize_start_geometry = None
-            self.setCursor(Qt.ArrowCursor)
-            event.accept()
+        self.window_manager.handle_mouse_release(event)
 
     def moveEvent(self, event):
-        """Handle any window move event (including programmatic moves)."""
+        """Handle any window move event."""
         super().moveEvent(event)
-
-        # Debounce position saving for any move event
-        if hasattr(self, 'position_save_timer'):
-            self.position_save_timer.stop()
-            self.position_save_timer.start(500)
+        self.window_manager.handle_move_event(event)
 
     def on_state_changed(self, new_state):
         """Handle state changes from StateManager."""

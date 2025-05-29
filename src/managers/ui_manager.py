@@ -23,11 +23,7 @@ class UIManager:
         self.settings_button = None
         self.copy_button = None
         
-        # Timers
-        self.position_save_timer = QTimer()
-        self.position_save_timer.setSingleShot(True)
-        self.position_save_timer.timeout.connect(self.save_geometry)
-    
+
     def setup_ui(self):
         """Create and setup all UI components."""
         self._setup_window_properties()
@@ -207,15 +203,3 @@ class UIManager:
         font.setPointSize(12)
         widget.setFont(font)
     
-    def save_geometry(self):
-        """Save window position."""
-        self.config.set('position_x', self.parent.x())
-        self.config.set('position_y', self.parent.y())
-        self.logger.debug(f"Position saved: ({self.parent.x()}, {self.parent.y()})")
-    
-    def restore_geometry(self):
-        """Restore window position."""
-        x = self.config.get('position_x', WindowSize.DEFAULT_X)
-        y = self.config.get('position_y', WindowSize.DEFAULT_Y)
-        self.logger.debug(f"Restoring window position to ({x}, {y})")
-        self.parent.move(x, y)
