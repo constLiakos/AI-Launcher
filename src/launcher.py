@@ -50,7 +50,6 @@ class Launcher(QMainWindow):
         self.api_client = ApiClient(logger, self.config)
 
         # Initialize managers
-        # Check if we should clear previous response when reopening
         convrestation_history_limit =  self.config.get('message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT)
 
         self.conversation_manager = ConversationManager(logger, max_conversations=convrestation_history_limit)
