@@ -9,6 +9,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence, QFont, QF
 
 from managers.recording_manager import Recording_Manager
 from managers.tray_manager import TrayManager
+from managers.ui_manager import UIManager
 from utils.config import Config
 from utils.api_client import ApiClient
 from managers.conversation_manager import ConversationManager
@@ -58,6 +59,7 @@ class Launcher(QMainWindow):
         self.hotkey_manager = HotkeyManager(logger, self.show_window, self.config)
         self.recording_manager = Recording_Manager(logger, state_manager=self.state_manager, config=self.config)
         self.tray_manager = TrayManager(logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
+        self.ui_manager = UIManager(self, logger, self.config, self.style_manager)
 
         # Set current theme
         self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
@@ -228,144 +230,45 @@ class Launcher(QMainWindow):
         
 
     def setup_ui(self):
-    # Remove window frame and title bar
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        """Setup UI using UIManager."""
+        self.ui_manager.setup_ui()
         
-        # Set initial size and allow resizing
-        self.resize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
-        self.setMinimumSize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)  # Set reasonable minimums
-
-        # Create central widget and main layout
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-
-        # Main container with rounded corners
-        self.main_container = QFrame()
-        self.main_container.setObjectName("mainContainer")
-
-        # Main layout
-        container_layout = QVBoxLayout(self.main_container)
-        container_layout.setContentsMargins(ElementSize.CONTAINER_MARGIN_HORIZONTAL, ElementSize.CONTAINER_MARGIN_VERTICAL,
-                                            ElementSize.CONTAINER_MARGIN_HORIZONTAL, ElementSize.CONTAINER_MARGIN_VERTICAL)
-        container_layout.setSpacing(ElementSize.CONTAINER_SPACING)
-
-        # Input section (this will stay fixed at the top)
-        input_layout = QHBoxLayout()
-        input_layout.setSpacing(ElementSize.CONTAINER_SPACING)
-
-        # Input field
-        self.input_field = QLineEdit()
-        self.input_field.setObjectName("inputField")
-        self.input_field.setPlaceholderText(Text.INPUT_PLACEHOLDER)
-        self.input_field.textChanged.connect(self.on_input_changed)
-        self.input_field.returnPressed.connect(self.force_send_request)
-        input_layout.addWidget(self.input_field)
-
-        # Speech-to-text button
-        self.stt_button = QPushButton()
-        self.stt_button.setObjectName("sttButton")
-        self.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
-        self.stt_button.setIconSize(QSize(24, 24))
-        self.stt_button.setFixedSize(
-            ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
-        self.stt_button.clicked.connect(self.recording_manager.toggle_recording)
-        # self.stt_button.setToolTip("Speech to Text")
-        input_layout.addWidget(self.stt_button)
-
-        # Settings button (gear icon)
-        logger.debug(f"Settings Gear Icon Path: {str(Files.SETTINGS_GEAR_ICON_PATH)}")
-        self.settings_button = QPushButton()
-        self.settings_button.setObjectName("settingsButton")
-        self.settings_button.setIcon(QIcon(str(Files.SETTINGS_GEAR_ICON_PATH)))
-        self.settings_button.setIconSize(QSize(24, 24))
-        self.settings_button.setFixedSize(
-            ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
-        self.settings_button.clicked.connect(self.open_settings)
-        input_layout.addWidget(self.settings_button)
-
-        # Add input section to top of container (fixed position)
-        container_layout.addLayout(input_layout)
-
-        # Response area (appears below input, initially hidden)
-        self.response_area = QTextBrowser()
-        self.response_area.setObjectName("responseArea")
-        self.response_area.setAcceptRichText(True)
-        self.response_area.setOpenExternalLinks(True)
-
-        self.setup_emoji_font(self.response_area)
-        self.response_area.setVisible(False)
-
-        self.response_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        container_layout.addWidget(self.response_area)
-
-        # Set stretch factors - higher number gets more space (fix small response area)
-        container_layout.setStretchFactor(self.input_field, 0)  # Fixed size
-        container_layout.setStretchFactor(self.response_area, 1)  # Takes remaining space
-
-        # Copy button positioned absolutely - make it a child of main_container instead
-        self.copy_button = QPushButton(Text.COPY_BUTTON)
-        self.copy_button.setObjectName("copyButton")
-        self.copy_button.setFixedSize(
-            ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
-        self.copy_button.clicked.connect(self.copy_response)
-        self.copy_button.setVisible(False)  # Hidden initially
+        # Connect signals
+        callbacks = {
+            'input_changed': self.on_input_changed,
+            'return_pressed': self.force_send_request,
+            'stt_clicked': self.recording_manager.toggle_recording,
+            'settings_clicked': self.open_settings,
+            'copy_clicked': self.copy_response
+        }
+        self.ui_manager.connect_signals(callbacks)
         
-        # Make it a child of main_container instead of response_area
-        self.copy_button.setParent(self.main_container)
-        
-        # Ensure it's on top
-        self.copy_button.raise_()
-
-        # Add a stretch to push everything to the top if needed
-        container_layout.addStretch()
-
-        # Set central widget
-        main_layout.addWidget(self.main_container)
-
-        # Setup keyboard shortcuts
-        self.setup_shortcuts()
-
+        # Set up aliases for backward compatibility
+        self.input_field = self.ui_manager.input_field
+        self.response_area = self.ui_manager.response_area
+        self.stt_button = self.ui_manager.stt_button
+        self.settings_button = self.ui_manager.settings_button
+        self.copy_button = self.ui_manager.copy_button
+        self.main_container = self.ui_manager.main_container
 
     def update_stt_button_visibility(self):
-        """Update mic button visibility based on STT enabled state."""
+        """Update mic button visibility."""
         self.stt_enabled = self.config.get('stt_enabled', STT.DEFAULT_ENABLED)
-        self.stt_button.setVisible(self.stt_enabled)
-        self.stt_button.setEnabled(self.stt_enabled)
+        self.ui_manager.update_stt_button_visibility(self.stt_enabled)
 
     def set_input_state(self, state):
-        """Set visual state of input field: 'normal', 'thinking' """
-        if state == "typing":
-            self.animation_manager.stop_thinking_animation()
-            self.input_field.setObjectName("inputFieldTyping")
-            self.input_field.setStyle(self.input_field.style())
-        elif state == "thinking":
-            self.input_field.setObjectName("inputFieldThinking")
+        """Set input field state."""
+        self.ui_manager.set_input_state(state)
+        
+        # Handle animations
+        if state == "thinking":
             self.animation_manager.start_thinking_animation(self.input_field)
-        else:  # normal
+        else:
             self.animation_manager.stop_thinking_animation()
-            self.input_field.setObjectName("inputField")
-            self.input_field.setStyle(self.input_field.style())
 
     def position_copy_button(self):
-        """Position the copy button in the top-right corner of the response area, accounting for scrollbar."""
-        if self.response_area.isVisible():
-            # Get the response area's position relative to main_container
-            response_pos = self.response_area.pos()
-            response_geometry = self.response_area.geometry()
-            
-            # Calculate position relative to main_container
-            button_x = response_pos.x() + response_geometry.width() - self.copy_button.width() - ElementSize.SCROLLBAR_SIZE - ElementSize.COPY_BUTTON_RIGHT_MARGIN
-            button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
-            
-            self.copy_button.move(button_x, button_y)
-            self.copy_button.raise_()  # Bring to front
-            
-            # Ensure it stays visible
-            self.copy_button.setVisible(True)
+        """Position copy button."""
+        self.ui_manager.position_copy_button()
 
     def resizeEvent(self, event):
         """Handle window resize to reposition copy button and adjust response area."""
@@ -745,18 +648,12 @@ class Launcher(QMainWindow):
                 Timing.SETTINGS_FEEDBACK_DURATION, self.hide_status)
             
     def restore_geometry(self):
-        """Restore window position (top-left corner)."""
-        x = self.config.get('position_x', WindowSize.DEFAULT_X)
-        y = self.config.get('position_y', WindowSize.DEFAULT_Y)
-        logger.debug(f"Restoring window position to ({x}, {y})")
-        self.move(x, y)
+        """Restore window position."""
+        self.ui_manager.restore_geometry()
 
     def save_geometry(self):
-        """Save window position (top-left corner)."""
-        self.config.set('position_x', self.x())
-        self.config.set('position_y', self.y())
-        # Optional: for debugging
-        logger.debug(f"Position saved: ({self.x()}, {self.y()})")
+        """Save window position."""
+        self.ui_manager.save_geometry()
 
     def closeEvent(self, event):
         """Override close event to hide to tray instead of quitting."""
@@ -904,28 +801,3 @@ class Launcher(QMainWindow):
         """Delegate to StateManager."""
         logger.debug("Force send request triggered (Enter key pressed)")
         self.state_manager.force_send_request()
-
-    def setup_emoji_font(self, widget):
-        """Configure font for better emoji support."""
-        font = QFont()
-        
-        # Try different fonts that support color emojis
-        emoji_fonts = [
-            "Segoe UI Emoji",      # Windows
-            "Apple Color Emoji",   # macOS
-            "Noto Color Emoji",    # Linux
-            "Twemoji",             # Web fallback
-            "Segoe UI",            # Windows fallback
-            "Arial",               # Universal fallback
-        ]
-        
-        font_db = QFontDatabase()
-        for font_name in emoji_fonts:
-            font.setFamily(font_name)
-            # Use families() method to check if font exists
-            if font_name in font_db.families():
-                logger.debug(f"Using font: {font_name}")
-                break
-        
-        font.setPointSize(12)
-        widget.setFont(font)
