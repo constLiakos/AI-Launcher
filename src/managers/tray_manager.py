@@ -1,4 +1,3 @@
-# Add missing imports at the top
 import logging
 from PyQt5.QtWidgets import (QWidget, QAction, QSystemTrayIcon, QMenu, QAction, QSystemTrayIcon)
 from PyQt5.QtCore import Qt, pyqtSlot
