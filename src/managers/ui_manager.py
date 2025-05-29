@@ -101,6 +101,8 @@ class UIManager:
         
         self.setup_emoji_font(self.response_area)
         container_layout.addWidget(self.response_area)
+        container_layout.setStretchFactor(container_layout.itemAt(0).layout(), 0)  # Input section
+        container_layout.setStretchFactor(self.response_area, 1)  # Response area takes remaining space
         container_layout.addStretch()
     
     def _create_copy_button(self):
