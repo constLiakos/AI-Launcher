@@ -1,5 +1,5 @@
 import logging
-from utils.constants import BackgroundColors, Theme
+from utils.constants import Theme
 from PyQt5.QtGui import QFont, QFontDatabase
 
 class StyleManager:

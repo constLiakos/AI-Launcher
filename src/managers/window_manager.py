@@ -1,9 +1,7 @@
 import logging
-from pathlib import Path
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot
-from PyQt5.QtGui import QKeySequence, QIcon
-from utils.constants import WindowSize, ElementSize, Timing, Text
+from utils.constants import WindowSize, ElementSize
 
 logger = logging.getLogger(__name__)
 

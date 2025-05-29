@@ -1,7 +1,7 @@
 import logging
 from pynput.keyboard import Controller, Listener, HotKey
 import threading
-from PyQt5.QtCore import QTimer, pyqtSignal, QObject
+from PyQt5.QtCore import pyqtSignal, QObject
 
 from utils.constants import Hotkey
 import time

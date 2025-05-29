@@ -1,5 +1,5 @@
 import logging
-from PyQt5.QtWidgets import (QWidget, QAction, QSystemTrayIcon, QMenu)
+from PyQt5.QtWidgets import (QAction, QSystemTrayIcon, QMenu)
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont
 from utils.constants import Style, Colors, Text, Timing, TrayIcon

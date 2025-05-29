@@ -1,11 +1,9 @@
 # Add missing imports at the top
 import logging
 from pathlib import Path
-from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                             QLineEdit, QPushButton, QLabel, QTextEdit, QFrame,
-                             QApplication, QAction, QGraphicsDropShadowEffect, QSystemTrayIcon, QMenu, QAction, QShortcut, QSizePolicy, QTextBrowser)
-from PyQt5.QtCore import Qt, QTimer, QSize, pyqtSlot
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont, QKeySequence, QFont, QFontDatabase, QIcon
+from PyQt5.QtWidgets import (QMainWindow, QApplication, QAction, QAction, QShortcut)
+from PyQt5.QtCore import Qt, QTimer, pyqtSlot
+from PyQt5.QtGui import QIcon, QKeySequence, QIcon
 
 from managers.recording_manager import Recording_Manager
 from managers.tray_manager import TrayManager
@@ -18,15 +16,16 @@ from utils.settings_dialog import SettingsDialog
 from managers.animation_manager import AnimationManager
 from managers.style_manager import StyleManager
 from managers.hotkey_manager import HotkeyManager
-from utils.constants import STT, Conversation, ElementSize, Files, Style, Theme, WindowSize, Colors, Text, Timing, TrayIcon
+from utils.constants import STT, Conversation, ElementSize, Files, Theme, WindowSize, Text, Timing
 from utils.markdown_render import MarkdownRenderer
 from managers.state_manager import StateManager
 from utils.stt_api_client import SttApiClient
 
 logger = logging.getLogger(__name__)
 
+
 class Launcher(QMainWindow):
-    def __init__(self, logdir:str, debug=False):
+    def __init__(self, logdir: str, debug=False):
         super().__init__()
         self.debug = debug
 
@@ -41,7 +40,7 @@ class Launcher(QMainWindow):
                 logging.StreamHandler()  # Still shows in console
             ]
         )
-        
+
         # Initialize configuration
         self.config = Config()
         self.window_manager = WindowManager(self, self.config, logger)
@@ -50,17 +49,24 @@ class Launcher(QMainWindow):
         self.api_client = ApiClient(logger, self.config)
 
         # Initialize managers
-        convrestation_history_limit =  self.config.get('message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT)
+        convrestation_history_limit = self.config.get(
+            'message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT)
 
-        self.conversation_manager = ConversationManager(logger, max_conversations=convrestation_history_limit)
+        self.conversation_manager = ConversationManager(
+            logger, max_conversations=convrestation_history_limit)
         self.style_manager = StyleManager(logger)
-        self.animation_manager = AnimationManager(self, logger, self.style_manager)
+        self.animation_manager = AnimationManager(
+            self, logger, self.style_manager)
         self.state_manager = StateManager(self.config, logger)
         self.markdown_render = MarkdownRenderer(logger)
-        self.hotkey_manager = HotkeyManager(logger, self.show_window, self.config)
-        self.recording_manager = Recording_Manager(logger, state_manager=self.state_manager, config=self.config)
-        self.tray_manager = TrayManager(logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
-        self.ui_manager = UIManager(self, logger, self.config, self.style_manager)
+        self.hotkey_manager = HotkeyManager(
+            logger, self.show_window, self.config)
+        self.recording_manager = Recording_Manager(
+            logger, state_manager=self.state_manager, config=self.config)
+        self.tray_manager = TrayManager(
+            logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
+        self.ui_manager = UIManager(
+            self, logger, self.config, self.style_manager)
 
         self.window_manager.setup_window_properties()
 
@@ -78,7 +84,8 @@ class Launcher(QMainWindow):
         self.state_manager.expanded_changed.connect(
             self.on_expanded_changed)
         self.state_manager.stt_state_changed.connect(self.on_stt_state_changed)
-        self.state_manager.recording_completed_sg.connect(self.on_recording_completed)
+        self.state_manager.recording_completed_sg.connect(
+            self.on_recording_completed)
 
         # UI setup
         self.setup_ui()
@@ -112,9 +119,10 @@ class Launcher(QMainWindow):
         if self.stt_enabled:
             try:
                 if self.stt_api_client == None:
-                    self.stt_api_client = SttApiClient(logger, self.config)       
+                    self.stt_api_client = SttApiClient(logger, self.config)
             except Exception as e:
-                logger.error(f"Error in stt_api_client, cannot be created:  {e}")
+                logger.error(
+                    f"Error in stt_api_client, cannot be created:  {e}")
                 self.stt_enabled = False
         else:
             self.stt_enabled = False
@@ -127,7 +135,7 @@ class Launcher(QMainWindow):
     def quit_application(self):
         """Quit application using WindowManager."""
         self.window_manager.quit_application()
-    
+
     def show_window(self):
         """Show window using WindowManager."""
         self.window_manager.show_window()
@@ -135,12 +143,11 @@ class Launcher(QMainWindow):
     def hide_window(self):
         """Hide window using WindowManager."""
         self.window_manager.hide_window()
-        
 
     def setup_ui(self):
         """Setup UI using UIManager."""
         self.ui_manager.setup_ui()
-        
+
         # Connect signals
         callbacks = {
             'input_changed': self.on_input_changed,
@@ -150,7 +157,7 @@ class Launcher(QMainWindow):
             'copy_clicked': self.copy_response
         }
         self.ui_manager.connect_signals(callbacks)
-        
+
         # Set up aliases for backward compatibility
         self.input_field = self.ui_manager.input_field
         self.response_area = self.ui_manager.response_area
@@ -167,7 +174,7 @@ class Launcher(QMainWindow):
     def set_input_state(self, state):
         """Set input field state."""
         self.ui_manager.set_input_state(state)
-        
+
         # Handle animations
         if state == "thinking":
             self.animation_manager.start_thinking_animation(self.input_field)
@@ -181,28 +188,33 @@ class Launcher(QMainWindow):
     def resizeEvent(self, event):
         """Handle window resize to reposition copy button and adjust response area."""
         super().resizeEvent(event)
-        
+
         # Reposition copy button
         if hasattr(self, 'copy_button') and self.copy_button.isVisible():
             self.position_copy_button()
-        
+
         # Dynamically adjust response area constraints based on window size
         if hasattr(self, 'response_area'):
             window_height = self.height()
             # Reserve space for input area, margins, and some padding
             available_height = window_height - ElementSize.RESPONSE_MARGIN_BOTTOM
-            
+
             # Ensure available_height is positive
-            available_height = max(available_height, 50)  # Minimum 50px available
-            
+            # Minimum 50px available
+            available_height = max(available_height, 50)
+
             # Set dynamic min/max based on available space
-            min_response_height = min(ElementSize.RESPONSE_MIN_HEIGHT, available_height * 0.3)
-            max_response_height = max(available_height * 0.9, min_response_height)
-            
+            min_response_height = min(
+                ElementSize.RESPONSE_MIN_HEIGHT, available_height * 0.3)
+            max_response_height = max(
+                available_height * 0.9, min_response_height)
+
             # Ensure both values are positive
-            min_response_height = max(int(min_response_height), 20)  # Minimum 20px
-            max_response_height = max(int(max_response_height), min_response_height)
-            
+            min_response_height = max(
+                int(min_response_height), 20)  # Minimum 20px
+            max_response_height = max(
+                int(max_response_height), min_response_height)
+
             self.response_area.setMinimumHeight(min_response_height)
             self.response_area.setMaximumHeight(max_response_height)
 
@@ -244,7 +256,8 @@ class Launcher(QMainWindow):
 
     def apply_modern_style(self):
         """Apply the modern stylesheet using StyleManager."""
-        self.setStyleSheet(self.style_manager.get_complete_style(self.current_theme))
+        self.setStyleSheet(
+            self.style_manager.get_complete_style(self.current_theme))
 
     def _cleanup_worker(self):
         """Cleanup worker thread safely."""
@@ -294,7 +307,8 @@ class Launcher(QMainWindow):
         """Send request - called by StateManager signal."""
         logger.debug(f"Sending request with prompt length: {len(prompt)}")
         if not prompt or self.state_manager.is_currently_processing():
-            logger.debug("Request blocked - empty prompt or already processing")
+            logger.debug(
+                "Request blocked - empty prompt or already processing")
             return
 
         # Store the current prompt for this conversation
@@ -353,7 +367,8 @@ class Launcher(QMainWindow):
 
     def _handle_chunk(self, chunk, request_id):
         """Handle incoming response chunks with validation."""
-        logger.debug(f"Received chunk for request {request_id}, size: {len(chunk)}")
+        logger.debug(
+            f"Received chunk for request {request_id}, size: {len(chunk)}")
         if not self.state_manager.is_request_valid(request_id):
             logger.debug(f"Invalid request_id {request_id}, ignoring chunk")
             return
@@ -388,11 +403,11 @@ class Launcher(QMainWindow):
 
         # Get the complete response
         full_response = self.state_manager.get_accumulated_response()
-        
+
         # Store the conversation (user prompt + assistant response)
         if hasattr(self, 'current_user_prompt') and full_response:
             self.conversation_manager.add_conversation(
-                self.current_user_prompt, 
+                self.current_user_prompt,
                 full_response
             )
             logger.debug("Conversation added to history")
@@ -410,7 +425,7 @@ class Launcher(QMainWindow):
         logger.error(f"Request {request_id} failed: {error_message}")
         if not self.state_manager.handle_error(error_message, request_id):
             return
-        
+
         # Get error text from StateManager
         error_text = self.state_manager.get_accumulated_response()
 
@@ -510,7 +525,7 @@ class Launcher(QMainWindow):
         logger.info("STT Settings Changed")
         self.stt_configure()
         self.update_stt_button_visibility()
-        self.stt_api_client = SttApiClient(logger, self.config)    
+        self.stt_api_client = SttApiClient(logger, self.config)
 
     def open_settings(self):
         """Open the settings dialog."""
@@ -519,17 +534,17 @@ class Launcher(QMainWindow):
 
         # Connect the theme change signal
         dialog.theme_changed.connect(self.on_theme_changed)
-        
+
         # Let the dialog calculate its size first
         dialog.adjustSize()
-        
+
         # Center the dialog relative to the main window
         main_rect = self.geometry()
         dialog_rect = dialog.geometry()
         center_x = main_rect.x() + (main_rect.width() - dialog_rect.width()) // 2
         center_y = main_rect.y() + (main_rect.height() - dialog_rect.height()) // 2
         dialog.move(center_x, center_y)
-        
+
         if dialog.exec_():
             logger.debug("Settings dialog accepted")
             # Check if theme changed
@@ -539,21 +554,21 @@ class Launcher(QMainWindow):
                 self.current_theme = new_theme
                 self.style_manager.set_theme(self.current_theme)
                 self.apply_modern_style()
-            
+
             # Show feedback with larger, visible status
             delay_seconds = self.config.get(
                 'request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)
             status_msg = f"✓ Settings saved! Request delay: {delay_seconds}s"
             self.show_status(status_msg)
-            
+
             # Update API client
             self.api_client = ApiClient(logger, self.config)
             self.restart_hotkey_listener()
-            
+
             # Hide status after longer delay
             QTimer.singleShot(
                 Timing.SETTINGS_FEEDBACK_DURATION, self.hide_status)
-            
+
     def restore_geometry(self):
         """Restore window position using WindowManager."""
         self.window_manager.restore_geometry()
@@ -592,16 +607,18 @@ class Launcher(QMainWindow):
         """Handle state changes from StateManager."""
         logger.debug(f"State changed to: {new_state}")
         self.set_input_state(new_state)
-        
+
         if new_state == "normal" and not self.state_manager.get_current_prompt():
-            logger.debug("State is normal with no prompt - checking if response should be hidden")
+            logger.debug(
+                "State is normal with no prompt - checking if response should be hidden")
             if self.response_area.isVisible():
                 logger.debug("Hiding response area")
                 self.hide_response()
 
     def on_processing_changed(self, is_processing):
         """Handle processing state changes."""
-        logger.debug(f"Processing state changed: {'started' if is_processing else 'stopped'}")
+        logger.debug(
+            f"Processing state changed: {'started' if is_processing else 'stopped'}")
         self.settings_button.setEnabled(not is_processing)
 
     def on_response_ready(self, response):

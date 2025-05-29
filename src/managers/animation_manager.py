@@ -2,7 +2,7 @@ import logging
 from PyQt5.QtCore import QTimer, QPropertyAnimation, QRect, QEasingCurve, QObject, QVariantAnimation
 from PyQt5.QtGui import QColor
 from managers.style_manager import StyleManager
-from utils.constants import AnimationConfig, ElementSize, Timing
+from utils.constants import AnimationConfig
 
 class AnimationManager(QObject):
     """Manages all animations for the application."""

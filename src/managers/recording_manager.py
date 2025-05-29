@@ -4,7 +4,6 @@ import threading
 import numpy as np
 import wavio
 import os
-from os import path
 
 from managers.state_manager import StateManager
 from utils.constants import Directories, Files

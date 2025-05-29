@@ -1,6 +1,5 @@
 import json
 import os
-from pathlib import Path
 
 from utils.constants import LLM, STT, Conversation, Directories, Hotkey, Theme, Timing, WindowSize
 
