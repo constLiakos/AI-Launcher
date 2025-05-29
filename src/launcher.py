@@ -57,7 +57,7 @@ class Launcher(QMainWindow):
         self.markdown_render = MarkdownRenderer(logger)
         self.hotkey_manager = HotkeyManager(logger, self.show_window, self.config)
         self.recording_manager = Recording_Manager(logger, state_manager=self.state_manager, config=self.config)
-        self.tray_manager = TrayManager(self, logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
+        self.tray_manager = TrayManager(logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
 
         # Set current theme
         self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
