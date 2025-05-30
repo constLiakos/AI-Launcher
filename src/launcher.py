@@ -91,7 +91,7 @@ class Launcher(QMainWindow):
         self.tray_manager = TrayManager(
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
         self.ui_manager = UIManager(
-            self, logger, self.config, self.animation_manager)
+            self, logger, self.config, self.animation_manager, self.state_manager)
         self.window_manager.setup_window_properties()
 
     def _finalize_setup(self):
@@ -485,9 +485,7 @@ class Launcher(QMainWindow):
         if is_expanded:
             self.animate_resize(WindowSize.EXPANDED_WIDTH,
                                 WindowSize.EXPANDED_HEIGHT)
-            self.response_area.setVisible(True)
-            self.copy_button.setVisible(True)
-            self.position_copy_button()
+            self.ui_manager.show_response_area()
         else:
             self.animate_resize(WindowSize.COMPACT_WIDTH,
                                 WindowSize.COMPACT_HEIGHT)

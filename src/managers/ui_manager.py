@@ -5,15 +5,17 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QText
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
 from managers.animation_manager import AnimationManager
+from managers.state_manager import StateManager
 from utils.constants import (ElementSize, Files, InputSettings, Text, WindowSize)
 
 
 class UIManager:
-    def __init__(self, parent_window, logger, config, animation_manager):
+    def __init__(self, parent_window, logger, config, animation_manager, state_manager):
         self.parent = parent_window
-        self.logger = logger
+        self.logger = logger.getChild('ui_manager')
         self.config = config
         self.animation_manager:AnimationManager = animation_manager
+        self.state_manager:StateManager = state_manager
 
         self.main_container = None
         self.input_field = None
@@ -133,20 +135,16 @@ class UIManager:
         self.copy_button.setVisible(True)
         self.position_copy_button()
 
-    def hide_response_area(self):
-        """Hide response area and copy button."""
-        self.response_area.setVisible(False)
-        self.copy_button.setVisible(False)
-
     def reset_input_height(self):
         """Reset input field to original single-line height."""
-        if self.multiline_input and self.original_input_height:
-            self.input_field.setMinimumHeight(self.original_input_height)
-            self.input_field.setMaximumHeight(self.original_input_height)
+        pass
+        # if self.multiline_input and self.original_input_height:
+        #     self.input_field.setMinimumHeight(self.original_input_height)
+        #     self.input_field.setMaximumHeight(self.original_input_height)
             
-            # Reset window height too
-            if self.original_window_height:
-                self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
+        #     # Reset window height too
+        #     if self.original_window_height:
+        #         self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
 
 
 
@@ -375,22 +373,22 @@ class UIManager:
                 self.logger.debug(f"Resizing window: {current_window_height} -> {new_window_height} (lines: {line_count})")
                 self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
 
-    def _adjust_window_height(self, height_diff):
-        """Adjust window height when input field changes size."""
-        current_window_height = self.parent.height()
-        new_window_height = current_window_height + height_diff
+    # def _adjust_window_height(self, height_diff):
+    #     """Adjust window height when input field changes size."""
+    #     current_window_height = self.parent.height()
+    #     new_window_height = current_window_height + height_diff
         
-        # Store original window height if not stored yet
-        if self.original_window_height is None:
-            self.original_window_height = current_window_height
+    #     # Store original window height if not stored yet
+    #     if self.original_window_height is None:
+    #         self.original_window_height = current_window_height
         
-        # Ensure reasonable bounds
-        min_height = WindowSize.COMPACT_HEIGHT
-        max_height = min_height + 200  # Reasonable maximum expansion
-        new_window_height = max(min_height, min(new_window_height, max_height))
+    #     # Ensure reasonable bounds
+    #     min_height = WindowSize.COMPACT_HEIGHT
+    #     max_height = min_height + 200  # Reasonable maximum expansion
+    #     new_window_height = max(min_height, min(new_window_height, max_height))
         
-        # Animate the resize
-        self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
+    #     # Animate the resize
+    #     self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
 
     def _setup_emoji_font(self, widget):
         """Configure font for emoji support."""
