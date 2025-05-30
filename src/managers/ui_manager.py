@@ -19,7 +19,7 @@ class UIManager:
         self.stt_button = None
         self.settings_button = None
         self.copy_button = None
-        self.multiline_input = False
+        self.input_type_is_multiline = False
         self.multiline_toggle_button = None
 
         self.original_input_height = None
@@ -35,7 +35,7 @@ class UIManager:
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
-        self.multiline_input = multiline_input
+        self.input_type_is_multiline = multiline_input
         self._setup_window_properties()
         self._create_main_container()
         self._create_input_section()
@@ -122,7 +122,7 @@ class UIManager:
             self.input_field.clear()
             
         # Reset to original heights when clearing in multiline mode
-        if self.multiline_input:
+        if self.input_type_is_multiline:
             self._reset_input_and_window_height()
 
     def update_stt_button_visibility(self, enabled):
@@ -181,15 +181,6 @@ class UIManager:
     def reset_input_height(self):
         """Reset input field to original single-line height."""
         pass
-        # if self.multiline_input and self.original_input_height:
-        #     self.input_field.setMinimumHeight(self.original_input_height)
-        #     self.input_field.setMaximumHeight(self.original_input_height)
-            
-        #     # Reset window height too
-        #     if self.original_window_height:
-        #         self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
-
-
 
     def recreate_input_field(self, multiline_input):
         """Recreate input field when mode changes."""
@@ -205,7 +196,7 @@ class UIManager:
                 is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded']()
             
             # Reset to original window height if switching from multiline
-            if self.multiline_input and not multiline_input and self.original_window_height and not is_currently_window_expanded:
+            if self.input_type_is_multiline and not multiline_input and self.original_window_height and not is_currently_window_expanded:
                 self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
             
             # Get the layout and find the old input field's position
@@ -217,7 +208,7 @@ class UIManager:
                 self.original_window_height = None
             
             # Update mode and create new field
-            self.multiline_input = multiline_input
+            self.input_type_is_multiline = multiline_input
             self._create_input_field()
             
             # Store original heights for new multiline mode
@@ -278,7 +269,7 @@ class UIManager:
         self.multiline_toggle_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
         self.multiline_toggle_button.setFont(QFont("Segoe UI Emoji", 14))  # Larger emoji font
-        self.update_multiline_toggle_button(self.multiline_input)
+        self.update_multiline_toggle_button(self.input_type_is_multiline)
         input_layout.addWidget(self.multiline_toggle_button)
 
         # STT button
@@ -342,7 +333,7 @@ class UIManager:
 
     def _create_input_field(self):
         """Create appropriate input field based on multiline setting."""
-        if self.multiline_input:
+        if self.input_type_is_multiline:
             # Multi-line input
             self.input_field = QTextEdit()
             self.input_field.setPlaceholderText(f"{Text.INPUT_PLACEHOLDER} (Ctrl+Enter to send)")
@@ -373,7 +364,7 @@ class UIManager:
 
     def _handle_multiline_resize(self):
         """Handle resizing of multiline input field and window based on content."""
-        if not self.multiline_input or not hasattr(self.input_field, 'document'):
+        if not self.input_type_is_multiline or not hasattr(self.input_field, 'document'):
             return
         
         text = self.input_field.toPlainText()
@@ -439,7 +430,7 @@ class UIManager:
 
     def _reset_input_and_window_height(self):
         """Reset both input field and window to original heights."""
-        if self.multiline_input and self.original_input_height and self.original_window_height:
+        if self.input_type_is_multiline and self.original_input_height and self.original_window_height:
             self.logger.debug(f"Resetting heights - Input: {self.original_input_height}, Window: {self.original_window_height}")
             
             # Reset input field height
