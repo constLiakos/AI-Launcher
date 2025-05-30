@@ -26,7 +26,7 @@ class UIManager:
         self.original_input_height = None  # Store original input height
         self.original_window_height = None  # Store original window height
         self.min_window_height = WindowSize.COMPACT_HEIGHT  # Minimum window height
-        self.line_height = 25  # Approximate height per line of text
+        self.line_height = 23
 
 
     def setup_ui(self, multiline_input=False):
@@ -262,9 +262,9 @@ class UIManager:
             
             # Set initial height to single line equivalent
             font_metrics = self.input_field.fontMetrics()
-            single_line_height = font_metrics.height() + 30  # 30px for padding
-            self.input_field.setMinimumHeight(single_line_height)
-            self.input_field.setMaximumHeight(single_line_height)
+            single_line_height = font_metrics.height()  # 30px for padding
+            # self.input_field.setMinimumHeight(single_line_height)
+            # self.input_field.setMaximumHeight(single_line_height)
             
             # Store original heights
             self.original_input_height = single_line_height
@@ -294,8 +294,14 @@ class UIManager:
         line_count = max(1, text.count('\n') + 1)  # At least 1 line
         
         # Calculate new input height based on line count
+
+        previous_height = self.input_field.height()
+
         base_padding = 30  # Base padding for borders, margins
-        new_input_height = (line_count * self.line_height) + base_padding
+        new_input_height_cal = (line_count * self.line_height) + base_padding
+
+        new_input_height = max(previous_height, new_input_height_cal)
+
         
         # Ensure minimum height (single line)
         if self.original_input_height:
@@ -304,6 +310,8 @@ class UIManager:
         # Cap maximum input height
         max_input_height = InputSettings.MAX_HEIGHT
         new_input_height = min(new_input_height, max_input_height)
+
+        
         
         # Calculate height difference for input field
         current_input_height = self.input_field.height()
