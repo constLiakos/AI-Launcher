@@ -448,8 +448,8 @@ class Launcher(QMainWindow):
             self.response_area.setVisible(True)
             self.copy_button.setVisible(True)
             self.position_copy_button()
-            self.animate_resize(WindowSize.EXPANDED_WIDTH,
-                                WindowSize.EXPANDED_HEIGHT)
+            self.animate_resize(WindowSize.EXPANDED_SINGLELINE_INPUT_WIDTH,
+                                WindowSize.EXPANDED_SINGLELINE_INPUT_HEIGHT)
 
         # Display error
         self.response_area.setHtml(error_text)
@@ -505,8 +505,14 @@ class Launcher(QMainWindow):
     def on_expanded_changed(self, is_expanded):
         """Handle expansion state changes from StateManager."""
         if is_expanded:
-            self.animate_resize(WindowSize.EXPANDED_WIDTH,
-                                WindowSize.EXPANDED_HEIGHT)
+            if self.state_manager.is_input_type_multiline():
+                expanded_width = WindowSize.EXPANDED_MULTILINE_INPUT_WIDTH
+                expanded_height = WindowSize.EXPANDED_MULTILINE_INPUT_HEIGHT
+            else:
+                expanded_width = WindowSize.EXPANDED_SINGLELINE_INPUT_WIDTH
+                expanded_height = WindowSize.EXPANDED_SINGLELINE_INPUT_HEIGHT
+
+            self.animate_resize(expanded_width,expanded_height)
             self.ui_manager.show_response_area()
         else:
             self.animate_resize(WindowSize.COMPACT_WIDTH,
