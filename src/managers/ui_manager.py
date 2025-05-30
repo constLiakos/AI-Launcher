@@ -2,7 +2,7 @@ import logging
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit,
                              QPushButton, QTextBrowser, QFrame, QShortcut,
                              QSizePolicy)
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import Qt, pyqtSlot, QTimer
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
 from utils.constants import (ElementSize, Files, InputSettings, Text, WindowSize)
 
@@ -27,6 +27,11 @@ class UIManager:
         self.min_window_height = WindowSize.COMPACT_HEIGHT
         self.animation_callbacks = {}
         self.state_manager_callbacks = {}
+
+        self.multiline_toggle_debounce_timer = QTimer()
+        self.multiline_toggle_debounce_timer.setSingleShot(True)
+        self.multiline_toggle_debounce_timer.timeout.connect(self._handle_multiline_toggle_debounced)
+        self.pending_multiline_callback = None
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -66,7 +71,10 @@ class UIManager:
         if 'is_currenlty_expanded' in callbacks:
             self.state_manager_callbacks['is_currenlty_expanded']  = callbacks['is_currenlty_expanded']
         if 'multiline_toggle_clicked' in callbacks:
-            self.multiline_toggle_button.clicked.connect(callbacks['multiline_toggle_clicked'])
+            # Store the callback and connect to debounced handler
+            self.pending_multiline_callback = callbacks['multiline_toggle_clicked']
+            self.multiline_toggle_button.clicked.connect(self._handle_multiline_toggle_click)
+
 
     def update_multiline_toggle_button(self, is_multiline):
         """Update multiline toggle button appearance based on current state."""
@@ -83,6 +91,16 @@ class UIManager:
         self.multiline_toggle_button.style().unpolish(self.multiline_toggle_button)
         self.multiline_toggle_button.style().polish(self.multiline_toggle_button)
   
+    def _handle_multiline_toggle_click(self):
+        """Handle multiline toggle with debouncing."""
+        # Reset timer and start new one
+        self.multiline_toggle_debounce_timer.stop()
+        self.multiline_toggle_debounce_timer.start(100)  # 100ms debounce
+
+    def _handle_multiline_toggle_debounced(self):
+        """Execute the actual multiline toggle callback after debounce."""
+        if self.pending_multiline_callback:
+            self.pending_multiline_callback()
 
     def set_input_text(self, text):
         """Set text in input field regardless of type."""
@@ -181,9 +199,13 @@ class UIManager:
                 current_text = self.input_field.toPlainText()
             else:
                 current_text = self.input_field.text()
+
+            is_currently_window_expanded = False
+            if 'is_currenlty_expanded' in self.state_manager_callbacks:
+                is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded']()
             
             # Reset to original window height if switching from multiline
-            if self.multiline_input and not multiline_input and self.original_window_height:
+            if self.multiline_input and not multiline_input and self.original_window_height and not is_currently_window_expanded:
                 self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
             
             # Remove old input field
@@ -192,7 +214,7 @@ class UIManager:
             self.input_field.deleteLater()
             
             # Reset height tracking when switching modes
-            self.original_input_height = None
+            # self.original_input_height = None
             if not multiline_input:  # Only reset window height when going to single-line
                 self.original_window_height = None
             
