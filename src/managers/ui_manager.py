@@ -345,7 +345,7 @@ class UIManager:
         if self.multiline_input:
             # Multi-line input
             self.input_field = QTextEdit()
-            self.input_field.setPlaceholderText(f"{Text.INPUT_PLACEHOLDER}\n(Ctrl+Enter to send)")
+            self.input_field.setPlaceholderText(f"{Text.INPUT_PLACEHOLDER} (Ctrl+Enter to send)")
             
             # Set initial height to single line equivalent
             font_metrics = self.input_field.fontMetrics()

@@ -70,7 +70,7 @@ class Hotkey:
 class WindowSize:
     """Window size constants"""
     # Compact mode (input only)
-    COMPACT_WIDTH = 600
+    COMPACT_WIDTH = 650
     COMPACT_HEIGHT = 90
 
     # Expanded mode (with response)

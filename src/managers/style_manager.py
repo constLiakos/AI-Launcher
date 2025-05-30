@@ -389,6 +389,43 @@ class StyleManager:
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 #2563eb, stop:1 #1d4ed8);
         }}
+
+        #multilineToggleButton {{
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 {colors['primary']}, stop:1 #3b82f6);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }}
+        #multilineToggleButton:hover {{
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #3b82f6, stop:1 #2563eb);
+        }}
+        #multilineToggleButton:pressed {{
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #2563eb, stop:1 #1d4ed8);
+        }}
+
+        #multilineToggleButtonActive {{
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 {colors['primary']}, stop:1 #3b82f6);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        }}
+        #multilineToggleButtonActive:hover {{
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #3b82f6, stop:1 #2563eb);
+        }}
+        #multilineToggleButtonActive:pressed {{
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                stop:0 #2563eb, stop:1 #1d4ed8);
+        }}
+
         #copyButton {{
             background: {colors['transparent_white']};
             border: 1px solid rgba(79, 156, 249, 0.3);
@@ -437,6 +474,8 @@ class StyleManager:
             font-size: 18px;
             font-weight: bold;
         }}
+
+
         """
     
     
