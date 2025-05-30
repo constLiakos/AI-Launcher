@@ -100,8 +100,9 @@ class Launcher(QMainWindow):
             logger, state_manager=self.state_manager, config=self.config)
         self.tray_manager = TrayManager(
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
+        
         self.ui_manager = UIManager(
-            self, logger, self.config, self.animation_manager, self.state_manager)
+            self, logger, self.config, self.state_manager)
         self.window_manager.setup_window_properties()
 
 
@@ -148,7 +149,9 @@ class Launcher(QMainWindow):
             'return_pressed': self.force_send_request,
             'stt_clicked': self.recording_manager.toggle_recording,
             'settings_clicked': self.open_settings,
-            'copy_clicked': self.copy_response
+            'copy_clicked': self.copy_response,
+            'start_thinking_animation': self.animation_manager.start_thinking_animation,
+            'stop_thinking_animation': self.animation_manager.stop_thinking_animation
         }
         self.ui_manager.connect_signals(callbacks)
 

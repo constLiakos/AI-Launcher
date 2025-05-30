@@ -4,17 +4,15 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QText
                              QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
-from managers.animation_manager import AnimationManager
 from managers.state_manager import StateManager
 from utils.constants import (ElementSize, Files, InputSettings, Text, WindowSize)
 
 
 class UIManager:
-    def __init__(self, parent_window, logger, config, animation_manager, state_manager):
+    def __init__(self, parent_window, logger, config, state_manager):
         self.parent = parent_window
         self.logger = logger.getChild('ui_manager')
         self.config = config
-        self.animation_manager:AnimationManager = animation_manager
         self.state_manager:StateManager = state_manager
 
         self.main_container = None
@@ -28,6 +26,7 @@ class UIManager:
         self.original_input_height = None
         self.original_window_height = None
         self.min_window_height = WindowSize.COMPACT_HEIGHT
+        self.animation_callbacks = {}
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -59,6 +58,12 @@ class UIManager:
             self.settings_button.clicked.connect(callbacks['settings_clicked'])
         if 'copy_clicked' in callbacks:
             self.copy_button.clicked.connect(callbacks['copy_clicked'])
+        # Store animation callbacks
+        if 'start_thinking_animation' in callbacks:
+            self.animation_callbacks['start_thinking'] = callbacks['start_thinking_animation']
+        if 'stop_thinking_animation' in callbacks:
+            self.animation_callbacks['stop_thinking'] = callbacks['stop_thinking_animation']
+
 
     def set_input_text(self, text):
         """Set text in input field regardless of type."""
@@ -101,14 +106,17 @@ class UIManager:
     def set_input_state(self, state):
         """Set visual state of input field: 'normal', 'thinking' """
         if state == "typing":
-            self.animation_manager.stop_thinking_animation()
+            if 'stop_thinking' in self.animation_callbacks:
+                self.animation_callbacks['stop_thinking']()
             self.input_field.setObjectName("inputFieldTyping")
             self.input_field.setStyle(self.input_field.style())
         elif state == "thinking":
             self.input_field.setObjectName("inputFieldThinking")
-            self.animation_manager.start_thinking_animation(self.input_field)
+            if 'start_thinking' in self.animation_callbacks:
+                self.animation_callbacks['start_thinking'](self.input_field)
         else:  # normal
-            self.animation_manager.stop_thinking_animation()
+            if 'stop_thinking' in self.animation_callbacks:
+                self.animation_callbacks['stop_thinking']()
             self.input_field.setObjectName("inputField")
             self.input_field.setStyle(self.input_field.style())
 
