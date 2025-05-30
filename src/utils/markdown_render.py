@@ -24,7 +24,7 @@ class MarkdownRenderer:
             try:
                 return markdown.markdown(text, extensions=self.extensions)
             except Exception as e:
-                print(f"Markdown conversion failed: {e}")
+                self.logger.error(f"Markdown conversion failed: {e}")
                 return self._basic_markdown_to_html(text)
         else:
             return self._basic_markdown_to_html(text)

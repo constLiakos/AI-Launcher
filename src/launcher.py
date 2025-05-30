@@ -266,7 +266,7 @@ class Launcher(QMainWindow):
                 self.show_status(Text.STATUS_NO_TEXT_TO_COPY)
 
         except Exception as e:
-            print(f"{Text.ERROR_COPYING_CLIPBOARD} {str(e)}")
+            logger.error(f"{Text.ERROR_COPYING_CLIPBOARD} {str(e)}")
             self.show_status(Text.STATUS_COPY_FAILED)
 
     def animate_resize(self, width, height, fast=False):
