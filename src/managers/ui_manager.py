@@ -329,27 +329,17 @@ class UIManager:
         # Count actual lines in the text
         line_count = max(1, text.count('\n') + 1)  # At least 1 line
 
-        base_padding = 35  # Base padding for borders, margins
+        base_padding = 40  # Base padding for borders, margins
         new_input_height_cal = (line_count * self.line_height) + base_padding
-
-        # new_input_height = max(previous_height, new_input_height_cal)
-        
-        # Ensure minimum height (single line)
-        # if self.original_input_height:
-        #     new_input_height = max(new_input_height, self.original_input_height)
         
         new_input_height = min(new_input_height_cal, InputSettings.MAX_HEIGHT)
-        
-        # Calculate height difference for input field
-        current_input_height = self.input_field.height()
-        # input_height_diff = new_input_height - current_input_height
         
         # Update input field height
         self.input_field.setMinimumHeight(new_input_height)
         self.input_field.setMaximumHeight(new_input_height)
         
         # Calculate new window height
-        if self.original_window_height:
+        if self.original_window_height and not self.state_manager.is_expanded:
             # Base window expansion on number of lines beyond the first line
             extra_lines = max(0, line_count - 1)
             window_height_increase = extra_lines * self.line_height
@@ -365,23 +355,6 @@ class UIManager:
             if abs(new_window_height - current_window_height) > 5:  # 5px tolerance
                 self.logger.debug(f"Resizing window: {current_window_height} -> {new_window_height} (lines: {line_count})")
                 self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
-
-    # def _adjust_window_height(self, height_diff):
-    #     """Adjust window height when input field changes size."""
-    #     current_window_height = self.parent.height()
-    #     new_window_height = current_window_height + height_diff
-        
-    #     # Store original window height if not stored yet
-    #     if self.original_window_height is None:
-    #         self.original_window_height = current_window_height
-        
-    #     # Ensure reasonable bounds
-    #     min_height = WindowSize.COMPACT_HEIGHT
-    #     max_height = min_height + 200  # Reasonable maximum expansion
-    #     new_window_height = max(min_height, min(new_window_height, max_height))
-        
-    #     # Animate the resize
-    #     self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
 
     def _setup_emoji_font(self, widget):
         """Configure font for emoji support."""
