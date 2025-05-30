@@ -4,7 +4,8 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QText
                              QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSlot, QTimer
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
-from utils.constants import (ElementSize, Files, InputSettings, Text, WindowSize)
+from utils.constants import (
+    ElementSize, Files, InputSettings, Text, WindowSize)
 
 
 class UIManager:
@@ -30,7 +31,8 @@ class UIManager:
 
         self.multiline_toggle_debounce_timer = QTimer()
         self.multiline_toggle_debounce_timer.setSingleShot(True)
-        self.multiline_toggle_debounce_timer.timeout.connect(self._handle_multiline_toggle_debounced)
+        self.multiline_toggle_debounce_timer.timeout.connect(
+            self._handle_multiline_toggle_debounced)
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -47,15 +49,17 @@ class UIManager:
         if 'input_changed' in callbacks:
             if hasattr(self.input_field, 'toPlainText'):
                 # QTextEdit - textChanged doesn't pass text
-                self.input_field.textChanged.connect(lambda: callbacks['input_changed'](self.get_input_text()))
+                self.input_field.textChanged.connect(
+                    lambda: callbacks['input_changed'](self.get_input_text()))
             else:
                 # QLineEdit - textChanged passes text
-                self.input_field.textChanged.connect(callbacks['input_changed'])
-        
+                self.input_field.textChanged.connect(
+                    callbacks['input_changed'])
+
         if 'return_pressed' in callbacks:
             # Install event filter on parent to handle key events
             self.input_field.installEventFilter(self.parent)
-        
+
         if 'stt_clicked' in callbacks:
             self.stt_button.clicked.connect(callbacks['stt_clicked'])
         if 'settings_clicked' in callbacks:
@@ -68,9 +72,10 @@ class UIManager:
         if 'stop_thinking_animation' in callbacks:
             self.animation_callbacks['stop_thinking'] = callbacks['stop_thinking_animation']
         if 'is_currenlty_expanded' in callbacks:
-            self.state_manager_callbacks['is_currenlty_expanded']  = callbacks['is_currenlty_expanded']
+            self.state_manager_callbacks['is_currenlty_expanded'] = callbacks['is_currenlty_expanded']
 
-        self.multiline_toggle_button.clicked.connect(self._handle_multiline_toggle_click)
+        self.multiline_toggle_button.clicked.connect(
+            self._handle_multiline_toggle_click)
 
     def _setup_shortcuts(self):
         """Setup keyboard shortcuts."""
@@ -90,7 +95,8 @@ class UIManager:
         """Store original heights when first entering multiline mode."""
         if self.original_window_height is None:
             self.original_window_height = self.parent.height()
-            self.logger.debug(f"Stored original window height: {self.original_window_height}")
+            self.logger.debug(
+                f"Stored original window height: {self.original_window_height}")
 
     def _setup_window_properties(self):
         """Configure window properties."""
@@ -126,29 +132,30 @@ class UIManager:
             return self.input_field.text()
 
     def handle_multiline_resize(self):
-        """Handle resizing of multiline input field and window based on content."""        
+        """Handle resizing of multiline input field and window based on content."""
         if not self.input_type_is_multiline or not hasattr(self.input_field, 'document'):
             return
-        
+
         text = self.input_field.toPlainText()
-        
+
         # Calculate actual displayed lines including wrapped text
         document = self.input_field.document()
         document_layout = document.documentLayout()
-        
+
         # Get the width available for text (excluding margins/padding)
         text_width = self.input_field.viewport().width()
-        
+
         # Calculate total visual lines (including wrapped lines)
         total_visual_lines = 0
         block = document.firstBlock()
-        
+
         while block.isValid():
             block_layout = block.layout()
             if block_layout:
                 # Count line breaks within this block (wrapped lines)
                 line_count_in_block = block_layout.lineCount()
-                total_visual_lines += max(1, line_count_in_block)  # At least 1 line per block
+                # At least 1 line per block
+                total_visual_lines += max(1, line_count_in_block)
             else:
                 # Fallback: estimate wrapped lines based on text length and width
                 block_text = block.text()
@@ -156,23 +163,27 @@ class UIManager:
                     total_visual_lines += 1  # Empty line
                 else:
                     font_metrics = self.input_field.fontMetrics()
-                    text_width_pixels = font_metrics.horizontalAdvance(block_text)
-                    estimated_lines = max(1, (text_width_pixels // max(1, text_width)) + 1)
+                    text_width_pixels = font_metrics.horizontalAdvance(
+                        block_text)
+                    estimated_lines = max(
+                        1, (text_width_pixels // max(1, text_width)) + 1)
                     total_visual_lines += estimated_lines
             block = block.next()
-        
+
         # Ensure at least 1 line
         line_count = max(1, total_visual_lines)
-        new_input_height_cal = (line_count * InputSettings.LINE_HEIGHT) + InputSettings.BASE_PADDING
+        new_input_height_cal = (
+            line_count * InputSettings.LINE_HEIGHT) + InputSettings.BASE_PADDING
         new_input_height = min(new_input_height_cal, InputSettings.MAX_HEIGHT)
-        
+
         # Update input field height
         self.input_field.setMinimumHeight(new_input_height)
         self.input_field.setMaximumHeight(new_input_height)
-        
+
         is_currently_window_expanded = False
         if 'is_currenlty_expanded' in self.state_manager_callbacks:
-                is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded']()
+            is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded'](
+            )
 
         # Calculate new window height
         if self.original_window_height and not is_currently_window_expanded:
@@ -180,18 +191,21 @@ class UIManager:
             extra_lines = max(0, line_count - 1)
             window_height_increase = extra_lines * InputSettings.LINE_HEIGHT
             new_window_height = self.original_window_height + window_height_increase
-            
+
             # Ensure reasonable bounds
             min_height = self.min_window_height
             max_height = min_height + 300  # Allow substantial expansion
-            new_window_height = max(min_height, min(new_window_height, max_height))
-            
+            new_window_height = max(min_height, min(
+                new_window_height, max_height))
+
             # Only resize window if height actually changed
             current_window_height = self.parent.height()
             if abs(new_window_height - current_window_height) > 5:  # 5px tolerance
-                self.logger.debug(f"Resizing window: {current_window_height} -> {new_window_height} (lines: {line_count})")
-                self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
-                
+                self.logger.debug(
+                    f"Resizing window: {current_window_height} -> {new_window_height} (lines: {line_count})")
+                self.parent.animate_resize(
+                    self.parent.width(), new_window_height, fast=True)
+
         if self.response_area.isVisible():
             QTimer.singleShot(10, self.position_copy_button)
 
@@ -213,39 +227,43 @@ class UIManager:
 
             is_currently_window_expanded = False
             if 'is_currenlty_expanded' in self.state_manager_callbacks:
-                is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded']()
+                is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded'](
+                )
             else:
-                self.logger.error("Error accessing callback: is_currenlty_expanded")
-            
+                self.logger.error(
+                    "Error accessing callback: is_currenlty_expanded")
+
             # Reset to original window height if switching from multiline
             if self.input_type_is_multiline and not multiline_input and self.original_window_height and not is_currently_window_expanded:
-                self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
-            
+                self.parent.animate_resize(
+                    self.parent.width(), self.original_window_height, fast=True)
+
             # Get the layout and find the old input field's position
             layout = self.input_field.parent().layout()
             old_input_field = self.input_field
-            
+
             # Reset height tracking when switching modes
             if not multiline_input:  # Only reset window height when going to single-line
                 self.original_window_height = None
-            
+
             # Update mode and create new field
             self.input_type_is_multiline = multiline_input
             self._create_input_field()
-            
+
             # Store original heights for new multiline mode
             if multiline_input:
                 self._store_original_heights()
-            
+
             # Replace the widget in the layout (maintains position)
             layout.replaceWidget(old_input_field, self.input_field)
             old_input_field.deleteLater()
-            
+
             # Restore text (this might trigger resize)
             if hasattr(self.input_field, 'setText'):
                 self.input_field.setText(current_text)
             elif hasattr(self.input_field, 'setPlainText'):
                 self.input_field.setPlainText(current_text)
+
     def set_input_state(self, state):
         """Set visual state of input field: 'normal', 'thinking' """
         if state == "typing":
@@ -274,14 +292,14 @@ class UIManager:
         """Set input type and handle UI changes"""
         if self.input_type_is_multiline == is_multiline:
             return
-            
+
         self.input_type_is_multiline = is_multiline
         self.update_multiline_toggle_button(is_multiline)
         self.recreate_input_field(is_multiline)
-        
+
         # Save to config
         self.config.set('multiline_input', is_multiline)
-        
+
         if hasattr(self.parent, 'on_input_type_changed'):
             self.parent.on_input_type_changed()
 
@@ -306,7 +324,8 @@ class UIManager:
         self.multiline_toggle_button = QPushButton()
         self.multiline_toggle_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
-        self.multiline_toggle_button.setFont(QFont("Segoe UI Emoji", 14))  # Larger emoji font
+        self.multiline_toggle_button.setFont(
+            QFont("Segoe UI Emoji", 14))  # Larger emoji font
         self.update_multiline_toggle_button(self.input_type_is_multiline)
         input_layout.addWidget(self.multiline_toggle_button)
 
@@ -333,30 +352,32 @@ class UIManager:
         if self.input_type_is_multiline:
             # Multi-line input
             self.input_field = QTextEdit()
-            self.input_field.setPlaceholderText(f"{Text.INPUT_PLACEHOLDER} (Ctrl+Enter to send)")
-            
+            self.input_field.setPlaceholderText(
+                f"{Text.INPUT_PLACEHOLDER} (Ctrl+Enter to send)")
+
             # Set initial height to single line equivalent
             font_metrics = self.input_field.fontMetrics()
             single_line_height = font_metrics.height()  # 30px for padding
-            
+
             # Store original heights
             self.original_input_height = single_line_height
             if self.original_window_height is None:
                 self.original_window_height = self.parent.height()
-            
+
             self.input_field.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-            self.input_field.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            
+            self.input_field.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarAlwaysOff)
+
             # Connect to content change to handle resizing
             self.input_field.textChanged.connect(self.handle_multiline_resize)
-            
+
         else:
             # Single-line input
             self.input_field = QLineEdit()
-            self.input_field.setPlaceholderText(f"{Text.INPUT_PLACEHOLDER} (Enter to send)")
-        
-        self.input_field.setObjectName("inputField")
+            self.input_field.setPlaceholderText(
+                f"{Text.INPUT_PLACEHOLDER} (Enter to send)")
 
+        self.input_field.setObjectName("inputField")
 
     def _toggle_input_type(self):
         """Toggle between single-line and multi-line input"""
@@ -430,17 +451,19 @@ class UIManager:
         """Update multiline toggle button appearance based on current state."""
         if is_multiline:
             self.multiline_toggle_button.setText("📝")  # Multi-line icon
-            self.multiline_toggle_button.setToolTip("Switch to single-line input")
-            self.multiline_toggle_button.setObjectName("multilineToggleButtonActive")
+            self.multiline_toggle_button.setToolTip(
+                "Switch to single-line input")
+            self.multiline_toggle_button.setObjectName(
+                "multilineToggleButtonActive")
         else:
-            self.multiline_toggle_button.setText("📄")  # Single-line icon  
-            self.multiline_toggle_button.setToolTip("Switch to multi-line input")
+            self.multiline_toggle_button.setText("📄")  # Single-line icon
+            self.multiline_toggle_button.setToolTip(
+                "Switch to multi-line input")
             self.multiline_toggle_button.setObjectName("multilineToggleButton")
-        
+
         # Force style update
         self.multiline_toggle_button.style().unpolish(self.multiline_toggle_button)
         self.multiline_toggle_button.style().polish(self.multiline_toggle_button)
-  
 
     def _create_copy_button(self):
         """Create copy button."""
@@ -466,6 +489,7 @@ class UIManager:
 #   ##########################################################################################
 #       Help Functions
 #   ##########################################################################################
+
     def _setup_emoji_font(self, widget):
         """Configure font for emoji support."""
         font = QFont()
