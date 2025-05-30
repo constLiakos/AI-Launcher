@@ -186,6 +186,8 @@ class UIManager:
             is_currently_window_expanded = False
             if 'is_currenlty_expanded' in self.state_manager_callbacks:
                 is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded']()
+            else:
+                self.logger.error("Error accessing callback: is_currenlty_expanded")
             
             # Reset to original window height if switching from multiline
             if self.input_type_is_multiline and not multiline_input and self.original_window_height and not is_currently_window_expanded:
@@ -353,7 +355,7 @@ class UIManager:
         self.input_field.setObjectName("inputField")
 
     def handle_multiline_resize(self):
-        """Handle resizing of multiline input field and window based on content."""
+        """Handle resizing of multiline input field and window based on content."""        
         if not self.input_type_is_multiline or not hasattr(self.input_field, 'document'):
             return
         

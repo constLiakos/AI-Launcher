@@ -55,6 +55,7 @@ class StateManager(QObject):
         self.logger.debug(f"StateManager initialized with request delay: {self.request_delay_ms}ms")
 
     def set_input_type(self, is_multiline = False):
+        self.logger.debug(f"Set Input type: {is_multiline}")
         self.input_type_is_multiline = is_multiline
         self.multiline_input_type_changed.emit(is_multiline)
 
