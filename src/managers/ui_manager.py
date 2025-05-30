@@ -31,7 +31,6 @@ class UIManager:
         self.multiline_toggle_debounce_timer = QTimer()
         self.multiline_toggle_debounce_timer.setSingleShot(True)
         self.multiline_toggle_debounce_timer.timeout.connect(self._handle_multiline_toggle_debounced)
-        self.pending_multiline_callback = None
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -70,10 +69,8 @@ class UIManager:
             self.animation_callbacks['stop_thinking'] = callbacks['stop_thinking_animation']
         if 'is_currenlty_expanded' in callbacks:
             self.state_manager_callbacks['is_currenlty_expanded']  = callbacks['is_currenlty_expanded']
-        if 'multiline_toggle_clicked' in callbacks:
-            # Store the callback and connect to debounced handler
-            self.pending_multiline_callback = callbacks['multiline_toggle_clicked']
-            self.multiline_toggle_button.clicked.connect(self._handle_multiline_toggle_click)
+
+        self.multiline_toggle_button.clicked.connect(self._handle_multiline_toggle_click)
 
     def _setup_shortcuts(self):
         """Setup keyboard shortcuts."""
@@ -288,11 +285,6 @@ class UIManager:
         if hasattr(self.parent, 'on_input_type_changed'):
             self.parent.on_input_type_changed()
 
-
-    def toggle_input_type(self):
-        """Toggle between single-line and multi-line input"""
-        self.set_input_type(not self.input_type_is_multiline)
-
     def _create_input_section(self):
         """Create input field and buttons."""
         container_layout = QVBoxLayout(self.main_container)
@@ -364,6 +356,11 @@ class UIManager:
             self.input_field.setPlaceholderText(f"{Text.INPUT_PLACEHOLDER} (Enter to send)")
         
         self.input_field.setObjectName("inputField")
+
+
+    def _toggle_input_type(self):
+        """Toggle between single-line and multi-line input"""
+        self.set_input_type(not self.input_type_is_multiline)
 
 #   ##########################################################################################
 #       Response Area Functions
@@ -459,12 +456,12 @@ class UIManager:
         """Handle multiline toggle with debouncing."""
         # Reset timer and start new one
         self.multiline_toggle_debounce_timer.stop()
-        self.multiline_toggle_debounce_timer.start(100)  # 100ms debounce
+        self.multiline_toggle_debounce_timer.start(20)
 
     def _handle_multiline_toggle_debounced(self):
         """Execute the actual multiline toggle callback after debounce."""
-        if self.pending_multiline_callback:
-            self.pending_multiline_callback()
+        self._toggle_input_type()
+
 
 #   ##########################################################################################
 #       Help Functions

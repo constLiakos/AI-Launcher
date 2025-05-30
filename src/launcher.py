@@ -134,7 +134,6 @@ class Launcher(QMainWindow):
             'start_thinking_animation': self.animation_manager.start_thinking_animation,
             'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
             'is_currenlty_expanded': self.state_manager.is_currently_expanded,
-            'multiline_toggle_clicked': self.on_multiline_toggle_clicked
         }
     def _reconnect_ui_signals(self):
         """Reusable signal connection method"""
@@ -187,11 +186,6 @@ class Launcher(QMainWindow):
             self.animation_manager.start_thinking_animation(self.input_field)
         else:
             self.animation_manager.stop_thinking_animation()
-
-    def on_multiline_toggle_clicked(self):
-        """Handle multiline toggle button click."""
-        logger.debug(f"Multiline toggle clicked. Current mode: {self.ui_manager.is_multiline_input()}")
-        self.ui_manager.toggle_input_type()
 
     def on_input_type_changed(self):
         """Called by UIManager when input type changes"""
