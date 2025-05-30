@@ -28,7 +28,7 @@ class UIManager:
         self.original_input_height = None  # Store original input height
         self.original_window_height = None  # Store original window height
         self.min_window_height = WindowSize.COMPACT_HEIGHT  # Minimum window height
-        self.line_height = 23
+        self.line_height = 20
 
 
     def setup_ui(self, multiline_input=False):
@@ -322,34 +322,27 @@ class UIManager:
         """Handle resizing of multiline input field and window based on content."""
         if not self.multiline_input or not hasattr(self.input_field, 'document'):
             return
-            
-        # Count actual lines in the text
-        text = self.input_field.toPlainText()
-        line_count = max(1, text.count('\n') + 1)  # At least 1 line
         
-        # Calculate new input height based on line count
+        text = self.input_field.toPlainText()
+        if text.strip() == "":
+            return
+        # Count actual lines in the text
+        line_count = max(1, text.count('\n') + 1)  # At least 1 line
 
-        previous_height = self.input_field.height()
-
-        base_padding = 30  # Base padding for borders, margins
+        base_padding = 35  # Base padding for borders, margins
         new_input_height_cal = (line_count * self.line_height) + base_padding
 
-        new_input_height = max(previous_height, new_input_height_cal)
-
+        # new_input_height = max(previous_height, new_input_height_cal)
         
         # Ensure minimum height (single line)
-        if self.original_input_height:
-            new_input_height = max(new_input_height, self.original_input_height)
+        # if self.original_input_height:
+        #     new_input_height = max(new_input_height, self.original_input_height)
         
-        # Cap maximum input height
-        max_input_height = InputSettings.MAX_HEIGHT
-        new_input_height = min(new_input_height, max_input_height)
-
-        
+        new_input_height = min(new_input_height_cal, InputSettings.MAX_HEIGHT)
         
         # Calculate height difference for input field
         current_input_height = self.input_field.height()
-        input_height_diff = new_input_height - current_input_height
+        # input_height_diff = new_input_height - current_input_height
         
         # Update input field height
         self.input_field.setMinimumHeight(new_input_height)
