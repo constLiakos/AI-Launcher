@@ -208,13 +208,11 @@ class UIManager:
             if self.multiline_input and not multiline_input and self.original_window_height and not is_currently_window_expanded:
                 self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
             
-            # Remove old input field
+            # Get the layout and find the old input field's position
             layout = self.input_field.parent().layout()
-            layout.removeWidget(self.input_field)
-            self.input_field.deleteLater()
+            old_input_field = self.input_field
             
             # Reset height tracking when switching modes
-            # self.original_input_height = None
             if not multiline_input:  # Only reset window height when going to single-line
                 self.original_window_height = None
             
@@ -226,8 +224,9 @@ class UIManager:
             if multiline_input:
                 self._store_original_heights()
             
-            # Insert new field at the beginning of the layout
-            layout.insertWidget(0, self.input_field)
+            # Replace the widget in the layout (maintains position)
+            layout.replaceWidget(old_input_field, self.input_field)
+            old_input_field.deleteLater()
             
             # Restore text (this might trigger resize)
             if hasattr(self.input_field, 'setText'):
