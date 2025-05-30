@@ -358,8 +358,39 @@ class UIManager:
             return
         
         text = self.input_field.toPlainText()
-        # Count actual lines in the text
-        line_count = max(1, text.count('\n') + 1)  # At least 1 line
+        
+        # Calculate actual displayed lines including wrapped text
+        document = self.input_field.document()
+        document_layout = document.documentLayout()
+        
+        # Get the width available for text (excluding margins/padding)
+        text_width = self.input_field.viewport().width()
+        
+        # Calculate total visual lines (including wrapped lines)
+        total_visual_lines = 0
+        block = document.firstBlock()
+        
+        while block.isValid():
+            block_layout = block.layout()
+            if block_layout:
+                # Count line breaks within this block (wrapped lines)
+                line_count_in_block = block_layout.lineCount()
+                total_visual_lines += max(1, line_count_in_block)  # At least 1 line per block
+            else:
+                # Fallback: estimate wrapped lines based on text length and width
+                block_text = block.text()
+                if not block_text:
+                    total_visual_lines += 1  # Empty line
+                else:
+                    font_metrics = self.input_field.fontMetrics()
+                    text_width_pixels = font_metrics.horizontalAdvance(block_text)
+                    estimated_lines = max(1, (text_width_pixels // max(1, text_width)) + 1)
+                    total_visual_lines += estimated_lines
+            
+            block = block.next()
+        
+        # Ensure at least 1 line
+        line_count = max(1, total_visual_lines)
 
         new_input_height_cal = (line_count * InputSettings.LINE_HEIGHT) + InputSettings.BASE_PADDING
         
