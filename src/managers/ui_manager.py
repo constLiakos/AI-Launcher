@@ -4,16 +4,14 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QText
                              QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
-from managers.state_manager import StateManager
 from utils.constants import (ElementSize, Files, InputSettings, Text, WindowSize)
 
 
 class UIManager:
-    def __init__(self, parent_window, logger, config, state_manager):
+    def __init__(self, parent_window, logger, config):
         self.parent = parent_window
         self.logger = logger.getChild('ui_manager')
         self.config = config
-        self.state_manager:StateManager = state_manager
 
         self.main_container = None
         self.input_field = None
@@ -27,6 +25,7 @@ class UIManager:
         self.original_window_height = None
         self.min_window_height = WindowSize.COMPACT_HEIGHT
         self.animation_callbacks = {}
+        self.state_manager_callbacks = {}
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -63,6 +62,8 @@ class UIManager:
             self.animation_callbacks['start_thinking'] = callbacks['start_thinking_animation']
         if 'stop_thinking_animation' in callbacks:
             self.animation_callbacks['stop_thinking'] = callbacks['stop_thinking_animation']
+        if 'is_currenlty_expanded' in callbacks:
+            self.state_manager_callbacks['is_currenlty_expanded']  = callbacks['is_currenlty_expanded']
 
 
     def set_input_text(self, text):
@@ -342,8 +343,12 @@ class UIManager:
         self.input_field.setMinimumHeight(new_input_height)
         self.input_field.setMaximumHeight(new_input_height)
         
+        is_currently_window_expanded = False
+        if 'is_currenlty_expanded' in self.state_manager_callbacks:
+                is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded']()
+
         # Calculate new window height
-        if self.original_window_height and not self.state_manager.is_expanded:
+        if self.original_window_height and not is_currently_window_expanded:
             # Base window expansion on number of lines beyond the first line
             extra_lines = max(0, line_count - 1)
             window_height_increase = extra_lines * InputSettings.LINE_HEIGHT

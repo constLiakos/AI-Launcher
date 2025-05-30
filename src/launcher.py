@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class Launcher(QMainWindow):
     def __init__(self, logdir: str, debug=False):
         super().__init__()
-        
+
         self._setup_logging(logdir, debug)
         self._initialize_core_components()
         self._initialize_managers()
@@ -79,8 +79,8 @@ class Launcher(QMainWindow):
         self.window_manager = WindowManager(logger, self, self.config)
         self.api_client = ApiClient(logger, self.config)
         self.stt_api_client = None
-        self.multiline_input = self.config.get('multiline_input', InputSettings.MULTILINE_INPUT)
-
+        self.multiline_input = self.config.get(
+            'multiline_input', InputSettings.MULTILINE_INPUT)
 
     def _initialize_managers(self):
         "Initialize managers"
@@ -100,11 +100,10 @@ class Launcher(QMainWindow):
             logger, state_manager=self.state_manager, config=self.config)
         self.tray_manager = TrayManager(
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
-        
-        self.ui_manager = UIManager(
-            self, logger, self.config, self.state_manager)
-        self.window_manager.setup_window_properties()
 
+        self.ui_manager = UIManager(
+            self, logger, self.config)
+        self.window_manager.setup_window_properties()
 
     def stt_configure(self):
         """Initialize STT API client with better error handling."""
@@ -112,7 +111,7 @@ class Launcher(QMainWindow):
         if not self.stt_enabled:
             self.stt_api_client = None
             return
-        
+
         try:
             if self.stt_api_client is None:  # Use 'is None' instead of '== None'
                 self.stt_api_client = SttApiClient(logger, self.config)
@@ -151,7 +150,8 @@ class Launcher(QMainWindow):
             'settings_clicked': self.open_settings,
             'copy_clicked': self.copy_response,
             'start_thinking_animation': self.animation_manager.start_thinking_animation,
-            'stop_thinking_animation': self.animation_manager.stop_thinking_animation
+            'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
+            'is_currenlty_expanded': self.state_manager.is_currently_expanded
         }
         self.ui_manager.connect_signals(callbacks)
 
@@ -380,7 +380,8 @@ class Launcher(QMainWindow):
             self._auto_scroll_response()
         except Exception as e:
             logger.error(f"Error handling chunk: {e}")
-            self._handle_error(f"Error processing response: {str(e)}", request_id)
+            self._handle_error(
+                f"Error processing response: {str(e)}", request_id)
 
     def _auto_scroll_response(self):
         """Separate auto-scroll logic."""
@@ -533,10 +534,9 @@ class Launcher(QMainWindow):
         center_y = main_rect.y() + (main_rect.height() - dialog_rect.height()) // 2
         dialog.move(center_x, center_y)
 
-
         if dialog.exec_():
             logger.debug("Settings dialog accepted")
-            
+
             # Check if multiline setting changed
             new_multiline = self.config.get('multiline_input', False)
             if new_multiline != self.multiline_input:
@@ -630,12 +630,11 @@ class Launcher(QMainWindow):
         self.set_input_state("normal")
         self.settings_button.setEnabled(True)
 
-
     def on_input_changed(self, text):
         """Simplified input handling - delegate to StateManager."""
         logger.debug(f"Input changed, length: {len(text)} characters")
         self.state_manager.set_prompt(text)
-        
+
         # Reset input height if text is cleared in multiline mode
         if not text.strip() and self.multiline_input:
             self.ui_manager.reset_input_height()
@@ -645,8 +644,8 @@ class Launcher(QMainWindow):
         logger.debug("Force send request triggered (Enter key pressed)")
         self.state_manager.force_send_request()
 
-
     # Add event filter for handling key presses
+
     def eventFilter(self, obj, event):
         """Handle key events for input field."""
         if obj == self.input_field and event.type() == event.KeyPress:
