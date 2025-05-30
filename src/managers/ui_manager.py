@@ -411,6 +411,9 @@ class UIManager:
             if abs(new_window_height - current_window_height) > 5:  # 5px tolerance
                 self.logger.debug(f"Resizing window: {current_window_height} -> {new_window_height} (lines: {line_count})")
                 self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
+                
+        if self.response_area.isVisible():
+            QTimer.singleShot(10, self.position_copy_button)
 
     def _setup_emoji_font(self, widget):
         """Configure font for emoji support."""
