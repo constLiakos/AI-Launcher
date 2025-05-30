@@ -5,16 +5,14 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QText
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
 from managers.animation_manager import AnimationManager
-from managers.style_manager import StyleManager
 from utils.constants import (ElementSize, Files, InputSettings, Text, WindowSize)
 
 
 class UIManager:
-    def __init__(self, parent_window, logger, config, style_manager, animation_manager):
+    def __init__(self, parent_window, logger, config, animation_manager):
         self.parent = parent_window
         self.logger = logger
         self.config = config
-        self.style_manager:StyleManager = style_manager
         self.animation_manager:AnimationManager = animation_manager
 
         self.main_container = None

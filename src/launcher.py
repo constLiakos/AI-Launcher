@@ -91,7 +91,7 @@ class Launcher(QMainWindow):
         self.tray_manager = TrayManager(
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
         self.ui_manager = UIManager(
-            self, logger, self.config, self.style_manager, self.animation_manager)
+            self, logger, self.config, self.animation_manager)
         self.window_manager.setup_window_properties()
 
     def _finalize_setup(self):
@@ -632,7 +632,7 @@ class Launcher(QMainWindow):
         self.set_input_state("normal")
         self.settings_button.setEnabled(True)
 
-        
+
     def on_input_changed(self, text):
         """Simplified input handling - delegate to StateManager."""
         logger.debug(f"Input changed, length: {len(text)} characters")
