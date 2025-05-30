@@ -39,6 +39,157 @@ class UIManager:
         self._create_copy_button()
         self._setup_shortcuts()
 
+    def connect_signals(self, callbacks):
+        """Connect UI signals to callbacks."""
+        if 'input_changed' in callbacks:
+            if hasattr(self.input_field, 'toPlainText'):
+                # QTextEdit - textChanged doesn't pass text
+                self.input_field.textChanged.connect(lambda: callbacks['input_changed'](self.get_input_text()))
+            else:
+                # QLineEdit - textChanged passes text
+                self.input_field.textChanged.connect(callbacks['input_changed'])
+        
+        if 'return_pressed' in callbacks:
+            # Install event filter on parent to handle key events
+            self.input_field.installEventFilter(self.parent)
+        
+        if 'stt_clicked' in callbacks:
+            self.stt_button.clicked.connect(callbacks['stt_clicked'])
+        if 'settings_clicked' in callbacks:
+            self.settings_button.clicked.connect(callbacks['settings_clicked'])
+        if 'copy_clicked' in callbacks:
+            self.copy_button.clicked.connect(callbacks['copy_clicked'])
+
+    def set_input_text(self, text):
+        """Set text in input field regardless of type."""
+        if hasattr(self.input_field, 'setPlainText'):
+            self.input_field.setPlainText(text)
+        else:
+            self.input_field.setText(text)
+
+    def get_input_text(self):
+        """Get text from input field regardless of type."""
+        if hasattr(self.input_field, 'toPlainText'):
+            return self.input_field.toPlainText()
+        else:
+            return self.input_field.text()
+
+    def clear_input(self):
+        """Clear input field and reset heights."""
+        if hasattr(self.input_field, 'clear'):
+            self.input_field.clear()
+            
+        # Reset to original heights when clearing in multiline mode
+        if self.multiline_input:
+            self._reset_input_and_window_height()
+
+    def update_stt_button_visibility(self, enabled):
+        """Update STT button visibility."""
+        self.stt_button.setVisible(enabled)
+        self.stt_button.setEnabled(enabled)
+
+    def update_stt_button_appearance(self, state):
+        """Update STT button appearance."""
+        if state == "recording":
+            self.stt_button.setIcon(QIcon(str(Files.MIC_RECORDING_ICON_PATH)))
+        else:
+            self.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
+
+        self.stt_button.style().unpolish(self.stt_button)
+        self.stt_button.style().polish(self.stt_button)
+
+    def set_input_state(self, state):
+        """Set visual state of input field: 'normal', 'thinking' """
+        if state == "typing":
+            self.animation_manager.stop_thinking_animation()
+            self.input_field.setObjectName("inputFieldTyping")
+            self.input_field.setStyle(self.input_field.style())
+        elif state == "thinking":
+            self.input_field.setObjectName("inputFieldThinking")
+            self.animation_manager.start_thinking_animation(self.input_field)
+        else:  # normal
+            self.animation_manager.stop_thinking_animation()
+            self.input_field.setObjectName("inputField")
+            self.input_field.setStyle(self.input_field.style())
+
+    def position_copy_button(self):
+        """Position copy button in response area."""
+        if self.response_area.isVisible():
+            response_pos = self.response_area.pos()
+            response_geometry = self.response_area.geometry()
+
+            button_x = (response_pos.x() + response_geometry.width() -
+                        self.copy_button.width() - ElementSize.SCROLLBAR_SIZE -
+                        ElementSize.COPY_BUTTON_RIGHT_MARGIN)
+            button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
+
+            self.copy_button.move(button_x, button_y)
+            self.copy_button.raise_()
+            self.copy_button.setVisible(True)
+
+    def show_response_area(self):
+        """Show response area and copy button."""
+        self.response_area.setVisible(True)
+        self.copy_button.setVisible(True)
+        self.position_copy_button()
+
+    def hide_response_area(self):
+        """Hide response area and copy button."""
+        self.response_area.setVisible(False)
+        self.copy_button.setVisible(False)
+
+    def reset_input_height(self):
+        """Reset input field to original single-line height."""
+        if self.multiline_input and self.original_input_height:
+            self.input_field.setMinimumHeight(self.original_input_height)
+            self.input_field.setMaximumHeight(self.original_input_height)
+            
+            # Reset window height too
+            if self.original_window_height:
+                self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
+
+
+
+    def recreate_input_field(self, multiline_input):
+        """Recreate input field when mode changes."""
+        if self.input_field:
+            # Store current text
+            if hasattr(self.input_field, 'toPlainText'):
+                current_text = self.input_field.toPlainText()
+            else:
+                current_text = self.input_field.text()
+            
+            # Reset to original window height if switching from multiline
+            if self.multiline_input and not multiline_input and self.original_window_height:
+                self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
+            
+            # Remove old input field
+            layout = self.input_field.parent().layout()
+            layout.removeWidget(self.input_field)
+            self.input_field.deleteLater()
+            
+            # Reset height tracking when switching modes
+            self.original_input_height = None
+            if not multiline_input:  # Only reset window height when going to single-line
+                self.original_window_height = None
+            
+            # Update mode and create new field
+            self.multiline_input = multiline_input
+            self._create_input_field()
+            
+            # Store original heights for new multiline mode
+            if multiline_input:
+                self._store_original_heights()
+            
+            # Insert new field at the beginning of the layout
+            layout.insertWidget(0, self.input_field)
+            
+            # Restore text (this might trigger resize)
+            if hasattr(self.input_field, 'setText'):
+                self.input_field.setText(current_text)
+            elif hasattr(self.input_field, 'setPlainText'):
+                self.input_field.setPlainText(current_text)
+
     def _setup_window_properties(self):
         """Configure window properties."""
         self.parent.setWindowFlags(
@@ -108,7 +259,7 @@ class UIManager:
         self.response_area.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        self.setup_emoji_font(self.response_area)
+        self._setup_emoji_font(self.response_area)
         container_layout.addWidget(self.response_area)
         container_layout.setStretchFactor(
             container_layout.itemAt(0).layout(), 0)  # Input section
@@ -136,121 +287,6 @@ class UIManager:
         quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self.parent)
         quit_shortcut.activated.connect(self.parent.quit_application)
 
-
-    def connect_signals(self, callbacks):
-        """Connect UI signals to callbacks."""
-        if 'input_changed' in callbacks:
-            if hasattr(self.input_field, 'toPlainText'):
-                # QTextEdit - textChanged doesn't pass text
-                self.input_field.textChanged.connect(lambda: callbacks['input_changed'](self.get_input_text()))
-            else:
-                # QLineEdit - textChanged passes text
-                self.input_field.textChanged.connect(callbacks['input_changed'])
-        
-        if 'return_pressed' in callbacks:
-            # Install event filter on parent to handle key events
-            self.input_field.installEventFilter(self.parent)
-        
-        if 'stt_clicked' in callbacks:
-            self.stt_button.clicked.connect(callbacks['stt_clicked'])
-        if 'settings_clicked' in callbacks:
-            self.settings_button.clicked.connect(callbacks['settings_clicked'])
-        if 'copy_clicked' in callbacks:
-            self.copy_button.clicked.connect(callbacks['copy_clicked'])
-
-    def get_input_text(self):
-        """Get text from input field regardless of type."""
-        if hasattr(self.input_field, 'toPlainText'):
-            return self.input_field.toPlainText()
-        else:
-            return self.input_field.text()
-
-    def set_input_text(self, text):
-        """Set text in input field regardless of type."""
-        if hasattr(self.input_field, 'setPlainText'):
-            self.input_field.setPlainText(text)
-        else:
-            self.input_field.setText(text)
-
-    def clear_input(self):
-        """Clear input field and reset heights."""
-        if hasattr(self.input_field, 'clear'):
-            self.input_field.clear()
-            
-        # Reset to original heights when clearing in multiline mode
-        if self.multiline_input:
-            self.reset_input_and_window_height()
-
-    def update_stt_button_visibility(self, enabled):
-        """Update STT button visibility."""
-        self.stt_button.setVisible(enabled)
-        self.stt_button.setEnabled(enabled)
-
-    def update_stt_button_appearance(self, state):
-        """Update STT button appearance."""
-        if state == "recording":
-            self.stt_button.setIcon(QIcon(str(Files.MIC_RECORDING_ICON_PATH)))
-        else:
-            self.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
-
-        self.stt_button.style().unpolish(self.stt_button)
-        self.stt_button.style().polish(self.stt_button)
-
-    def set_input_state(self, state):
-        """Set visual state of input field: 'normal', 'thinking' """
-        if state == "typing":
-            self.animation_manager.stop_thinking_animation()
-            self.input_field.setObjectName("inputFieldTyping")
-            self.input_field.setStyle(self.input_field.style())
-        elif state == "thinking":
-            self.input_field.setObjectName("inputFieldThinking")
-            self.animation_manager.start_thinking_animation(self.input_field)
-        else:  # normal
-            self.animation_manager.stop_thinking_animation()
-            self.input_field.setObjectName("inputField")
-            self.input_field.setStyle(self.input_field.style())
-
-    def position_copy_button(self):
-        """Position copy button in response area."""
-        if self.response_area.isVisible():
-            response_pos = self.response_area.pos()
-            response_geometry = self.response_area.geometry()
-
-            button_x = (response_pos.x() + response_geometry.width() -
-                        self.copy_button.width() - ElementSize.SCROLLBAR_SIZE -
-                        ElementSize.COPY_BUTTON_RIGHT_MARGIN)
-            button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
-
-            self.copy_button.move(button_x, button_y)
-            self.copy_button.raise_()
-            self.copy_button.setVisible(True)
-
-    def show_response_area(self):
-        """Show response area and copy button."""
-        self.response_area.setVisible(True)
-        self.copy_button.setVisible(True)
-        self.position_copy_button()
-
-    def hide_response_area(self):
-        """Hide response area and copy button."""
-        self.response_area.setVisible(False)
-        self.copy_button.setVisible(False)
-
-    def setup_emoji_font(self, widget):
-        """Configure font for emoji support."""
-        font = QFont()
-        emoji_fonts = ["Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji",
-                       "Twemoji", "Segoe UI", "Arial"]
-
-        font_db = QFontDatabase()
-        for font_name in emoji_fonts:
-            font.setFamily(font_name)
-            if font_name in font_db.families():
-                self.logger.debug(f"Using font: {font_name}")
-                break
-
-        font.setPointSize(12)
-        widget.setFont(font)
 
 
     def _create_input_field(self):
@@ -356,7 +392,29 @@ class UIManager:
         # Animate the resize
         self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
 
-    def reset_input_and_window_height(self):
+    def _setup_emoji_font(self, widget):
+        """Configure font for emoji support."""
+        font = QFont()
+        emoji_fonts = ["Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji",
+                       "Twemoji", "Segoe UI", "Arial"]
+
+        font_db = QFontDatabase()
+        for font_name in emoji_fonts:
+            font.setFamily(font_name)
+            if font_name in font_db.families():
+                self.logger.debug(f"Using font: {font_name}")
+                break
+
+        font.setPointSize(12)
+        widget.setFont(font)
+
+    def _store_original_heights(self):
+        """Store original heights when first entering multiline mode."""
+        if self.original_window_height is None:
+            self.original_window_height = self.parent.height()
+            self.logger.debug(f"Stored original window height: {self.original_window_height}")
+
+    def _reset_input_and_window_height(self):
         """Reset both input field and window to original heights."""
         if self.multiline_input and self.original_input_height and self.original_window_height:
             self.logger.debug(f"Resetting heights - Input: {self.original_input_height}, Window: {self.original_window_height}")
@@ -369,64 +427,3 @@ class UIManager:
             current_window_height = self.parent.height()
             if abs(self.original_window_height - current_window_height) > 5:  # 5px tolerance
                 self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
-
-    def store_original_heights(self):
-        """Store original heights when first entering multiline mode."""
-        if self.original_window_height is None:
-            self.original_window_height = self.parent.height()
-            self.logger.debug(f"Stored original window height: {self.original_window_height}")
-
-    def reset_input_height(self):
-        """Reset input field to original single-line height."""
-        if self.multiline_input and self.original_input_height:
-            self.input_field.setMinimumHeight(self.original_input_height)
-            self.input_field.setMaximumHeight(self.original_input_height)
-            
-            # Reset window height too
-            if self.original_window_height:
-                self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
-
-
-
-    def recreate_input_field(self, multiline_input):
-        """Recreate input field when mode changes."""
-        if self.input_field:
-            # Store current text
-            if hasattr(self.input_field, 'toPlainText'):
-                current_text = self.input_field.toPlainText()
-            else:
-                current_text = self.input_field.text()
-            
-            # Reset to original window height if switching from multiline
-            if self.multiline_input and not multiline_input and self.original_window_height:
-                self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)
-            
-            # Remove old input field
-            layout = self.input_field.parent().layout()
-            layout.removeWidget(self.input_field)
-            self.input_field.deleteLater()
-            
-            # Reset height tracking when switching modes
-            self.original_input_height = None
-            if not multiline_input:  # Only reset window height when going to single-line
-                self.original_window_height = None
-            
-            # Update mode and create new field
-            self.multiline_input = multiline_input
-            self._create_input_field()
-            
-            # Store original heights for new multiline mode
-            if multiline_input:
-                self.store_original_heights()
-            
-            # Insert new field at the beginning of the layout
-            layout.insertWidget(0, self.input_field)
-            
-            # Restore text (this might trigger resize)
-            if hasattr(self.input_field, 'setText'):
-                self.input_field.setText(current_text)
-            elif hasattr(self.input_field, 'setPlainText'):
-                self.input_field.setPlainText(current_text)
-
-
-

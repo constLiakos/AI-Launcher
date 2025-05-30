@@ -250,26 +250,11 @@ class StateManager(QObject):
         self.request_delay_ms = int(delay_seconds * 1000)
         self.logger.debug(f"Request delay updated from {old_delay}ms to {self.request_delay_ms}ms")
 
-    def _send_request_signal(self):
-        """Internal method to emit request signal."""
-        self.logger.debug(f"Sending request signal for prompt: '{self.current_prompt[:50]}{'...' if len(self.current_prompt) > 50 else ''}'")
-        self.set_state("thinking")
-        if self.current_prompt.strip():
-            self.request_ready.emit(self.current_prompt)
-
     def cleanup_worker_safely(self):
         """Safely cleanup the current worker."""
         if self.streaming_worker:
             self.logger.debug("Cleaning up streaming worker safely")
             self.streaming_worker.deleteLater()
-            self.streaming_worker = None
-
-    def _cleanup_worker(self):
-        """Cleanup worker thread safely."""
-        if self.streaming_worker:
-            self.logger.debug("Cleaning up worker thread")
-            if self.streaming_worker.isRunning():
-                self.streaming_worker.terminate()
             self.streaming_worker = None
 
     # Getters for current state
@@ -317,3 +302,20 @@ class StateManager(QObject):
     
     def recording_completed(self):
         self.recording_completed_sg.emit()
+
+
+    def _cleanup_worker(self):
+        """Cleanup worker thread safely."""
+        if self.streaming_worker:
+            self.logger.debug("Cleaning up worker thread")
+            if self.streaming_worker.isRunning():
+                self.streaming_worker.terminate()
+            self.streaming_worker = None
+
+
+    def _send_request_signal(self):
+        """Internal method to emit request signal."""
+        self.logger.debug(f"Sending request signal for prompt: '{self.current_prompt[:50]}{'...' if len(self.current_prompt) > 50 else ''}'")
+        self.set_state("thinking")
+        if self.current_prompt.strip():
+            self.request_ready.emit(self.current_prompt)
