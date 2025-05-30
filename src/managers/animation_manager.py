@@ -72,27 +72,6 @@ class AnimationManager(QObject):
         self.active_animations['thinking_color'] = color_animation
         color_animation.start()
 
-    def _on_smooth_transition_finished(self, next_phase):
-        """Update phase when smooth transition completes."""
-        self.thinking_phase = next_phase
-        if 'thinking_color' in self.active_animations:
-            del self.active_animations['thinking_color']
-
-    def _apply_smooth_color(self, color):
-        """Apply the interpolated color during smooth transition."""
-        if hasattr(self, 'input_field'):
-            color_str = f"rgba({color.red()}, {color.green()}, {color.blue()}, {color.alpha()/255:.1f})"
-            style = self.style_manager.get_animated_thinking_style(color_str)
-            self.input_field.setStyleSheet(style)
-
-    def _stop_animation(self, animation_key):
-        """Stop existing animation if running."""
-        if animation_key in self.active_animations:
-            animation = self.active_animations[animation_key]
-            if animation.state() == QPropertyAnimation.Running:
-                animation.stop()
-            del self.active_animations[animation_key]
-
     def animate_window_resize(self, widget, new_width, new_height, fast=False):
         """Special method for animating window resizes that preserves resize capability."""
         animation_key = f"window_resize_{id(widget)}"
@@ -121,6 +100,27 @@ class AnimationManager(QObject):
         self.active_animations[animation_key] = animation
         animation.finished.connect(lambda: self._finalize_window_resize(widget, animation_key))
         animation.start()
+
+    def _on_smooth_transition_finished(self, next_phase):
+        """Update phase when smooth transition completes."""
+        self.thinking_phase = next_phase
+        if 'thinking_color' in self.active_animations:
+            del self.active_animations['thinking_color']
+
+    def _apply_smooth_color(self, color):
+        """Apply the interpolated color during smooth transition."""
+        if hasattr(self, 'input_field'):
+            color_str = f"rgba({color.red()}, {color.green()}, {color.blue()}, {color.alpha()/255:.1f})"
+            style = self.style_manager.get_animated_thinking_style(color_str)
+            self.input_field.setStyleSheet(style)
+
+    def _stop_animation(self, animation_key):
+        """Stop existing animation if running."""
+        if animation_key in self.active_animations:
+            animation = self.active_animations[animation_key]
+            if animation.state() == QPropertyAnimation.Running:
+                animation.stop()
+            del self.active_animations[animation_key]
 
     def _finalize_window_resize(self, widget, animation_key):
         """Finalize window resize without affecting resize capability."""
