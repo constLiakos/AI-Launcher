@@ -350,7 +350,7 @@ class StyleManager:
         colors = self.get_theme_colors()
         # self.logger.debug(f"Generated animated thinking style with color: {color}")
         return f"""
-        QLineEdit#inputFieldThinking {{
+        #inputFieldThinking {{
             background: {colors['field_bg']};
             border: 3px solid {color};
             border-radius: 20px;
@@ -360,7 +360,7 @@ class StyleManager:
             font-weight: 400;
         }}
         
-        QLineEdit#inputFieldThinking:focus {{
+        #inputFieldThinking:focus {{
             border: 3px solid {color};
             background: {colors['field_bg_focus']};
             outline: none;
