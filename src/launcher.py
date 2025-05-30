@@ -578,18 +578,7 @@ class Launcher(QMainWindow):
                 # Recreate UI with new input mode
                 self.ui_manager.recreate_input_field(new_multiline)
                 # Reconnect signals
-                callbacks = {
-                    'input_changed': self.on_input_changed,
-                    'return_pressed': self.force_send_request,
-                    'stt_clicked': self.recording_manager.toggle_recording,
-                    'settings_clicked': self.open_settings,
-                    'copy_clicked': self.copy_response,
-                    'start_thinking_animation': self.animation_manager.start_thinking_animation,
-                    'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
-                    'is_currenlty_expanded': self.state_manager.is_currently_expanded,
-                    'multiline_toggle_clicked': self.on_multiline_toggle_clicked,
-                }
-                self.ui_manager.connect_signals(callbacks)
+                self.ui_manager.connect_signals(self._get_signal_callbacks)
                 self.input_field = self.ui_manager.input_field
 
             new_theme = self.config.get('theme', Theme.DEFAULT_THEME)
