@@ -20,6 +20,7 @@ class UIManager:
         self.settings_button = None
         self.copy_button = None
         self.multiline_input = False
+        self.multiline_toggle_button = None
 
         self.original_input_height = None
         self.original_window_height = None
@@ -64,7 +65,24 @@ class UIManager:
             self.animation_callbacks['stop_thinking'] = callbacks['stop_thinking_animation']
         if 'is_currenlty_expanded' in callbacks:
             self.state_manager_callbacks['is_currenlty_expanded']  = callbacks['is_currenlty_expanded']
+        if 'multiline_toggle_clicked' in callbacks:
+            self.multiline_toggle_button.clicked.connect(callbacks['multiline_toggle_clicked'])
 
+    def update_multiline_toggle_button(self, is_multiline):
+        """Update multiline toggle button appearance based on current state."""
+        if is_multiline:
+            self.multiline_toggle_button.setText("📝")  # Multi-line icon
+            self.multiline_toggle_button.setToolTip("Switch to single-line input")
+            self.multiline_toggle_button.setObjectName("multilineToggleButtonActive")
+        else:
+            self.multiline_toggle_button.setText("📄")  # Single-line icon  
+            self.multiline_toggle_button.setToolTip("Switch to multi-line input")
+            self.multiline_toggle_button.setObjectName("multilineToggleButton")
+        
+        # Force style update
+        self.multiline_toggle_button.style().unpolish(self.multiline_toggle_button)
+        self.multiline_toggle_button.style().polish(self.multiline_toggle_button)
+  
 
     def set_input_text(self, text):
         """Set text in input field regardless of type."""
@@ -233,6 +251,14 @@ class UIManager:
         # Create input field based on multiline setting
         self._create_input_field()
         input_layout.addWidget(self.input_field)
+
+        # Multiline toggle button
+        self.multiline_toggle_button = QPushButton()
+        self.multiline_toggle_button.setFixedSize(
+            ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
+        self.multiline_toggle_button.setFont(QFont("Segoe UI Emoji", 14))  # Larger emoji font
+        self.update_multiline_toggle_button(self.multiline_input)
+        input_layout.addWidget(self.multiline_toggle_button)
 
         # STT button
         self.stt_button = QPushButton()

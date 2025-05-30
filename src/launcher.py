@@ -141,7 +141,6 @@ class Launcher(QMainWindow):
     def setup_ui(self):
         """Setup UI using UIManager."""
         self.ui_manager.setup_ui(multiline_input=self.multiline_input)
-
         # Connect signals
         callbacks = {
             'input_changed': self.on_input_changed,
@@ -151,10 +150,11 @@ class Launcher(QMainWindow):
             'copy_clicked': self.copy_response,
             'start_thinking_animation': self.animation_manager.start_thinking_animation,
             'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
-            'is_currenlty_expanded': self.state_manager.is_currently_expanded
+            'is_currenlty_expanded': self.state_manager.is_currently_expanded,
+            'multiline_toggle_clicked': self.on_multiline_toggle_clicked
         }
         self.ui_manager.connect_signals(callbacks)
-
+        
         # Set up aliases for backward compatibility
         self.input_field = self.ui_manager.input_field
         self.response_area = self.ui_manager.response_area
@@ -162,7 +162,7 @@ class Launcher(QMainWindow):
         self.settings_button = self.ui_manager.settings_button
         self.copy_button = self.ui_manager.copy_button
         self.main_container = self.ui_manager.main_container
-
+        
     def update_stt_button_visibility(self):
         """Update mic button visibility."""
         self.stt_enabled = self.config.get('stt_enabled', STT.DEFAULT_ENABLED)
@@ -177,6 +177,41 @@ class Launcher(QMainWindow):
             self.animation_manager.start_thinking_animation(self.input_field)
         else:
             self.animation_manager.stop_thinking_animation()
+
+    def on_multiline_toggle_clicked(self):
+        """Handle multiline toggle button click."""
+        logger.debug(f"Multiline toggle clicked. Current mode: {self.multiline_input}")
+        
+        # Toggle the mode
+        new_multiline = not self.multiline_input
+        self.multiline_input = new_multiline
+        
+        # Save to config
+        self.config.set('multiline_input', new_multiline)        
+        # Update the UI manager's button appearance
+        self.ui_manager.update_multiline_toggle_button(new_multiline)
+        
+        # Recreate the input field with new mode
+        self.ui_manager.recreate_input_field(new_multiline)
+        
+        # Reconnect all signals since we recreated the input field
+        callbacks = {
+            'input_changed': self.on_input_changed,
+            'return_pressed': self.force_send_request,
+            'stt_clicked': self.recording_manager.toggle_recording,
+            'settings_clicked': self.open_settings,
+            'copy_clicked': self.copy_response,
+            'start_thinking_animation': self.animation_manager.start_thinking_animation,
+            'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
+            'is_currenlty_expanded': self.state_manager.is_currently_expanded,
+            'multiline_toggle_clicked': self.on_multiline_toggle_clicked
+        }
+        self.ui_manager.connect_signals(callbacks)
+        
+        # Update the input field reference
+        self.input_field = self.ui_manager.input_field
+        
+        logger.debug(f"Multiline mode changed to: {new_multiline}")
 
     def position_copy_button(self):
         """Position copy button."""
@@ -520,10 +555,8 @@ class Launcher(QMainWindow):
         """Open the settings dialog."""
         logger.debug("Opening settings dialog")
         dialog: SettingsDialog = SettingsDialog(logger, self.config, self)
-
         # Connect the theme change signal
         dialog.theme_changed.connect(self.on_theme_changed)
-
         # Let the dialog calculate its size first
         dialog.adjustSize()
 
@@ -533,23 +566,25 @@ class Launcher(QMainWindow):
         center_x = main_rect.x() + (main_rect.width() - dialog_rect.width()) // 2
         center_y = main_rect.y() + (main_rect.height() - dialog_rect.height()) // 2
         dialog.move(center_x, center_y)
-
+        
         if dialog.exec_():
             logger.debug("Settings dialog accepted")
-
             # Check if multiline setting changed
             new_multiline = self.config.get('multiline_input', False)
             if new_multiline != self.multiline_input:
                 self.multiline_input = new_multiline
+                # Update button appearance
+                self.ui_manager.update_multiline_toggle_button(new_multiline)
                 # Recreate UI with new input mode
-                self.ui_manager.recreate_input_field(self.multiline_input)
+                self.ui_manager.recreate_input_field(new_multiline)
                 # Reconnect signals
                 callbacks = {
                     'input_changed': self.on_input_changed,
                     'return_pressed': self.force_send_request,
                     'stt_clicked': self.recording_manager.toggle_recording,
                     'settings_clicked': self.open_settings,
-                    'copy_clicked': self.copy_response
+                    'copy_clicked': self.copy_response,
+                    'multiline_toggle_clicked': self.on_multiline_toggle_clicked
                 }
                 self.ui_manager.connect_signals(callbacks)
                 self.input_field = self.ui_manager.input_field
