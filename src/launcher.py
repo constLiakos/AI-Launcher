@@ -632,10 +632,15 @@ class Launcher(QMainWindow):
         self.set_input_state("normal")
         self.settings_button.setEnabled(True)
 
+        
     def on_input_changed(self, text):
         """Simplified input handling - delegate to StateManager."""
         logger.debug(f"Input changed, length: {len(text)} characters")
         self.state_manager.set_prompt(text)
+        
+        # Reset input height if text is cleared in multiline mode
+        if not text.strip() and self.multiline_input:
+            self.ui_manager.reset_input_height()
 
     def force_send_request(self):
         """Delegate to StateManager."""

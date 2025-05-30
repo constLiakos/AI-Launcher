@@ -277,8 +277,24 @@ class StyleManager:
                 color: {colors['text_color']};
                 font-weight: 400;
             }}
-            
+             
             #inputField:focus {{
+                border: 2px solid {colors['border_focus']};
+                background: {colors['field_bg_focus']};
+                outline: none;
+            }}
+
+            QTextEdit#inputField {{
+                background: {colors['field_bg']};
+                border: 2px solid {colors['border_normal']};
+                border-radius: 20px;
+                padding: 15px 20px;
+                font-size: 16px;
+                color: {colors['text_color']};
+                font-weight: 400;
+            }}
+            
+            QTextEdit#inputField:focus {{
                 border: 2px solid {colors['border_focus']};
                 background: {colors['field_bg_focus']};
                 outline: none;
@@ -301,6 +317,21 @@ class StyleManager:
             }}
             
             #inputFieldTyping:focus {{
+                border: 2px solid {colors['border_focus']};
+                background: {colors['field_bg_focus']};
+                outline: none;
+            }}
+            QTextEdit#inputFieldTyping {{
+                background: {colors['field_bg']};
+                border: 2px solid {colors['primary']};
+                border-radius: 20px;
+                padding: 15px 20px;
+                font-size: 16px;
+                color: {colors['text_color']};
+                font-weight: 400;
+            }}
+            
+            QTextEdit#inputFieldTyping:focus {{
                 border: 2px solid {colors['border_focus']};
                 background: {colors['field_bg_focus']};
                 outline: none;

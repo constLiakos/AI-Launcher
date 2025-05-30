@@ -170,6 +170,7 @@ class StateManager(QObject):
     def cleanup_state(self):
         """Clean up state when input is cleared."""
         self.logger.debug(f"Cleaning up state - response_visible: {self.response_visible}, is_processing: {self.is_processing}")
+        
         # FIXED: Hide response first, then set state
         if self.response_visible:
             self.hide_response()
