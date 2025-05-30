@@ -66,7 +66,7 @@ class Launcher(QMainWindow):
     def _initialize_core_components(self):
         """Initialize config, API client, etc."""
         self.config = Config()
-        self.window_manager = WindowManager(self, self.config, logger)
+        self.window_manager = WindowManager(logger, self, self.config)
         self.api_client = ApiClient(logger, self.config)
         self.stt_api_client = None
         self.multiline_input = self.config.get('multiline_input', InputSettings.MULTILINE_INPUT)
