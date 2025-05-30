@@ -76,6 +76,7 @@ class StateManager(QObject):
 
         if self.current_prompt:
             self.set_state("typing")
+            # TODO START only if in non multiline mode
             self.request_timer.start(self.request_delay_ms)
             self.logger.debug(f"Started request timer for {self.request_delay_ms}ms")
         else:
