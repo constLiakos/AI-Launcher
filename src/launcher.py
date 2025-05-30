@@ -367,6 +367,8 @@ class Launcher(QMainWindow):
             self.input_field.setText(transcribed_text)
             # Optionally set focus back to input field
             self.input_field.setFocus()
+            if self.state_manager.is_input_type_multiline():
+                self.ui_manager.handle_multiline_resize()
 
     def update_stt_button_appearance(self, state):
         """Update STT button appearance based on state."""
