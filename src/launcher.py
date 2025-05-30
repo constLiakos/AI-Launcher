@@ -584,6 +584,9 @@ class Launcher(QMainWindow):
                     'stt_clicked': self.recording_manager.toggle_recording,
                     'settings_clicked': self.open_settings,
                     'copy_clicked': self.copy_response,
+                    'start_thinking_animation': self.animation_manager.start_thinking_animation,
+                    'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
+                    'is_currenlty_expanded': self.state_manager.is_currently_expanded,
                     'multiline_toggle_clicked': self.on_multiline_toggle_clicked
                 }
                 self.ui_manager.connect_signals(callbacks)
