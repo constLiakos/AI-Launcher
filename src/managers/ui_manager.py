@@ -121,30 +121,6 @@ class UIManager:
 #       Input Field Functions
 #   ##########################################################################################
 
-    def set_input_state(self, state):
-        """Set visual state of input field: 'normal', 'thinking' """
-        if state == "typing":
-            if 'stop_thinking' in self.animation_callbacks:
-                self.animation_callbacks['stop_thinking']()
-            self.input_field.setObjectName("inputFieldTyping")
-            self.input_field.setStyle(self.input_field.style())
-        elif state == "thinking":
-            self.input_field.setObjectName("inputFieldThinking")
-            if 'start_thinking' in self.animation_callbacks:
-                self.animation_callbacks['start_thinking'](self.input_field)
-        else:  # normal
-            if 'stop_thinking' in self.animation_callbacks:
-                self.animation_callbacks['stop_thinking']()
-            self.input_field.setObjectName("inputField")
-            self.input_field.setStyle(self.input_field.style())
-
-    def set_input_text(self, text):
-        """Set text in input field regardless of type."""
-        if hasattr(self.input_field, 'setPlainText'):
-            self.input_field.setPlainText(text)
-        else:
-            self.input_field.setText(text)
-
     def get_input_text(self):
         """Get text from input field regardless of type."""
         if hasattr(self.input_field, 'toPlainText'):
@@ -222,6 +198,9 @@ class UIManager:
         if self.response_area.isVisible():
             QTimer.singleShot(10, self.position_copy_button)
 
+    def is_multiline_input(self):
+        return self.input_type_is_multiline
+
     def reset_input_height(self):
         """Reset input field to original single-line height."""
         pass
@@ -270,13 +249,29 @@ class UIManager:
                 self.input_field.setText(current_text)
             elif hasattr(self.input_field, 'setPlainText'):
                 self.input_field.setPlainText(current_text)
+    def set_input_state(self, state):
+        """Set visual state of input field: 'normal', 'thinking' """
+        if state == "typing":
+            if 'stop_thinking' in self.animation_callbacks:
+                self.animation_callbacks['stop_thinking']()
+            self.input_field.setObjectName("inputFieldTyping")
+            self.input_field.setStyle(self.input_field.style())
+        elif state == "thinking":
+            self.input_field.setObjectName("inputFieldThinking")
+            if 'start_thinking' in self.animation_callbacks:
+                self.animation_callbacks['start_thinking'](self.input_field)
+        else:  # normal
+            if 'stop_thinking' in self.animation_callbacks:
+                self.animation_callbacks['stop_thinking']()
+            self.input_field.setObjectName("inputField")
+            self.input_field.setStyle(self.input_field.style())
 
-    def is_multiline_input(self):
-        return self.input_type_is_multiline
-
-    def toggle_input_type(self):
-        """Toggle between single-line and multi-line input"""
-        self.set_input_type(not self.input_type_is_multiline)
+    def set_input_text(self, text):
+        """Set text in input field regardless of type."""
+        if hasattr(self.input_field, 'setPlainText'):
+            self.input_field.setPlainText(text)
+        else:
+            self.input_field.setText(text)
 
     def set_input_type(self, is_multiline):
         """Set input type and handle UI changes"""
@@ -292,6 +287,11 @@ class UIManager:
         
         if hasattr(self.parent, 'on_input_type_changed'):
             self.parent.on_input_type_changed()
+
+
+    def toggle_input_type(self):
+        """Toggle between single-line and multi-line input"""
+        self.set_input_type(not self.input_type_is_multiline)
 
     def _create_input_section(self):
         """Create input field and buttons."""
@@ -399,6 +399,21 @@ class UIManager:
 #       Button Functions
 #   ##########################################################################################
 
+    def position_copy_button(self):
+        """Position copy button in response area."""
+        if self.response_area.isVisible():
+            response_pos = self.response_area.pos()
+            response_geometry = self.response_area.geometry()
+
+            button_x = (response_pos.x() + response_geometry.width() -
+                        self.copy_button.width() - ElementSize.SCROLLBAR_SIZE -
+                        ElementSize.COPY_BUTTON_RIGHT_MARGIN)
+            button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
+
+            self.copy_button.move(button_x, button_y)
+            self.copy_button.raise_()
+            self.copy_button.setVisible(True)
+
     def update_stt_button_appearance(self, state):
         """Update STT button appearance."""
         if state == "recording":
@@ -409,21 +424,10 @@ class UIManager:
         self.stt_button.style().unpolish(self.stt_button)
         self.stt_button.style().polish(self.stt_button)
 
-    def _create_copy_button(self):
-        """Create copy button."""
-        self.copy_button = QPushButton(Text.COPY_BUTTON)
-        self.copy_button.setObjectName("copyButton")
-        self.copy_button.setFixedSize(
-            ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
-        self.copy_button.setVisible(False)
-        self.copy_button.setParent(self.main_container)
-        self.copy_button.raise_()
-
     def update_stt_button_visibility(self, enabled):
         """Update STT button visibility."""
         self.stt_button.setVisible(enabled)
         self.stt_button.setEnabled(enabled)
-
 
     def update_multiline_toggle_button(self, is_multiline):
         """Update multiline toggle button appearance based on current state."""
@@ -440,6 +444,17 @@ class UIManager:
         self.multiline_toggle_button.style().unpolish(self.multiline_toggle_button)
         self.multiline_toggle_button.style().polish(self.multiline_toggle_button)
   
+
+    def _create_copy_button(self):
+        """Create copy button."""
+        self.copy_button = QPushButton(Text.COPY_BUTTON)
+        self.copy_button.setObjectName("copyButton")
+        self.copy_button.setFixedSize(
+            ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
+        self.copy_button.setVisible(False)
+        self.copy_button.setParent(self.main_container)
+        self.copy_button.raise_()
+
     def _handle_multiline_toggle_click(self):
         """Handle multiline toggle with debouncing."""
         # Reset timer and start new one
@@ -450,21 +465,6 @@ class UIManager:
         """Execute the actual multiline toggle callback after debounce."""
         if self.pending_multiline_callback:
             self.pending_multiline_callback()
-
-    def position_copy_button(self):
-        """Position copy button in response area."""
-        if self.response_area.isVisible():
-            response_pos = self.response_area.pos()
-            response_geometry = self.response_area.geometry()
-
-            button_x = (response_pos.x() + response_geometry.width() -
-                        self.copy_button.width() - ElementSize.SCROLLBAR_SIZE -
-                        ElementSize.COPY_BUTTON_RIGHT_MARGIN)
-            button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
-
-            self.copy_button.move(button_x, button_y)
-            self.copy_button.raise_()
-            self.copy_button.setVisible(True)
 
 #   ##########################################################################################
 #       Help Functions
