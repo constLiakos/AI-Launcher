@@ -75,62 +75,51 @@ class UIManager:
             self.pending_multiline_callback = callbacks['multiline_toggle_clicked']
             self.multiline_toggle_button.clicked.connect(self._handle_multiline_toggle_click)
 
+    def _setup_shortcuts(self):
+        """Setup keyboard shortcuts."""
+        # ESC to hide to tray
+        escape_shortcut = QShortcut(QKeySequence(Qt.Key_Escape), self.parent)
+        escape_shortcut.activated.connect(self.parent.hide_window)
 
-    def update_multiline_toggle_button(self, is_multiline):
-        """Update multiline toggle button appearance based on current state."""
-        if is_multiline:
-            self.multiline_toggle_button.setText("📝")  # Multi-line icon
-            self.multiline_toggle_button.setToolTip("Switch to single-line input")
-            self.multiline_toggle_button.setObjectName("multilineToggleButtonActive")
-        else:
-            self.multiline_toggle_button.setText("📄")  # Single-line icon  
-            self.multiline_toggle_button.setToolTip("Switch to multi-line input")
-            self.multiline_toggle_button.setObjectName("multilineToggleButton")
-        
-        # Force style update
-        self.multiline_toggle_button.style().unpolish(self.multiline_toggle_button)
-        self.multiline_toggle_button.style().polish(self.multiline_toggle_button)
-  
-    def _handle_multiline_toggle_click(self):
-        """Handle multiline toggle with debouncing."""
-        # Reset timer and start new one
-        self.multiline_toggle_debounce_timer.stop()
-        self.multiline_toggle_debounce_timer.start(100)  # 100ms debounce
+        # Ctrl+Q to quit completely
+        quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self.parent)
+        quit_shortcut.activated.connect(self.parent.quit_application)
 
-    def _handle_multiline_toggle_debounced(self):
-        """Execute the actual multiline toggle callback after debounce."""
-        if self.pending_multiline_callback:
-            self.pending_multiline_callback()
+#   ##########################################################################################
+#       Window Functions
+#   ##########################################################################################
 
-    def set_input_text(self, text):
-        """Set text in input field regardless of type."""
-        if hasattr(self.input_field, 'setPlainText'):
-            self.input_field.setPlainText(text)
-        else:
-            self.input_field.setText(text)
+    def _store_original_heights(self):
+        """Store original heights when first entering multiline mode."""
+        if self.original_window_height is None:
+            self.original_window_height = self.parent.height()
+            self.logger.debug(f"Stored original window height: {self.original_window_height}")
 
-    def get_input_text(self):
-        """Get text from input field regardless of type."""
-        if hasattr(self.input_field, 'toPlainText'):
-            return self.input_field.toPlainText()
-        else:
-            return self.input_field.text()
+    def _setup_window_properties(self):
+        """Configure window properties."""
+        self.parent.setWindowFlags(
+            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.parent.setAttribute(Qt.WA_TranslucentBackground)
+        self.parent.resize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
+        self.parent.setMinimumSize(
+            WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
 
+    def _create_main_container(self):
+        """Create the main container widget."""
+        central_widget = QWidget()
+        self.parent.setCentralWidget(central_widget)
 
-    def update_stt_button_visibility(self, enabled):
-        """Update STT button visibility."""
-        self.stt_button.setVisible(enabled)
-        self.stt_button.setEnabled(enabled)
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
 
-    def update_stt_button_appearance(self, state):
-        """Update STT button appearance."""
-        if state == "recording":
-            self.stt_button.setIcon(QIcon(str(Files.MIC_RECORDING_ICON_PATH)))
-        else:
-            self.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
+        self.main_container = QFrame()
+        self.main_container.setObjectName("mainContainer")
+        main_layout.addWidget(self.main_container)
 
-        self.stt_button.style().unpolish(self.stt_button)
-        self.stt_button.style().polish(self.stt_button)
+#   ##########################################################################################
+#       Input Field Functions
+#   ##########################################################################################
 
     def set_input_state(self, state):
         """Set visual state of input field: 'normal', 'thinking' """
@@ -149,26 +138,89 @@ class UIManager:
             self.input_field.setObjectName("inputField")
             self.input_field.setStyle(self.input_field.style())
 
-    def position_copy_button(self):
-        """Position copy button in response area."""
+    def set_input_text(self, text):
+        """Set text in input field regardless of type."""
+        if hasattr(self.input_field, 'setPlainText'):
+            self.input_field.setPlainText(text)
+        else:
+            self.input_field.setText(text)
+
+    def get_input_text(self):
+        """Get text from input field regardless of type."""
+        if hasattr(self.input_field, 'toPlainText'):
+            return self.input_field.toPlainText()
+        else:
+            return self.input_field.text()
+
+    def handle_multiline_resize(self):
+        """Handle resizing of multiline input field and window based on content."""        
+        if not self.input_type_is_multiline or not hasattr(self.input_field, 'document'):
+            return
+        
+        text = self.input_field.toPlainText()
+        
+        # Calculate actual displayed lines including wrapped text
+        document = self.input_field.document()
+        document_layout = document.documentLayout()
+        
+        # Get the width available for text (excluding margins/padding)
+        text_width = self.input_field.viewport().width()
+        
+        # Calculate total visual lines (including wrapped lines)
+        total_visual_lines = 0
+        block = document.firstBlock()
+        
+        while block.isValid():
+            block_layout = block.layout()
+            if block_layout:
+                # Count line breaks within this block (wrapped lines)
+                line_count_in_block = block_layout.lineCount()
+                total_visual_lines += max(1, line_count_in_block)  # At least 1 line per block
+            else:
+                # Fallback: estimate wrapped lines based on text length and width
+                block_text = block.text()
+                if not block_text:
+                    total_visual_lines += 1  # Empty line
+                else:
+                    font_metrics = self.input_field.fontMetrics()
+                    text_width_pixels = font_metrics.horizontalAdvance(block_text)
+                    estimated_lines = max(1, (text_width_pixels // max(1, text_width)) + 1)
+                    total_visual_lines += estimated_lines
+            block = block.next()
+        
+        # Ensure at least 1 line
+        line_count = max(1, total_visual_lines)
+        new_input_height_cal = (line_count * InputSettings.LINE_HEIGHT) + InputSettings.BASE_PADDING
+        new_input_height = min(new_input_height_cal, InputSettings.MAX_HEIGHT)
+        
+        # Update input field height
+        self.input_field.setMinimumHeight(new_input_height)
+        self.input_field.setMaximumHeight(new_input_height)
+        
+        is_currently_window_expanded = False
+        if 'is_currenlty_expanded' in self.state_manager_callbacks:
+                is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded']()
+
+        # Calculate new window height
+        if self.original_window_height and not is_currently_window_expanded:
+            # Base window expansion on number of lines beyond the first line
+            extra_lines = max(0, line_count - 1)
+            window_height_increase = extra_lines * InputSettings.LINE_HEIGHT
+            new_window_height = self.original_window_height + window_height_increase
+            
+            # Ensure reasonable bounds
+            min_height = self.min_window_height
+            max_height = min_height + 300  # Allow substantial expansion
+            new_window_height = max(min_height, min(new_window_height, max_height))
+            
+            # Only resize window if height actually changed
+            current_window_height = self.parent.height()
+            if abs(new_window_height - current_window_height) > 5:  # 5px tolerance
+                self.logger.debug(f"Resizing window: {current_window_height} -> {new_window_height} (lines: {line_count})")
+                self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
+                
         if self.response_area.isVisible():
-            response_pos = self.response_area.pos()
-            response_geometry = self.response_area.geometry()
-
-            button_x = (response_pos.x() + response_geometry.width() -
-                        self.copy_button.width() - ElementSize.SCROLLBAR_SIZE -
-                        ElementSize.COPY_BUTTON_RIGHT_MARGIN)
-            button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
-
-            self.copy_button.move(button_x, button_y)
-            self.copy_button.raise_()
-            self.copy_button.setVisible(True)
-
-    def show_response_area(self):
-        """Show response area and copy button."""
-        self.response_area.setVisible(True)
-        self.copy_button.setVisible(True)
-        self.position_copy_button()
+            QTimer.singleShot(10, self.position_copy_button)
 
     def reset_input_height(self):
         """Reset input field to original single-line height."""
@@ -219,27 +271,27 @@ class UIManager:
             elif hasattr(self.input_field, 'setPlainText'):
                 self.input_field.setPlainText(current_text)
 
-    def _setup_window_properties(self):
-        """Configure window properties."""
-        self.parent.setWindowFlags(
-            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.parent.setAttribute(Qt.WA_TranslucentBackground)
-        self.parent.resize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
-        self.parent.setMinimumSize(
-            WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
+    def is_multiline_input(self):
+        return self.input_type_is_multiline
 
-    def _create_main_container(self):
-        """Create the main container widget."""
-        central_widget = QWidget()
-        self.parent.setCentralWidget(central_widget)
+    def toggle_input_type(self):
+        """Toggle between single-line and multi-line input"""
+        self.set_input_type(not self.input_type_is_multiline)
 
-        main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.setSpacing(0)
-
-        self.main_container = QFrame()
-        self.main_container.setObjectName("mainContainer")
-        main_layout.addWidget(self.main_container)
+    def set_input_type(self, is_multiline):
+        """Set input type and handle UI changes"""
+        if self.input_type_is_multiline == is_multiline:
+            return
+            
+        self.input_type_is_multiline = is_multiline
+        self.update_multiline_toggle_button(is_multiline)
+        self.recreate_input_field(is_multiline)
+        
+        # Save to config
+        self.config.set('multiline_input', is_multiline)
+        
+        if hasattr(self.parent, 'on_input_type_changed'):
+            self.parent.on_input_type_changed()
 
     def _create_input_section(self):
         """Create input field and buttons."""
@@ -284,47 +336,6 @@ class UIManager:
 
         container_layout.addLayout(input_layout)
 
-    def _create_response_section(self):
-        """Create response area."""
-        container_layout = self.main_container.layout()
-
-        self.response_area = QTextBrowser()
-        self.response_area.setObjectName("responseArea")
-        self.response_area.setAcceptRichText(True)
-        self.response_area.setOpenExternalLinks(True)
-        self.response_area.setVisible(False)
-        self.response_area.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        self._setup_emoji_font(self.response_area)
-        container_layout.addWidget(self.response_area)
-        container_layout.setStretchFactor(
-            container_layout.itemAt(0).layout(), 0)  # Input section
-        # Response area takes remaining space
-        container_layout.setStretchFactor(self.response_area, 1)
-        container_layout.addStretch()
-
-    def _create_copy_button(self):
-        """Create copy button."""
-        self.copy_button = QPushButton(Text.COPY_BUTTON)
-        self.copy_button.setObjectName("copyButton")
-        self.copy_button.setFixedSize(
-            ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
-        self.copy_button.setVisible(False)
-        self.copy_button.setParent(self.main_container)
-        self.copy_button.raise_()
-
-    def _setup_shortcuts(self):
-        """Setup keyboard shortcuts."""
-        # ESC to hide to tray
-        escape_shortcut = QShortcut(QKeySequence(Qt.Key_Escape), self.parent)
-        escape_shortcut.activated.connect(self.parent.hide_window)
-
-        # Ctrl+Q to quit completely
-        quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self.parent)
-        quit_shortcut.activated.connect(self.parent.quit_application)
-
-
     def _create_input_field(self):
         """Create appropriate input field based on multiline setting."""
         if self.input_type_is_multiline:
@@ -354,79 +365,110 @@ class UIManager:
         
         self.input_field.setObjectName("inputField")
 
-    def handle_multiline_resize(self):
-        """Handle resizing of multiline input field and window based on content."""        
-        if not self.input_type_is_multiline or not hasattr(self.input_field, 'document'):
-            return
-        
-        text = self.input_field.toPlainText()
-        
-        # Calculate actual displayed lines including wrapped text
-        document = self.input_field.document()
-        document_layout = document.documentLayout()
-        
-        # Get the width available for text (excluding margins/padding)
-        text_width = self.input_field.viewport().width()
-        
-        # Calculate total visual lines (including wrapped lines)
-        total_visual_lines = 0
-        block = document.firstBlock()
-        
-        while block.isValid():
-            block_layout = block.layout()
-            if block_layout:
-                # Count line breaks within this block (wrapped lines)
-                line_count_in_block = block_layout.lineCount()
-                total_visual_lines += max(1, line_count_in_block)  # At least 1 line per block
-            else:
-                # Fallback: estimate wrapped lines based on text length and width
-                block_text = block.text()
-                if not block_text:
-                    total_visual_lines += 1  # Empty line
-                else:
-                    font_metrics = self.input_field.fontMetrics()
-                    text_width_pixels = font_metrics.horizontalAdvance(block_text)
-                    estimated_lines = max(1, (text_width_pixels // max(1, text_width)) + 1)
-                    total_visual_lines += estimated_lines
-            
-            block = block.next()
-        
-        # Ensure at least 1 line
-        line_count = max(1, total_visual_lines)
+#   ##########################################################################################
+#       Response Area Functions
+#   ##########################################################################################
 
-        new_input_height_cal = (line_count * InputSettings.LINE_HEIGHT) + InputSettings.BASE_PADDING
-        
-        new_input_height = min(new_input_height_cal, InputSettings.MAX_HEIGHT)
-        
-        # Update input field height
-        self.input_field.setMinimumHeight(new_input_height)
-        self.input_field.setMaximumHeight(new_input_height)
-        
-        is_currently_window_expanded = False
-        if 'is_currenlty_expanded' in self.state_manager_callbacks:
-                is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded']()
+    def show_response_area(self):
+        """Show response area and copy button."""
+        self.response_area.setVisible(True)
+        self.copy_button.setVisible(True)
+        self.position_copy_button()
 
-        # Calculate new window height
-        if self.original_window_height and not is_currently_window_expanded:
-            # Base window expansion on number of lines beyond the first line
-            extra_lines = max(0, line_count - 1)
-            window_height_increase = extra_lines * InputSettings.LINE_HEIGHT
-            new_window_height = self.original_window_height + window_height_increase
-            
-            # Ensure reasonable bounds
-            min_height = self.min_window_height
-            max_height = min_height + 300  # Allow substantial expansion
-            new_window_height = max(min_height, min(new_window_height, max_height))
-            
-            # Only resize window if height actually changed
-            current_window_height = self.parent.height()
-            if abs(new_window_height - current_window_height) > 5:  # 5px tolerance
-                self.logger.debug(f"Resizing window: {current_window_height} -> {new_window_height} (lines: {line_count})")
-                self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
-                
+    def _create_response_section(self):
+        """Create response area."""
+        container_layout = self.main_container.layout()
+
+        self.response_area = QTextBrowser()
+        self.response_area.setObjectName("responseArea")
+        self.response_area.setAcceptRichText(True)
+        self.response_area.setOpenExternalLinks(True)
+        self.response_area.setVisible(False)
+        self.response_area.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self._setup_emoji_font(self.response_area)
+        container_layout.addWidget(self.response_area)
+        container_layout.setStretchFactor(
+            container_layout.itemAt(0).layout(), 0)  # Input section
+        # Response area takes remaining space
+        container_layout.setStretchFactor(self.response_area, 1)
+        container_layout.addStretch()
+
+#   ##########################################################################################
+#       Button Functions
+#   ##########################################################################################
+
+    def update_stt_button_appearance(self, state):
+        """Update STT button appearance."""
+        if state == "recording":
+            self.stt_button.setIcon(QIcon(str(Files.MIC_RECORDING_ICON_PATH)))
+        else:
+            self.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
+
+        self.stt_button.style().unpolish(self.stt_button)
+        self.stt_button.style().polish(self.stt_button)
+
+    def _create_copy_button(self):
+        """Create copy button."""
+        self.copy_button = QPushButton(Text.COPY_BUTTON)
+        self.copy_button.setObjectName("copyButton")
+        self.copy_button.setFixedSize(
+            ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
+        self.copy_button.setVisible(False)
+        self.copy_button.setParent(self.main_container)
+        self.copy_button.raise_()
+
+    def update_stt_button_visibility(self, enabled):
+        """Update STT button visibility."""
+        self.stt_button.setVisible(enabled)
+        self.stt_button.setEnabled(enabled)
+
+
+    def update_multiline_toggle_button(self, is_multiline):
+        """Update multiline toggle button appearance based on current state."""
+        if is_multiline:
+            self.multiline_toggle_button.setText("📝")  # Multi-line icon
+            self.multiline_toggle_button.setToolTip("Switch to single-line input")
+            self.multiline_toggle_button.setObjectName("multilineToggleButtonActive")
+        else:
+            self.multiline_toggle_button.setText("📄")  # Single-line icon  
+            self.multiline_toggle_button.setToolTip("Switch to multi-line input")
+            self.multiline_toggle_button.setObjectName("multilineToggleButton")
+        
+        # Force style update
+        self.multiline_toggle_button.style().unpolish(self.multiline_toggle_button)
+        self.multiline_toggle_button.style().polish(self.multiline_toggle_button)
+  
+    def _handle_multiline_toggle_click(self):
+        """Handle multiline toggle with debouncing."""
+        # Reset timer and start new one
+        self.multiline_toggle_debounce_timer.stop()
+        self.multiline_toggle_debounce_timer.start(100)  # 100ms debounce
+
+    def _handle_multiline_toggle_debounced(self):
+        """Execute the actual multiline toggle callback after debounce."""
+        if self.pending_multiline_callback:
+            self.pending_multiline_callback()
+
+    def position_copy_button(self):
+        """Position copy button in response area."""
         if self.response_area.isVisible():
-            QTimer.singleShot(10, self.position_copy_button)
+            response_pos = self.response_area.pos()
+            response_geometry = self.response_area.geometry()
 
+            button_x = (response_pos.x() + response_geometry.width() -
+                        self.copy_button.width() - ElementSize.SCROLLBAR_SIZE -
+                        ElementSize.COPY_BUTTON_RIGHT_MARGIN)
+            button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
+
+            self.copy_button.move(button_x, button_y)
+            self.copy_button.raise_()
+            self.copy_button.setVisible(True)
+
+#   ##########################################################################################
+#       Help Functions
+#   ##########################################################################################
     def _setup_emoji_font(self, widget):
         """Configure font for emoji support."""
         font = QFont()
@@ -442,31 +484,3 @@ class UIManager:
 
         font.setPointSize(12)
         widget.setFont(font)
-
-    def _store_original_heights(self):
-        """Store original heights when first entering multiline mode."""
-        if self.original_window_height is None:
-            self.original_window_height = self.parent.height()
-            self.logger.debug(f"Stored original window height: {self.original_window_height}")
-            
-    def is_multiline_input(self):
-        return self.input_type_is_multiline
-
-    def toggle_input_type(self):
-        """Toggle between single-line and multi-line input"""
-        self.set_input_type(not self.input_type_is_multiline)
-
-    def set_input_type(self, is_multiline):
-        """Set input type and handle UI changes"""
-        if self.input_type_is_multiline == is_multiline:
-            return
-            
-        self.input_type_is_multiline = is_multiline
-        self.update_multiline_toggle_button(is_multiline)
-        self.recreate_input_field(is_multiline)
-        
-        # Save to config
-        self.config.set('multiline_input', is_multiline)
-        
-        if hasattr(self.parent, 'on_input_type_changed'):
-            self.parent.on_input_type_changed()
