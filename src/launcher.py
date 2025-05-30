@@ -192,22 +192,12 @@ class Launcher(QMainWindow):
         """Handle multiline toggle button click."""
         logger.debug(f"Multiline toggle clicked. Current mode: {self.state_manager.is_input_type_multiline()}")
         
-        # Toggle the mode
         new_multiline = not self.state_manager.is_input_type_multiline()
         self.state_manager.set_input_type(new_multiline)
-        
-        # Save to config
         self.config.set('multiline_input', new_multiline)        
-        # Update the UI manager's button appearance
         self.ui_manager.update_multiline_toggle_button(new_multiline)
-        
-        # Recreate the input field with new mode
         self.ui_manager.recreate_input_field(new_multiline)
-        
-        # Reconnect all signals since we recreated the input field
         self._reconnect_ui_signals()
-        
-        # Update the input field reference
         self.input_field = self.ui_manager.input_field
         
         logger.debug(f"Multiline mode changed to: {new_multiline}")
