@@ -79,8 +79,7 @@ class Launcher(QMainWindow):
         self.window_manager = WindowManager(logger, self, self.config)
         self.api_client = ApiClient(logger, self.config)
         self.stt_api_client = None
-        self.multiline_input = self.config.get(
-            'multiline_input', InputSettings.MULTILINE_INPUT)
+        
 
     def _initialize_managers(self):
         "Initialize managers"
@@ -140,7 +139,9 @@ class Launcher(QMainWindow):
 
     def setup_ui(self):
         """Setup UI using UIManager."""
-        self.ui_manager.setup_ui(multiline_input=self.multiline_input)
+        is_multiline_input = self.config.get('multiline_input', InputSettings.IS_MULTILINE_INPUT)
+        self.state_manager.set_input_type(is_multiline_input)
+        self.ui_manager.setup_ui(multiline_input=is_multiline_input)
         # Connect signals
         callbacks = {
             'input_changed': self.on_input_changed,
@@ -180,11 +181,11 @@ class Launcher(QMainWindow):
 
     def on_multiline_toggle_clicked(self):
         """Handle multiline toggle button click."""
-        logger.debug(f"Multiline toggle clicked. Current mode: {self.multiline_input}")
+        logger.debug(f"Multiline toggle clicked. Current mode: {self.state_manager.is_input_type_multiline()}")
         
         # Toggle the mode
-        new_multiline = not self.multiline_input
-        self.multiline_input = new_multiline
+        new_multiline = not self.state_manager.is_input_type_multiline()
+        self.state_manager.set_input_type(new_multiline)
         
         # Save to config
         self.config.set('multiline_input', new_multiline)        
@@ -571,8 +572,8 @@ class Launcher(QMainWindow):
             logger.debug("Settings dialog accepted")
             # Check if multiline setting changed
             new_multiline = self.config.get('multiline_input', False)
-            if new_multiline != self.multiline_input:
-                self.multiline_input = new_multiline
+            if new_multiline != self.state_manager.is_input_type_multiline():
+                self.state_manager.set_input_type(new_multiline)
                 # Update button appearance
                 self.ui_manager.update_multiline_toggle_button(new_multiline)
                 # Recreate UI with new input mode
@@ -674,7 +675,7 @@ class Launcher(QMainWindow):
         self.state_manager.set_prompt(text)
 
         # Reset input height if text is cleared in multiline mode
-        if not text.strip() and self.multiline_input:
+        if not text.strip() and self.state_manager.is_input_type_multiline():
             self.ui_manager.reset_input_height()
 
     def force_send_request(self):
@@ -687,7 +688,7 @@ class Launcher(QMainWindow):
     def eventFilter(self, obj, event):
         """Handle key events for input field."""
         if obj == self.input_field and event.type() == event.KeyPress:
-            if self.multiline_input:
+            if self.state_manager.is_input_type_multiline():
                 # Multi-line mode: Ctrl+Enter submits
                 if (event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter) and event.modifiers() == Qt.ControlModifier:
                     self.force_send_request()

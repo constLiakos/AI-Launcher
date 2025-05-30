@@ -464,7 +464,7 @@ class Animation:
 
 class InputSettings:
     """Input Area Settings"""
-    MULTILINE_INPUT = True
+    IS_MULTILINE_INPUT = True
     MAX_HEIGHT = 300
     MULTILINE_SINGLE_LINE_HEIGHT = 50  # Height equivalent to single line
     MULTILINE_EXPANSION_STEP = 25      # Height increase per line

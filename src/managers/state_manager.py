@@ -17,6 +17,7 @@ class StateManager(QObject):
     expanded_changed = pyqtSignal(bool)
     stt_state_changed = pyqtSignal(str)
     recording_completed_sg = pyqtSignal()
+    multiline_input_type_changed = pyqtSignal(bool)
 
     def __init__(self, config, logger:logging.Logger):
         super().__init__()
@@ -31,6 +32,7 @@ class StateManager(QObject):
         self.current_request_id = 0
         self.accumulated_response = ""
         self.current_state = "normal"  # 'normal', 'typing', 'thinking', 'error'
+        self.input_type_is_multiline = False
 
         # Worker management
         self.streaming_worker = None
@@ -50,6 +52,13 @@ class StateManager(QObject):
         self.is_recording = False
 
         self.logger.debug(f"StateManager initialized with request delay: {self.request_delay_ms}ms")
+
+    def set_input_type(self, is_multiline = False):
+        self.input_type_is_multiline = is_multiline
+        self.multiline_input_type_changed.emit(is_multiline)
+
+    def is_input_type_multiline(self):
+        return self.input_type_is_multiline
 
     def handle_first_chunk(self):
         """Handle first chunk reception - triggers UI expansion."""
@@ -76,8 +85,9 @@ class StateManager(QObject):
 
         if self.current_prompt:
             self.set_state("typing")
-            # TODO START only if in non multiline mode
-            self.request_timer.start(self.request_delay_ms)
+
+            if self.is_input_type_multiline() is False:
+                self.request_timer.start(self.request_delay_ms)
             self.logger.debug(f"Started request timer for {self.request_delay_ms}ms")
         else:
             self.logger.debug("Empty prompt, cleaning up state")

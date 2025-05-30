@@ -29,7 +29,7 @@ class Config:
             'tmp_dir': Directories.DEFAULT_TMP,
             'max_tokens': LLM.MAX_TOKENS,
             'temperature': LLM.TEMPERATURE,
-            'multiline_input': InputSettings.MULTILINE_INPUT
+            'multiline_input': InputSettings.IS_MULTILINE_INPUT
         }
         self.config = self.load_config()
 
