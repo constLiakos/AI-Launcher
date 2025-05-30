@@ -2,14 +2,20 @@ import logging
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit,
                              QPushButton, QTextBrowser, QFrame, QShortcut,
                              QSizePolicy)
-from PyQt5.QtCore import Qt, pyqtSlot, QTimer
+from PyQt5.QtCore import Qt, pyqtSlot, QTimer, pyqtSignal, QObject
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
 from utils.constants import (
     ElementSize, Files, InputSettings, Text, WindowSize)
 
 
-class UIManager:
+
+class UIManager(QObject):
+
+    expansion_changed = pyqtSignal(bool)
+    visual_state_changed = pyqtSignal(str)
+
     def __init__(self, parent_window, logger, config):
+        super().__init__()
         self.parent = parent_window
         self.logger = logger.getChild('ui_manager')
         self.config = config
@@ -33,6 +39,11 @@ class UIManager:
         self.multiline_toggle_debounce_timer.setSingleShot(True)
         self.multiline_toggle_debounce_timer.timeout.connect(
             self._handle_multiline_toggle_debounced)
+        
+        self.current_visual_state = "normal"
+        self.is_expanded = False
+        self.response_visible = False
+
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -86,6 +97,40 @@ class UIManager:
         # Ctrl+Q to quit completely
         quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self.parent)
         quit_shortcut.activated.connect(self.parent.quit_application)
+
+#   ##########################################################################################
+#       UI Functions
+#   ##########################################################################################
+
+    def contract_ui(self):
+        """Contract UI to hide response area - alias for hide_response."""
+        self.hide_response()
+
+    def expand_ui(self):
+        """Expand UI to show response area - alias for show_response_area."""
+        self.show_response_area()
+
+
+    def _apply_visual_state(self, state):
+        """Apply visual changes based on state."""
+        if state == "typing":
+            if 'stop_thinking' in self.animation_callbacks:
+                self.animation_callbacks['stop_thinking']()
+            self.input_field.setObjectName("inputFieldTyping")
+        elif state == "thinking":
+            self.input_field.setObjectName("inputFieldThinking")
+            if 'start_thinking' in self.animation_callbacks:
+                self.animation_callbacks['start_thinking'](self.input_field)
+        elif state == "error":
+            if 'stop_thinking' in self.animation_callbacks:
+                self.animation_callbacks['stop_thinking']()
+            self.input_field.setObjectName("inputFieldError")
+        else:  # normal
+            if 'stop_thinking' in self.animation_callbacks:
+                self.animation_callbacks['stop_thinking']()
+            self.input_field.setObjectName("inputField")
+        
+        self.input_field.setStyle(self.input_field.style())
 
 #   ##########################################################################################
 #       Window Functions
@@ -389,9 +434,37 @@ class UIManager:
 
     def show_response_area(self):
         """Show response area and copy button."""
-        self.response_area.setVisible(True)
-        self.copy_button.setVisible(True)
-        self.position_copy_button()
+        if not self.response_visible:
+            self.response_area.setVisible(True)
+            self.copy_button.setVisible(True)
+            self.position_copy_button()
+            self.response_visible = True
+            self.is_expanded = True
+            self.expansion_changed.emit(True)
+            self.logger.debug("Response area shown")
+
+    def hide_response(self):
+        """
+        Hide response area and copy button.
+        This is purely UI logic - hiding/showing widgets and managing layout.
+        """
+        if self.response_visible:
+            self.response_area.setVisible(False)
+            self.copy_button.setVisible(False)
+            self.response_visible = False
+            self.is_expanded = False
+            self.expansion_changed.emit(False)
+            self.logger.debug("Response area hidden")
+
+    def is_response_visible(self):
+        return self.response_visible
+
+    def toggle_response_visibility(self):
+        """Toggle response area visibility."""
+        if self.response_visible:
+            self.hide_response()
+        else:
+            self.show_response_area()
 
     def _create_response_section(self):
         """Create response area."""
@@ -485,6 +558,28 @@ class UIManager:
         """Execute the actual multiline toggle callback after debounce."""
         self._toggle_input_type()
 
+#   ##########################################################################################
+#       State Functions
+#   ##########################################################################################
+
+    def set_visual_state(self, state):
+        """Set visual state of UI components."""
+        if self.current_visual_state != state:
+            old_state = self.current_visual_state
+            self.current_visual_state = state
+            self.logger.debug(f"Visual state changed from '{old_state}' to '{state}'")
+            
+            # Apply visual changes immediately
+            self._apply_visual_state(state)
+            self.visual_state_changed.emit(state)
+ 
+    def get_visual_state(self):
+        return self.current_visual_state
+
+    # Getters for UI state
+    def is_currently_expanded(self):
+        """Check if UI is currently expanded."""
+        return self.is_expanded
 
 #   ##########################################################################################
 #       Help Functions

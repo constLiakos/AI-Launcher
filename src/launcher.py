@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from PyQt5.QtWidgets import (
     QMainWindow, QApplication, QAction, QShortcut)
-from PyQt5.QtCore import Qt, QTimer, pyqtSlot
+from PyQt5.QtCore import Qt, QTimer, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QIcon, QKeySequence
 
 from managers.recording_manager import Recording_Manager
@@ -61,18 +61,31 @@ class Launcher(QMainWindow):
 
     def _setup_signal_connections(self):
         """Setup Connection Signals"""
-        self.state_manager.state_changed.connect(self.on_state_changed)
         self.state_manager.processing_changed.connect(
             self.on_processing_changed)
-        self.state_manager.response_ready.connect(self.on_response_ready)
         self.state_manager.request_cancelled.connect(self.on_request_cancelled)
         self.state_manager.request_ready.connect(self.send_request)
-        self.state_manager.expanded_changed.connect(
-            self.on_expanded_changed)
         self.state_manager.stt_state_changed.connect(self.on_stt_state_changed)
         self.state_manager.recording_completed_sg.connect(
             self.on_recording_completed)
-        self.state_manager.clear_multiline_input_sg.connect(self.clear_multiline_input)
+       # UIManager signals (UI state)
+        self.ui_manager.expansion_changed.connect(self.on_expansion_changed)
+        self.state_manager.clear_multiline_input_sg.connect(
+            self.clear_multiline_input)
+
+    @pyqtSlot(bool)
+    def on_expansion_changed(self, is_expanded):
+        """Handle UI expansion changes."""
+        if is_expanded:
+            # Calculate window size based on input type
+            if self.ui_manager.is_multiline_input():
+                width, height = WindowSize.EXPANDED_MULTILINE_INPUT_WIDTH, WindowSize.EXPANDED_MULTILINE_INPUT_HEIGHT
+            else:
+                width, height = WindowSize.EXPANDED_SINGLELINE_INPUT_WIDTH, WindowSize.EXPANDED_SINGLELINE_INPUT_HEIGHT
+            self.animate_resize(width, height)
+        else:
+            self.animate_resize(WindowSize.COMPACT_WIDTH,
+                                WindowSize.COMPACT_HEIGHT)
 
     def _initialize_core_components(self):
         """Initialize config, API client, etc."""
@@ -80,7 +93,6 @@ class Launcher(QMainWindow):
         self.window_manager = WindowManager(logger, self, self.config)
         self.api_client = ApiClient(logger, self.config)
         self.stt_api_client = None
-        
 
     def _initialize_managers(self):
         "Initialize managers"
@@ -133,8 +145,9 @@ class Launcher(QMainWindow):
             'copy_clicked': self.copy_response,
             'start_thinking_animation': self.animation_manager.start_thinking_animation,
             'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
-            'is_currenlty_expanded': self.state_manager.is_currently_expanded,
+            'is_currenlty_expanded': self.ui_manager.is_currently_expanded,
         }
+
     def _reconnect_ui_signals(self):
         """Reusable signal connection method"""
         self.ui_manager.connect_signals(self._get_signal_callbacks())
@@ -159,11 +172,12 @@ class Launcher(QMainWindow):
 
     def setup_ui(self):
         """Setup UI using UIManager."""
-        is_multiline = self.config.get('multiline_input', InputSettings.IS_MULTILINE_INPUT)
+        is_multiline = self.config.get(
+            'multiline_input', InputSettings.IS_MULTILINE_INPUT)
         self.ui_manager.setup_ui(multiline_input=is_multiline)
         # Connect signals
         self._reconnect_ui_signals()
-        
+
         # Set up aliases for backward compatibility
         self.input_field = self.ui_manager.input_field
         self.response_area = self.ui_manager.response_area
@@ -171,7 +185,7 @@ class Launcher(QMainWindow):
         self.settings_button = self.ui_manager.settings_button
         self.copy_button = self.ui_manager.copy_button
         self.main_container = self.ui_manager.main_container
-        
+
     def update_stt_button_visibility(self):
         """Update mic button visibility."""
         self.stt_enabled = self.config.get('stt_enabled', STT.DEFAULT_ENABLED)
@@ -209,7 +223,8 @@ class Launcher(QMainWindow):
             window_height = self.height()
             # Reserve space for input area, margins, and some padding
             available_height = window_height - ElementSize.RESPONSE_MARGIN_BOTTOM
-            available_height = max(available_height, ElementSize.RESPONSE_AVAILABLE_HEIGHT_MINIMUM)
+            available_height = max(
+                available_height, ElementSize.RESPONSE_AVAILABLE_HEIGHT_MINIMUM)
 
             # Set dynamic min/max based on available space
             min_response_height = min(
@@ -229,6 +244,7 @@ class Launcher(QMainWindow):
     def hide_response(self):
         """Hide response using StateManager."""
         self.state_manager.hide_response()
+        #
         self.animate_resize(WindowSize.COMPACT_WIDTH,
                             WindowSize.COMPACT_HEIGHT, fast=True)
         QTimer.singleShot(50, lambda: self.response_area.setVisible(False))
@@ -275,55 +291,39 @@ class Launcher(QMainWindow):
             self.state_manager.streaming_worker = None
 
     def cancel_current_request(self):
-        """Improved cancellation with proper cleanup."""
+        """Cancel current request - delegates to StateManager."""
         if not self.state_manager.is_processing:
             return
-        # Increment request ID to invalidate current request
-        self.state_manager.current_request_id += 1
-        self.state_manager.is_processing = False
-        # Stop and cleanup streaming worker
-        if self.state_manager.streaming_worker and self.state_manager.streaming_worker.isRunning():
-            self.state_manager.streaming_worker.stop()
-            # Don't wait too long - use non-blocking approach
-            QTimer.singleShot(Timing.WINDOW_FLAG_DELAY, self._cleanup_worker)
-        # Cancel API request
+
+        # StateManager handles worker cleanup and state management
+        self.state_manager.cancel_current_request()
+
+        # Additional UI cleanup if needed
         if hasattr(self.api_client, 'cancel_request'):
             try:
                 self.api_client.cancel_request()
             except Exception as e:
-                print(f"Error cancelling API request: {e}")
-        # Re-enable UI immediately
-        self.settings_button.setEnabled(True)
-
-    def setup_shortcuts(self):
-        # ESC to hide to tray
-        escape_shortcut = QShortcut(QKeySequence(Qt.Key_Escape), self)
-        escape_shortcut.activated.connect(self.hide_window)
-
-        # Ctrl+Q to quit completely
-        quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self)
-        quit_shortcut.activated.connect(self.quit_application)
-
-        # Ctrl+S for settings
-        settings_action = QAction("Settings", self)
-        settings_action.setShortcut(QKeySequence("Ctrl+S"))
-        settings_action.triggered.connect(self.open_settings)
-        self.addAction(settings_action)
+                logger.error(f"Error cancelling API request: {e}")
 
     @pyqtSlot(str)
     def send_request(self, prompt):
         """Send request - called by StateManager signal."""
         logger.debug(f"Sending request with prompt length: {len(prompt)}")
+
         if not prompt or self.state_manager.is_currently_processing():
             logger.debug(
                 "Request blocked - empty prompt or already processing")
             return
 
-        # Store the current prompt for this conversation
+        # Store the current prompt for conversation history
         self.current_user_prompt = prompt
 
-        # Start processing through StateManager
+        # Start processing (application logic)
         request_id = self.state_manager.start_processing()
+
+        # Update UI state (visual feedback)
+        self.ui_manager.set_visual_state("thinking")
+
         logger.debug(f"Started processing with request_id: {request_id}")
 
         # Execute request
@@ -347,7 +347,7 @@ class Launcher(QMainWindow):
     def clear_multiline_input(self):
         """Clear Input"""
         self.ui_manager.handle_multiline_resize()
-        
+
     @pyqtSlot()
     def on_recording_completed(self):
         # Get transcribed text and fill the input field
@@ -388,12 +388,13 @@ class Launcher(QMainWindow):
         return True
 
     def _handle_chunk(self, chunk, request_id):
-        """Handle incoming response chunks with validation."""
+        """Handle incoming response chunks."""
         if not self._handle_request_lifecycle(request_id, "chunk"):
             return
         try:
-            self.state_manager.handle_first_chunk()
             self.state_manager.add_response_chunk(chunk)
+            if not self.ui_manager.is_response_visible():
+                self.ui_manager.expand_ui()
             self._update_response_display()
             self._auto_scroll_response()
         except Exception as e:
@@ -411,23 +412,19 @@ class Launcher(QMainWindow):
         """Handle request completion with conversation storage."""
         if not self.state_manager.handle_completion(request_id):
             return
-
         # Get the complete response
         full_response = self.state_manager.get_accumulated_response()
 
-        # Store the conversation (user prompt + assistant response)
         if hasattr(self, 'current_user_prompt') and full_response:
             self.conversation_manager.add_conversation(
-                self.current_user_prompt,
-                full_response
-            )
+                self.current_user_prompt, full_response)
             logger.debug("Conversation added to history")
 
         # Final update of response
         self._update_response_display()
 
         # Return UI to normal state
-        self.set_input_state("normal")
+        self.ui_manager.set_visual_state("normal")
         self.settings_button.setEnabled(True)
         self.input_field.setFocus()
 
@@ -441,18 +438,14 @@ class Launcher(QMainWindow):
         error_text = self.state_manager.get_accumulated_response()
 
         # Update UI - expand if not visible
-        if not self.response_area.isVisible():
-            self.response_area.setVisible(True)
-            self.copy_button.setVisible(True)
-            self.position_copy_button()
-            self.animate_resize(WindowSize.EXPANDED_SINGLELINE_INPUT_WIDTH,
-                                WindowSize.EXPANDED_SINGLELINE_INPUT_HEIGHT)
+        if not self.ui_manager.is_response_visible():
+            self.ui_manager.expand_ui()
 
         # Display error
         self.response_area.setHtml(error_text)
 
         # Return UI to normal state
-        self.set_input_state("normal")
+        self.ui_manager.set_visual_state("normal")
         self.settings_button.setEnabled(True)
         self.input_field.setFocus()
 
@@ -462,12 +455,19 @@ class Launcher(QMainWindow):
     def _execute_request(self, request_id):
         """Execute request using StateManager's worker creation."""
         try:
-            # Get conversation history for context
+            # Get conversation history for context (Launcher responsibility)
             conversation_history = self.conversation_manager.get_conversation_history()
 
+            # Create worker through StateManager (StateManager responsibility)
             worker = self.state_manager.create_streaming_worker(
-                self.api_client, request_id, conversation_history)
+                api_client=self.api_client,
+                request_id=request_id,
+                conversation_history=conversation_history
+            )
             if not worker:
+                logger.error("Failed to create streaming worker")
+                self._handle_error(
+                    "Failed to create request worker", request_id)
                 return
 
             worker.chunk_received.connect(
@@ -480,9 +480,11 @@ class Launcher(QMainWindow):
                 lambda error: self._handle_error(error, request_id)
             )
 
+            # Start the worker
             worker.start()
 
         except Exception as e:
+            logger.error(f"Error executing request: {e}")
             self._handle_error(str(e), request_id)
 
     @pyqtSlot()
@@ -509,7 +511,7 @@ class Launcher(QMainWindow):
                 expanded_width = WindowSize.EXPANDED_SINGLELINE_INPUT_WIDTH
                 expanded_height = WindowSize.EXPANDED_SINGLELINE_INPUT_HEIGHT
 
-            self.animate_resize(expanded_width,expanded_height)
+            self.animate_resize(expanded_width, expanded_height)
             self.ui_manager.show_response_area()
         else:
             self.animate_resize(WindowSize.COMPACT_WIDTH,
@@ -555,7 +557,6 @@ class Launcher(QMainWindow):
         center_x = main_rect.x() + (main_rect.width() - dialog_rect.width()) // 2
         center_y = main_rect.y() + (main_rect.height() - dialog_rect.height()) // 2
         dialog.move(center_x, center_y)
-        
         if dialog.exec_():
             logger.debug("Settings dialog accepted")
             # Check if multiline setting changed
@@ -630,7 +631,7 @@ class Launcher(QMainWindow):
                 self.hide_response()
 
     def on_processing_changed(self, is_processing):
-        """Handle processing state changes."""
+        """Handle processing state changes from StateManager."""
         logger.debug(
             f"Processing state changed: {'started' if is_processing else 'stopped'}")
         self.settings_button.setEnabled(not is_processing)
@@ -641,19 +642,28 @@ class Launcher(QMainWindow):
         self.response_area.setHtml(response)
 
     def on_request_cancelled(self):
-        """Handle request cancellation."""
+        """Handle request cancellation from StateManager."""
         logger.debug("Request cancelled - resetting UI state")
-        self.set_input_state("normal")
+        self.ui_manager.set_visual_state("normal")
         self.settings_button.setEnabled(True)
 
     def on_input_changed(self, text):
-        """Simplified input handling - delegate to StateManager."""
+        """
+        Handle input changes - coordinate between StateManager and UIManager.
+        This is where the coordination happens.
+        """
         logger.debug(f"Input changed, length: {len(text)} characters")
         self.state_manager.set_prompt(text, self.ui_manager.is_multiline_input())
 
-        # Reset input height if text is cleared in multiline mode
+        if text.strip():
+            self.ui_manager.set_visual_state("typing")
+        else:
+            self.ui_manager.set_visual_state("normal")
+            if self.ui_manager.is_currently_expanded():
+                self.ui_manager.contract_ui()
+
         if not text.strip() and self.ui_manager.is_multiline_input():
-            self.ui_manager.reset_input_height()
+            self.ui_manager.handle_multiline_resize()
 
     def force_send_request(self):
         """Delegate to StateManager."""
