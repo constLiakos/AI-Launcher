@@ -448,3 +448,25 @@ class UIManager:
         if self.original_window_height is None:
             self.original_window_height = self.parent.height()
             self.logger.debug(f"Stored original window height: {self.original_window_height}")
+            
+    def is_multiline_input(self):
+        return self.input_type_is_multiline
+
+    def toggle_input_type(self):
+        """Toggle between single-line and multi-line input"""
+        self.set_input_type(not self.input_type_is_multiline)
+
+    def set_input_type(self, is_multiline):
+        """Set input type and handle UI changes"""
+        if self.input_type_is_multiline == is_multiline:
+            return
+            
+        self.input_type_is_multiline = is_multiline
+        self.update_multiline_toggle_button(is_multiline)
+        self.recreate_input_field(is_multiline)
+        
+        # Save to config
+        self.config.set('multiline_input', is_multiline)
+        
+        if hasattr(self.parent, 'on_input_type_changed'):
+            self.parent.on_input_type_changed()
