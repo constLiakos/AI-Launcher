@@ -120,6 +120,24 @@ class Launcher(QMainWindow):
             self.stt_enabled = False
             self.stt_api_client = None
 
+    def _get_signal_callbacks(self):
+        """Centralize callback definitions to avoid duplication"""
+        return {
+            'input_changed': self.on_input_changed,
+            'return_pressed': self.force_send_request,
+            'stt_clicked': self.recording_manager.toggle_recording,
+            'settings_clicked': self.open_settings,
+            'copy_clicked': self.copy_response,
+            'start_thinking_animation': self.animation_manager.start_thinking_animation,
+            'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
+            'is_currenlty_expanded': self.state_manager.is_currently_expanded,
+            'multiline_toggle_clicked': self.on_multiline_toggle_clicked
+        }
+    def _reconnect_ui_signals(self):
+        """Reusable signal connection method"""
+        self.ui_manager.connect_signals(self._get_signal_callbacks())
+        self.input_field = self.ui_manager.input_field
+
     # Remove the old hotkey methods and replace with:
     def restart_hotkey_listener(self):
         """Restart the global hotkey listener with new settings."""
@@ -143,18 +161,7 @@ class Launcher(QMainWindow):
         self.state_manager.set_input_type(is_multiline_input)
         self.ui_manager.setup_ui(multiline_input=is_multiline_input)
         # Connect signals
-        callbacks = {
-            'input_changed': self.on_input_changed,
-            'return_pressed': self.force_send_request,
-            'stt_clicked': self.recording_manager.toggle_recording,
-            'settings_clicked': self.open_settings,
-            'copy_clicked': self.copy_response,
-            'start_thinking_animation': self.animation_manager.start_thinking_animation,
-            'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
-            'is_currenlty_expanded': self.state_manager.is_currently_expanded,
-            'multiline_toggle_clicked': self.on_multiline_toggle_clicked
-        }
-        self.ui_manager.connect_signals(callbacks)
+        self._reconnect_ui_signals()
         
         # Set up aliases for backward compatibility
         self.input_field = self.ui_manager.input_field
@@ -196,18 +203,7 @@ class Launcher(QMainWindow):
         self.ui_manager.recreate_input_field(new_multiline)
         
         # Reconnect all signals since we recreated the input field
-        callbacks = {
-            'input_changed': self.on_input_changed,
-            'return_pressed': self.force_send_request,
-            'stt_clicked': self.recording_manager.toggle_recording,
-            'settings_clicked': self.open_settings,
-            'copy_clicked': self.copy_response,
-            'start_thinking_animation': self.animation_manager.start_thinking_animation,
-            'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
-            'is_currenlty_expanded': self.state_manager.is_currently_expanded,
-            'multiline_toggle_clicked': self.on_multiline_toggle_clicked
-        }
-        self.ui_manager.connect_signals(callbacks)
+        self._reconnect_ui_signals()
         
         # Update the input field reference
         self.input_field = self.ui_manager.input_field
