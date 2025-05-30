@@ -116,14 +116,6 @@ class UIManager:
         else:
             return self.input_field.text()
 
-    def clear_input(self):
-        """Clear input field and reset heights."""
-        if hasattr(self.input_field, 'clear'):
-            self.input_field.clear()
-            
-        # Reset to original heights when clearing in multiline mode
-        if self.input_type_is_multiline:
-            self._reset_input_and_window_height()
 
     def update_stt_button_visibility(self, enabled):
         """Update STT button visibility."""
@@ -341,8 +333,6 @@ class UIManager:
             # Set initial height to single line equivalent
             font_metrics = self.input_field.fontMetrics()
             single_line_height = font_metrics.height()  # 30px for padding
-            # self.input_field.setMinimumHeight(single_line_height)
-            # self.input_field.setMaximumHeight(single_line_height)
             
             # Store original heights
             self.original_input_height = single_line_height
@@ -353,7 +343,7 @@ class UIManager:
             self.input_field.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             
             # Connect to content change to handle resizing
-            self.input_field.textChanged.connect(self._handle_multiline_resize)
+            self.input_field.textChanged.connect(self.handle_multiline_resize)
             
         else:
             # Single-line input
@@ -362,14 +352,12 @@ class UIManager:
         
         self.input_field.setObjectName("inputField")
 
-    def _handle_multiline_resize(self):
+    def handle_multiline_resize(self):
         """Handle resizing of multiline input field and window based on content."""
         if not self.input_type_is_multiline or not hasattr(self.input_field, 'document'):
             return
         
         text = self.input_field.toPlainText()
-        if text.strip() == "":
-            return
         # Count actual lines in the text
         line_count = max(1, text.count('\n') + 1)  # At least 1 line
 
@@ -427,17 +415,3 @@ class UIManager:
         if self.original_window_height is None:
             self.original_window_height = self.parent.height()
             self.logger.debug(f"Stored original window height: {self.original_window_height}")
-
-    def _reset_input_and_window_height(self):
-        """Reset both input field and window to original heights."""
-        if self.input_type_is_multiline and self.original_input_height and self.original_window_height:
-            self.logger.debug(f"Resetting heights - Input: {self.original_input_height}, Window: {self.original_window_height}")
-            
-            # Reset input field height
-            self.input_field.setMinimumHeight(self.original_input_height)
-            self.input_field.setMaximumHeight(self.original_input_height)
-            
-            # Reset window height
-            current_window_height = self.parent.height()
-            if abs(self.original_window_height - current_window_height) > 5:  # 5px tolerance
-                self.parent.animate_resize(self.parent.width(), self.original_window_height, fast=True)

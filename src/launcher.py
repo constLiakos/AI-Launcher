@@ -72,6 +72,7 @@ class Launcher(QMainWindow):
         self.state_manager.stt_state_changed.connect(self.on_stt_state_changed)
         self.state_manager.recording_completed_sg.connect(
             self.on_recording_completed)
+        self.state_manager.clear_multiline_input_sg.connect(self.clear_multiline_input)
 
     def _initialize_core_components(self):
         """Initialize config, API client, etc."""
@@ -354,6 +355,11 @@ class Launcher(QMainWindow):
             logger.info("Wrong State when updating stt button")
 
     @pyqtSlot()
+    def clear_multiline_input(self):
+        """Clear Input"""
+        self.ui_manager.handle_multiline_resize()
+        
+    @pyqtSlot()
     def on_recording_completed(self):
         # Get transcribed text and fill the input field
         transcribed_text = self.stt_api_client.transcribe()
@@ -579,7 +585,7 @@ class Launcher(QMainWindow):
                     'start_thinking_animation': self.animation_manager.start_thinking_animation,
                     'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
                     'is_currenlty_expanded': self.state_manager.is_currently_expanded,
-                    'multiline_toggle_clicked': self.on_multiline_toggle_clicked
+                    'multiline_toggle_clicked': self.on_multiline_toggle_clicked,
                 }
                 self.ui_manager.connect_signals(callbacks)
                 self.input_field = self.ui_manager.input_field

@@ -18,6 +18,7 @@ class StateManager(QObject):
     stt_state_changed = pyqtSignal(str)
     recording_completed_sg = pyqtSignal()
     multiline_input_type_changed = pyqtSignal(bool)
+    clear_multiline_input_sg = pyqtSignal()
 
     def __init__(self, config, logger:logging.Logger):
         super().__init__()
@@ -188,6 +189,8 @@ class StateManager(QObject):
 
         if self.is_processing:
             self.cancel_current_request()
+
+        self.clear_multiline_input_sg.emit()
 
         # Set state to normal after cleanup
         self.set_state("normal")
