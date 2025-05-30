@@ -112,13 +112,15 @@ class Launcher(QMainWindow):
             return
 
         try:
-            if self.stt_api_client is None:  # Use 'is None' instead of '== None'
+            if self.stt_api_client is None:
                 self.stt_api_client = SttApiClient(logger, self.config)
             logger.info("STT API client initialized successfully")
+            return True
         except Exception as e:
             logger.error(f"Failed to initialize STT API client: {e}")
             self.stt_enabled = False
             self.stt_api_client = None
+            return False
 
     def _get_signal_callbacks(self):
         """Centralize callback definitions to avoid duplication"""
@@ -227,20 +229,17 @@ class Launcher(QMainWindow):
             window_height = self.height()
             # Reserve space for input area, margins, and some padding
             available_height = window_height - ElementSize.RESPONSE_MARGIN_BOTTOM
-
-            # Ensure available_height is positive
-            # Minimum 50px available
-            available_height = max(available_height, 50)
+            available_height = max(available_height, ElementSize.RESPONSE_AVAILABLE_HEIGHT_MINIMUM)
 
             # Set dynamic min/max based on available space
             min_response_height = min(
-                ElementSize.RESPONSE_MIN_HEIGHT, available_height * 0.3)
+                ElementSize.RESPONSE_MIN_HEIGHT, available_height * ElementSize.RESPONSE_MIN_HEIGHT_RATIO)
             max_response_height = max(
-                available_height * 0.9, min_response_height)
+                available_height * ElementSize.RESPONSE_AVAILABLE_HEIGHT_MINIMUM, min_response_height)
 
             # Ensure both values are positive
             min_response_height = max(
-                int(min_response_height), 20)  # Minimum 20px
+                int(min_response_height), ElementSize.RESPONSE_MIN_ABSOLUTE_HEIGHT)
             max_response_height = max(
                 int(max_response_height), min_response_height)
 

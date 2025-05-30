@@ -98,6 +98,11 @@ class ElementSize:
     RESPONSE_MAX_HEIGHT = 1000
     RESPONSE_MARGIN_BOTTOM = 100  # Space for input area
 
+    RESPONSE_MIN_HEIGHT_RATIO = 0.3
+    RESPONSE_MAX_HEIGHT_RATIO = 0.9
+    RESPONSE_MIN_ABSOLUTE_HEIGHT = 20
+    RESPONSE_AVAILABLE_HEIGHT_MINIMUM = 50
+
     # Margins and spacing
     CONTAINER_MARGIN_HORIZONTAL = 20
     CONTAINER_MARGIN_VERTICAL = 15
@@ -111,6 +116,7 @@ class ElementSize:
     SCROLLBAR_SIZE = 8
     TRIGGER_EDGE_RESIZE_MARGIN_HORIZONTAL = 15
     TRIGGER_EDGE_RESIZE_MARGIN_VERTICAL = 15
+
 
 # =============================================================================
 # SETTINGS DIALOG
