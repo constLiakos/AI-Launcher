@@ -25,11 +25,9 @@ class UIManager:
         self.copy_button = None
         self.multiline_input = False
 
-        self.original_input_height = None  # Store original input height
-        self.original_window_height = None  # Store original window height
-        self.min_window_height = WindowSize.COMPACT_HEIGHT  # Minimum window height
-        self.line_height = 20
-
+        self.original_input_height = None
+        self.original_window_height = None
+        self.min_window_height = WindowSize.COMPACT_HEIGHT
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -286,7 +284,6 @@ class UIManager:
         quit_shortcut.activated.connect(self.parent.quit_application)
 
 
-
     def _create_input_field(self):
         """Create appropriate input field based on multiline setting."""
         if self.multiline_input:
@@ -329,8 +326,7 @@ class UIManager:
         # Count actual lines in the text
         line_count = max(1, text.count('\n') + 1)  # At least 1 line
 
-        base_padding = 40  # Base padding for borders, margins
-        new_input_height_cal = (line_count * self.line_height) + base_padding
+        new_input_height_cal = (line_count * InputSettings.LINE_HEIGHT) + InputSettings.BASE_PADDING
         
         new_input_height = min(new_input_height_cal, InputSettings.MAX_HEIGHT)
         
@@ -342,7 +338,7 @@ class UIManager:
         if self.original_window_height and not self.state_manager.is_expanded:
             # Base window expansion on number of lines beyond the first line
             extra_lines = max(0, line_count - 1)
-            window_height_increase = extra_lines * self.line_height
+            window_height_increase = extra_lines * InputSettings.LINE_HEIGHT
             new_window_height = self.original_window_height + window_height_increase
             
             # Ensure reasonable bounds

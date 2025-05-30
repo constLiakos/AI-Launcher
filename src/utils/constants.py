@@ -469,3 +469,5 @@ class InputSettings:
     MULTILINE_SINGLE_LINE_HEIGHT = 50  # Height equivalent to single line
     MULTILINE_EXPANSION_STEP = 25      # Height increase per line
     MAX_WINDOW_EXPANSION = 200         # Maximum additional window height
+    BASE_PADDING = 40
+    LINE_HEIGHT = 20
