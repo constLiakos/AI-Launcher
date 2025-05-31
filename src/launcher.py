@@ -44,7 +44,7 @@ class Launcher(QMainWindow):
         # Flag to track if app should really quit
         self.should_quit = False
         self.hotkey_manager.setup_hotkey()
-
+        self.hotkey_manager.hotkey_pressed.connect(self.show_window)
 
     def _setup_logging(self, logdir, debug):
         """Setup logging configuration."""
@@ -107,8 +107,7 @@ class Launcher(QMainWindow):
             self, logger, self.style_manager)
         self.state_manager = StateManager(self.config, logger)
         self.markdown_render = MarkdownRenderer(logger)
-        self.hotkey_manager = HotkeyManager(
-            logger, self.show_window, self.config)
+        self.hotkey_manager = HotkeyManager(logger, self.config)
         self.recording_manager = Recording_Manager(
             logger, state_manager=self.state_manager, config=self.config)
         self.tray_manager = TrayManager(
@@ -560,40 +559,66 @@ class Launcher(QMainWindow):
         center_y = main_rect.y() + (main_rect.height() - dialog_rect.height()) // 2
         dialog.move(center_x, center_y)
         if dialog.exec_():
-            logger.debug("Settings dialog accepted")
+            logger.debug("Settings dialog accepted, processing changes")
+            
             # Check if multiline setting changed
+            old_multiline = self.ui_manager.is_multiline_input()
             new_multiline = self.config.get('multiline_input', False)
-            if new_multiline != self.ui_manager.is_multiline_input():
+            logger.debug(f"Multiline input - old: {old_multiline}, new: {new_multiline}")
+            
+            if new_multiline != old_multiline:
+                logger.info(f"Multiline input mode changing from {old_multiline} to {new_multiline}")
                 self.state_manager.set_input_type(new_multiline)
+                logger.debug("State manager updated with new input type")
+                
                 # Update button appearance
                 self.ui_manager.update_multiline_toggle_button(new_multiline)
+                logger.debug("Multiline toggle button appearance updated")
+                
                 # Recreate UI with new input mode
                 self.ui_manager.recreate_input_field(new_multiline)
+                logger.debug("Input field recreated with new mode")
+                
                 # Reconnect signals
                 self.ui_manager.connect_signals(self._get_signal_callbacks)
                 self.input_field = self.ui_manager.input_field
+                logger.debug("UI signals reconnected")
 
+            # Check theme changes
+            old_theme = self.current_theme
             new_theme = self.config.get('theme', Theme.DEFAULT_THEME)
-            if new_theme != self.current_theme:
-                logger.debug(f"Settings saved, new theme: {new_theme}")
+            logger.debug(f"Theme - old: {old_theme}, new: {new_theme}")
+            
+            if new_theme != old_theme:
+                logger.info(f"Theme changing from {old_theme} to {new_theme}")
                 self.current_theme = new_theme
                 self.style_manager.set_theme(self.current_theme)
+                logger.debug("Style manager updated with new theme")
                 self.apply_modern_style()
+                logger.debug("Modern style applied")
 
             # Show feedback with larger, visible status
             delay_seconds = self.config.get(
                 'request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)
             status_msg = f"✓ Settings saved! Request delay: {delay_seconds}s"
+            logger.info(f"Settings saved successfully - request delay: {delay_seconds}s")
             self.show_status(status_msg)
 
             # Update API client
+            logger.debug("Updating API client with new configuration")
             self.api_client = ApiClient(logger, self.config)
+            logger.debug("API client updated")
+            
+            logger.debug("Restarting hotkey listener")
             self.restart_hotkey_listener()
+            logger.debug("Hotkey listener restarted")
 
             # Hide status after longer delay
             QTimer.singleShot(
                 Timing.SETTINGS_FEEDBACK_DURATION, self.hide_status)
-
+            logger.debug(f"Status hide timer set for {Timing.SETTINGS_FEEDBACK_DURATION}ms")
+        else:
+            logger.debug("Settings dialog cancelled by user")
     def closeEvent(self, event):
         """Override close event to hide to tray instead of quitting."""
         self.window_manager.handle_close_event(event)

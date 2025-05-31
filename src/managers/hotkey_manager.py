@@ -9,8 +9,9 @@ import time
 class HotkeyManager(QObject):
 
     hotkey_pressed = pyqtSignal()
+    stt_hotkey_pressed = pyqtSignal()
 
-    def __init__(self, logger: logging.Logger, callback, config):
+    def __init__(self, logger: logging.Logger, config):
         """
         Initialize hotkey manager.
         Args:
@@ -21,18 +22,15 @@ class HotkeyManager(QObject):
         self.logger = logger.getChild('hotkey_manager')
 
         self.logger.debug("HotkeyManager initializing...")
-        self.callback = callback
         self.config = config
         self.current_listener = None
         self.controller = Controller()
 
-        # Connect signal to callback for thread safety
-        self.hotkey_pressed.connect(callback)
-
         self.logger.info("HotkeyManager initialized")
-        
+
     def setup_hotkey(self):
         """Setup global hotkey from config."""
+        self.logger.debug("Setting up hotkeys")
         # Stop existing listener if any
         self.stop_listener()
             
@@ -41,37 +39,75 @@ class HotkeyManager(QObject):
             # Emit signal instead of direct callback - safer on Windows
             self.hotkey_pressed.emit()
         
+        def on_stt_hotkey():
+            self.logger.debug("STT hotkey pressed, emitting signal")
+            self.stt_hotkey_pressed.emit()
+        
         # Get hotkey from config
         hotkey_combo = self.config.get('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)
-        self.logger.info(f"Setting up hotkey: {hotkey_combo}")
+        stt_enabled = self.config.get('stt_enabled', False)
+
+        self.logger.info(f"Setting up main hotkey: {hotkey_combo}")
         
         try:
-            hotkey = HotKey(
-                HotKey.parse(hotkey_combo),
-                on_activate=on_hotkey
-            )
+            # Validate main hotkey first
+            main_hotkey_keys = HotKey.parse(hotkey_combo)
+            main_hotkey = HotKey(main_hotkey_keys, on_activate=on_hotkey)
             
+        except Exception as e:
+            self.logger.error(f"Invalid main hotkey format '{hotkey_combo}': {e}. Disabling main hotkey.")
+            # Disable main hotkey by setting to None and return early
+            self.config.set('hotkey', None)
+            return
+        
+        # Create STT hotkey if STT is enabled
+        stt_hotkey = None
+        if stt_enabled:
+            stt_hotkey_combo = self.config.get('stt_hotkey', 'ctrl+shift+v')
+            self.logger.info(f"Setting up STT hotkey: {stt_hotkey_combo}")
+            
+            try:
+                stt_hotkey_keys = HotKey.parse(stt_hotkey_combo)
+                stt_hotkey = HotKey(stt_hotkey_keys, on_activate=on_stt_hotkey)
+                
+            except Exception as e:
+                self.logger.error(f"Invalid STT hotkey format '{stt_hotkey_combo}': {e}. Disabling STT hotkey.")
+                # Disable STT hotkey but continue with main hotkey
+                self.config.set('stt_hotkey', None)
+                stt_hotkey = None
+        else:
+            self.logger.info("STT disabled - skipping STT hotkey setup")
+
+        try:
             def for_canonical(f):
                 return lambda k: f(self.current_listener.canonical(k))
             
             def start_listener():
                 self.logger.debug("Starting hotkey listener thread")
-                self.current_listener = Listener(
-                    on_press=for_canonical(hotkey.press),
-                    on_release=for_canonical(hotkey.release)
-                )
+
+                if stt_hotkey:
+                    # Handle both hotkeys
+                    self.current_listener = Listener(
+                        on_press=for_canonical(lambda k: (main_hotkey.press(k), stt_hotkey.press(k))),
+                        on_release=for_canonical(lambda k: (main_hotkey.release(k), stt_hotkey.release(k)))
+                    )
+                else:
+                    # Handle only main hotkey
+                    self.current_listener = Listener(
+                        on_press=for_canonical(main_hotkey.press),
+                        on_release=for_canonical(main_hotkey.release)
+                    )
                 self.current_listener.start()
                 self.logger.info("Hotkey listener started successfully")
                 self.current_listener.join()
             
             listener_thread = threading.Thread(target=start_listener, daemon=True)
             listener_thread.start()
-            
+
+            self.logger.debug("Set up hotkeys copmleted")
         except Exception as e:
-            self.logger.error(f"Invalid hotkey format: {hotkey_combo}. Error: {e}. Using default.")
-            # Fallback to default hotkey
-            self.config.set('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)
-            self.setup_hotkey()  # Retry with default
+            self.logger.error(f"Failed to start hotkey listener: {e}. Hotkeys disabled.")
+            self.current_listener = None
 
     def stop_listener(self):
         """Stop the current hotkey listener."""
