@@ -288,8 +288,8 @@ class WindowManager:
         # Debounce position saving for any move event
         if hasattr(self, 'position_save_timer'):
             self.position_save_timer.stop()
-            self.position_save_timer.start(500)
-            self.logger.debug("Position save timer restarted (500ms debounce)")
+            self.position_save_timer.start(2000)
+            self.logger.debug("Position save timer restarted (2sec debounce)")
 
     def handle_close_event(self, event):
         """Handle close event - hide to tray or quit."""
