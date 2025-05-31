@@ -113,24 +113,28 @@ class UIManager(QObject):
 
     def _apply_visual_state(self, state):
         """Apply visual changes based on state."""
-        if state == "typing":
-            if 'stop_thinking' in self.animation_callbacks:
-                self.animation_callbacks['stop_thinking']()
-            self.input_field.setObjectName("inputFieldTyping")
-        elif state == "thinking":
+        if state == "thinking":
             self.input_field.setObjectName("inputFieldThinking")
             if 'start_thinking' in self.animation_callbacks:
                 self.animation_callbacks['start_thinking'](self.input_field)
-        elif state == "error":
-            if 'stop_thinking' in self.animation_callbacks:
-                self.animation_callbacks['stop_thinking']()
-            self.input_field.setObjectName("inputFieldError")
-        else:  # normal
-            if 'stop_thinking' in self.animation_callbacks:
-                self.animation_callbacks['stop_thinking']()
-            self.input_field.setObjectName("inputField")
-        
-        self.input_field.setStyle(self.input_field.style())
+        else:
+            if state == "typing":
+                if 'stop_thinking' in self.animation_callbacks:
+                    self.animation_callbacks['stop_thinking']()
+                self.input_field.setObjectName("inputFieldTyping")
+            elif state == "thinking":
+                self.input_field.setObjectName("inputFieldThinking")
+                if 'start_thinking' in self.animation_callbacks:
+                    self.animation_callbacks['start_thinking'](self.input_field)
+            elif state == "error":
+                if 'stop_thinking' in self.animation_callbacks:
+                    self.animation_callbacks['stop_thinking']()
+                self.input_field.setObjectName("inputFieldError")
+            else:  # normal
+                if 'stop_thinking' in self.animation_callbacks:
+                    self.animation_callbacks['stop_thinking']()
+                self.input_field.setObjectName("inputField")
+            self.input_field.setStyle(self.input_field.style())
 
 #   ##########################################################################################
 #       Window Functions
@@ -564,6 +568,7 @@ class UIManager(QObject):
 
     def set_visual_state(self, state):
         """Set visual state of UI components."""
+        self.logger.debug(f"Set visual state: {state}")
         if self.current_visual_state != state:
             old_state = self.current_visual_state
             self.current_visual_state = state

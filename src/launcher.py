@@ -338,9 +338,9 @@ class Launcher(QMainWindow):
         self.current_user_prompt = prompt
 
         # Start processing (application logic)
-        request_id = self.state_manager.start_processing()
 
         # Update UI state (visual feedback)
+        request_id = self.state_manager.start_processing()
         self.ui_manager.set_visual_state("thinking")
 
         logger.debug(f"Started processing with request_id: {request_id}")
