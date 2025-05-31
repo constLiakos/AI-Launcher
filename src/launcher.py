@@ -120,6 +120,9 @@ class Launcher(QMainWindow):
         self.window_manager.window_restored.connect(
             self._on_window_restored
         )
+        self.window_manager.window_resized.connect(
+            self._on_window_resized
+        )
 
 
     def _on_tray_message_requested(self, title, message):
@@ -172,6 +175,10 @@ class Launcher(QMainWindow):
             self.logger.debug("No input field to focus")
             
         self.logger.info("Window shown successfully")
+
+    def _on_window_resized(self):
+        """Window resized"""
+        self.ui_manager.position_copy_button()
 
     def _clear_response_on_minimize(self):
         """Clear response area and contract UI when showing window"""
