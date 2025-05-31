@@ -487,12 +487,12 @@ class UIManager(QObject):
         """Show response area and copy button."""
         if not self.response_visible:
             self.response_area.setVisible(True)
-            self.copy_button.setVisible(True)
-            self.position_copy_button()
             self.response_visible = True
             self.is_expanded = True
             self.expansion_changed.emit(True)
+            # self.copy_button.setVisible(True)
             self.logger.debug("Response area shown")
+            self.position_copy_button()
 
     def hide_response(self):
         """
@@ -548,15 +548,23 @@ class UIManager(QObject):
         if self.response_area.isVisible():
             response_pos = self.response_area.pos()
             response_geometry = self.response_area.geometry()
+            
+            self.logger.debug(f"Response area position: {response_pos}, geometry: {response_geometry}")
 
             button_x = (response_pos.x() + response_geometry.width() -
                         self.copy_button.width() - ElementSize.SCROLLBAR_SIZE -
                         ElementSize.COPY_BUTTON_RIGHT_MARGIN)
             button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
+            
+            self.logger.debug(f"Calculated copy button position: x={button_x}, y={button_y}")
 
             self.copy_button.move(button_x, button_y)
             self.copy_button.raise_()
             self.copy_button.setVisible(True)
+            
+            self.logger.debug("Copy button positioned and made visible")
+        else:
+            self.logger.debug("Response area not visible, copy button not positioned")
 
     def update_stt_button_appearance(self, state):
         """Update STT button appearance."""

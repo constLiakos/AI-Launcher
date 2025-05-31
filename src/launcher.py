@@ -120,10 +120,6 @@ class Launcher(QMainWindow):
         self.window_manager.window_restored.connect(
             self._on_window_restored
         )
-        self.window_manager.window_resized.connect(
-            self._on_window_resized
-        )
-
 
     def _on_tray_message_requested(self, title, message):
         """Handle tray message request from WindowManager"""
@@ -175,10 +171,6 @@ class Launcher(QMainWindow):
             self.logger.debug("No input field to focus")
             
         self.logger.info("Window shown successfully")
-
-    def _on_window_resized(self):
-        """Window resized"""
-        self.ui_manager.position_copy_button()
 
     def _clear_response_on_minimize(self):
         """Clear response area and contract UI when showing window"""
@@ -293,7 +285,7 @@ class Launcher(QMainWindow):
         super().resizeEvent(event)
 
         # Reposition copy button
-        if hasattr(self, 'copy_button') and self.ui_manager.copy_button.isVisible():
+        if hasattr(self.ui_manager, 'copy_button') and self.ui_manager.copy_button.isVisible():
             self.ui_manager.position_copy_button()
 
         # Dynamically adjust response area constraints based on window size
@@ -346,7 +338,9 @@ class Launcher(QMainWindow):
 
     def animate_resize(self, width, height, fast=False):
         """Animate window resize using WindowManager."""
-        self.window_manager.animate_resize(width, height, fast)
+        logger.debug(f"Animating resize to {width}x{height}, fast={fast}")
+        self.animation_manager.animate_window_resize(self, width, height, fast)
+        # self.window_manager.animate_resize(width, height, fast)
 
     def apply_modern_style(self):
         """Apply the modern stylesheet using StyleManager."""

@@ -9,7 +9,6 @@ class WindowManager(QObject):
     geometry_saved = pyqtSignal(QRect)  # when geometry is saved
     window_minimized = pyqtSignal()
     window_restored = pyqtSignal()
-    window_resized = pyqtSignal()
     
     def __init__(self, logger, config):
         super().__init__()
@@ -247,7 +246,6 @@ class WindowManager(QObject):
         # Apply the new geometry
         self._window.setGeometry(new_x, new_y, new_width, new_height)
 
-        self.window_resized.emit()
         self.logger.debug(f"Window resized to: ({new_x}, {new_y}) {new_width}x{new_height}")
         
     def handle_mouse_release(self, event):
