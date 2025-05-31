@@ -55,8 +55,6 @@ class StateManager(QObject):
 
     def set_prompt(self, prompt, is_multiline_input=False):
         """
-        Update current prompt and handle state transitions.
-        This stays in StateManager because it:
         1. Manages application logic (request timing, cancellation)
         2. Triggers business rules (auto-send vs manual send)
         3. Coordinates multiple state changes
@@ -80,7 +78,6 @@ class StateManager(QObject):
 
     def create_streaming_worker(self, api_client, request_id, conversation_history=None):
         """
-        Create and configure streaming worker with optional conversation history.
         1. Manages worker lifecycle (self.streaming_worker)
         2. Validates request state (is_request_valid)
         3. Has access to current prompt and application state
