@@ -184,7 +184,6 @@ class Launcher(QMainWindow):
         self._reconnect_ui_signals()
 
         # Set up aliases for backward compatibility
-        self.settings_button = self.ui_manager.settings_button
         self.copy_button = self.ui_manager.copy_button
         self.main_container = self.ui_manager.main_container
 
@@ -427,7 +426,7 @@ class Launcher(QMainWindow):
 
         # Return UI to normal state
         self.ui_manager.set_visual_state("normal")
-        self.settings_button.setEnabled(True)
+        self.ui_manager.settings_button.setEnabled(True)
         self.ui_manager.input_field.setFocus()
 
     def _handle_error(self, error_message, request_id):
@@ -448,7 +447,7 @@ class Launcher(QMainWindow):
 
         # Return UI to normal state
         self.ui_manager.set_visual_state("normal")
-        self.settings_button.setEnabled(True)
+        self.ui_manager.settings_button.setEnabled(True)
         self.ui_manager.input_field.setFocus()
 
         # Clean up worker through StateManager
@@ -496,7 +495,7 @@ class Launcher(QMainWindow):
         self.show_status(Text.STATUS_COMPLETE)
 
         # Re-enable settings button
-        self.settings_button.setEnabled(True)
+        self.ui_manager.settings_button.setEnabled(True)
         self.ui_manager.input_field.setFocus()
 
         # Hide status after a moment
@@ -661,7 +660,7 @@ class Launcher(QMainWindow):
         """Handle processing state changes from StateManager."""
         logger.debug(
             f"Processing state changed: {'started' if is_processing else 'stopped'}")
-        self.settings_button.setEnabled(not is_processing)
+        self.ui_manager.settings_button.setEnabled(not is_processing)
 
     def on_response_ready(self, response):
         """Handle when response is ready to display."""
@@ -672,7 +671,7 @@ class Launcher(QMainWindow):
         """Handle request cancellation from StateManager."""
         logger.debug("Request cancelled - resetting UI state")
         self.ui_manager.set_visual_state("normal")
-        self.settings_button.setEnabled(True)
+        self.ui_manager.settings_button.setEnabled(True)
 
     def on_input_changed(self, text):
         """
