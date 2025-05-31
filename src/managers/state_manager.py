@@ -99,6 +99,7 @@ class StateManager(QObject):
         try:
             # Create worker with current application state
             worker = StreamingWorker(
+                logger=self.logger,
                 api_client=api_client,
                 prompt=self.current_prompt,
                 request_id=request_id,
