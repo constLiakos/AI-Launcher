@@ -184,7 +184,6 @@ class Launcher(QMainWindow):
         self._reconnect_ui_signals()
 
         # Set up aliases for backward compatibility
-        self.copy_button = self.ui_manager.copy_button
         self.main_container = self.ui_manager.main_container
 
 
@@ -216,7 +215,7 @@ class Launcher(QMainWindow):
         super().resizeEvent(event)
 
         # Reposition copy button
-        if hasattr(self, 'copy_button') and self.copy_button.isVisible():
+        if hasattr(self, 'copy_button') and self.ui_manager.copy_button.isVisible():
             self.position_copy_button()
 
         # Dynamically adjust response area constraints based on window size
@@ -259,14 +258,14 @@ class Launcher(QMainWindow):
                 clipboard.setText(response_text)
 
                 # Visual feedback
-                original_text = self.copy_button.text()
-                self.copy_button.setText(Text.COPY_SUCCESS)
-                self.copy_button.setStyleSheet(
+                original_text = self.ui_manager.copy_button.text()
+                self.ui_manager.copy_button.setText(Text.COPY_SUCCESS)
+                self.ui_manager.copy_button.setStyleSheet(
                     self.style_manager.button_styles.get_copy_button_success_style())
 
                 QTimer.singleShot(Timing.COPY_FEEDBACK_DURATION, lambda: (
-                    self.copy_button.setText(original_text),
-                    self.copy_button.setStyleSheet("")
+                    self.ui_manager.copy_button.setText(original_text),
+                    self.ui_manager.copy_button.setStyleSheet("")
                 ))
             else:
                 self.show_status(Text.STATUS_NO_TEXT_TO_COPY)
@@ -519,7 +518,7 @@ class Launcher(QMainWindow):
                                 WindowSize.COMPACT_HEIGHT)
             QTimer.singleShot(50, lambda: (
                 self.ui_manager.response_area.setVisible(False),
-                self.copy_button.setVisible(False)
+                self.ui_manager.copy_button.setVisible(False)
             ))
 
     def show_status(self, message):
