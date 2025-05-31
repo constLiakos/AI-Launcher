@@ -156,7 +156,7 @@ class Launcher(QMainWindow):
     def _reconnect_ui_signals(self):
         """Reusable signal connection method"""
         self.ui_manager.connect_signals(self._get_signal_callbacks())
-        self.input_field = self.ui_manager.input_field
+        self.ui_manager.input_field = self.ui_manager.input_field
 
     # Remove the old hotkey methods and replace with:
     def restart_hotkey_listener(self):
@@ -184,7 +184,6 @@ class Launcher(QMainWindow):
         self._reconnect_ui_signals()
 
         # Set up aliases for backward compatibility
-        self.input_field = self.ui_manager.input_field
         self.response_area = self.ui_manager.response_area
         self.stt_button = self.ui_manager.stt_button
         self.settings_button = self.ui_manager.settings_button
@@ -203,14 +202,13 @@ class Launcher(QMainWindow):
 
         # Handle animations
         if state == "thinking":
-            self.animation_manager.start_thinking_animation(self.input_field)
+            self.animation_manager.start_thinking_animation(self.ui_manager.input_field)
         else:
             self.animation_manager.stop_thinking_animation()
 
     def on_input_type_changed(self):
         """Called by UIManager when input type changes"""
         self._reconnect_ui_signals()
-        self.input_field = self.ui_manager.input_field
 
     def position_copy_button(self):
         """Position copy button."""
@@ -359,9 +357,9 @@ class Launcher(QMainWindow):
         # Get transcribed text and fill the input field
         transcribed_text = self.stt_api_client.transcribe()
         if transcribed_text and transcribed_text.strip():
-            self.input_field.setText(transcribed_text)
+            self.ui_manager.input_field.setText(transcribed_text)
             # Optionally set focus back to input field
-            self.input_field.setFocus()
+            self.ui_manager.input_field.setFocus()
             if self.ui_manager.is_multiline_input():
                 self.ui_manager.handle_multiline_resize()
 
@@ -432,7 +430,7 @@ class Launcher(QMainWindow):
         # Return UI to normal state
         self.ui_manager.set_visual_state("normal")
         self.settings_button.setEnabled(True)
-        self.input_field.setFocus()
+        self.ui_manager.input_field.setFocus()
 
     def _handle_error(self, error_message, request_id):
         """Handle errors with validation."""
@@ -453,7 +451,7 @@ class Launcher(QMainWindow):
         # Return UI to normal state
         self.ui_manager.set_visual_state("normal")
         self.settings_button.setEnabled(True)
-        self.input_field.setFocus()
+        self.ui_manager.input_field.setFocus()
 
         # Clean up worker through StateManager
         self.state_manager.cleanup_worker_safely()
@@ -501,7 +499,7 @@ class Launcher(QMainWindow):
 
         # Re-enable settings button
         self.settings_button.setEnabled(True)
-        self.input_field.setFocus()
+        self.ui_manager.input_field.setFocus()
 
         # Hide status after a moment
         QTimer.singleShot(Timing.STATUS_HIDE_DELAY, self.hide_status)
@@ -586,7 +584,6 @@ class Launcher(QMainWindow):
                 
                 # Reconnect signals
                 self.ui_manager.connect_signals(self._get_signal_callbacks)
-                self.input_field = self.ui_manager.input_field
                 logger.debug("UI signals reconnected")
 
             # Check theme changes
@@ -706,7 +703,7 @@ class Launcher(QMainWindow):
 
     def eventFilter(self, obj, event):
         """Handle key events for input field."""
-        if obj == self.input_field and event.type() == event.KeyPress:
+        if obj == self.ui_manager.input_field and event.type() == event.KeyPress:
             if self.ui_manager.is_multiline_input():
                 # Multi-line mode: Ctrl+Enter submits
                 if (event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter) and event.modifiers() == Qt.ControlModifier:
