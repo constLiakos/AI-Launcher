@@ -180,81 +180,133 @@ class UIManager(QObject):
 
     def handle_multiline_resize(self):
         """Handle resizing of multiline input field and window based on content."""
+        self.logger.debug("Starting multiline resize handling")
+        
         if not self.input_type_is_multiline or not hasattr(self.input_field, 'document'):
+            self.logger.debug("Skipping resize: input_type_is_multiline=%s, has_document=%s", 
+                            self.input_type_is_multiline, hasattr(self.input_field, 'document'))
             return
 
-        text = self.input_field.toPlainText()
+        try:
+            text = self.input_field.toPlainText()
+            self.logger.debug("Processing text with length: %d", len(text))
 
-        # Calculate actual displayed lines including wrapped text
-        document = self.input_field.document()
-        document_layout = document.documentLayout()
+            # Calculate actual displayed lines including wrapped text
+            document = self.input_field.document()
+            document_layout = document.documentLayout()
 
-        # Get the width available for text (excluding margins/padding)
-        text_width = self.input_field.viewport().width()
+            # Get the width available for text (excluding margins/padding)
+            text_width = self.input_field.viewport().width()
+            self.logger.debug("Text viewport width: %d pixels", text_width)
 
-        # Calculate total visual lines (including wrapped lines)
-        total_visual_lines = 0
-        block = document.firstBlock()
+            # Calculate total visual lines (including wrapped lines)
+            total_visual_lines = 0
+            block = document.firstBlock()
+            block_count = 0
 
-        while block.isValid():
-            block_layout = block.layout()
-            if block_layout:
-                # Count line breaks within this block (wrapped lines)
-                line_count_in_block = block_layout.lineCount()
-                # At least 1 line per block
-                total_visual_lines += max(1, line_count_in_block)
-            else:
-                # Fallback: estimate wrapped lines based on text length and width
-                block_text = block.text()
-                if not block_text:
-                    total_visual_lines += 1  # Empty line
+            while block.isValid():
+                block_count += 1
+                block_layout = block.layout()
+                
+                if block_layout:
+                    # Count line breaks within this block (wrapped lines)
+                    line_count_in_block = block_layout.lineCount()
+                    # At least 1 line per block
+                    lines_added = max(1, line_count_in_block)
+                    total_visual_lines += lines_added
+                    self.logger.debug("Block %d: layout lines=%d, added=%d", 
+                                    block_count, line_count_in_block, lines_added)
                 else:
-                    font_metrics = self.input_field.fontMetrics()
-                    text_width_pixels = font_metrics.horizontalAdvance(
-                        block_text)
-                    estimated_lines = max(
-                        1, (text_width_pixels // max(1, text_width)) + 1)
-                    total_visual_lines += estimated_lines
-            block = block.next()
+                    # Fallback: estimate wrapped lines based on text length and width
+                    block_text = block.text()
+                    if not block_text:
+                        total_visual_lines += 1  # Empty line
+                        self.logger.debug("Block %d: empty line", block_count)
+                    else:
+                        try:
+                            font_metrics = self.input_field.fontMetrics()
+                            text_width_pixels = font_metrics.horizontalAdvance(block_text)
+                            estimated_lines = max(1, (text_width_pixels // max(1, text_width)) + 1)
+                            total_visual_lines += estimated_lines
+                            self.logger.debug("Block %d: fallback estimation - text_width_pixels=%d, estimated_lines=%d", 
+                                            block_count, text_width_pixels, estimated_lines)
+                        except Exception as e:
+                            self.logger.error("Error calculating fallback line estimation for block %d: %s", block_count, e)
+                            total_visual_lines += 1  # Safe fallback
+                            
+                block = block.next()
 
-        # Ensure at least 1 line
-        line_count = max(1, total_visual_lines)
-        new_input_height_cal = (
-            line_count * InputSettings.LINE_HEIGHT) + InputSettings.BASE_PADDING
-        new_input_height = min(new_input_height_cal, InputSettings.MAX_HEIGHT)
+            self.logger.debug("Processed %d blocks, total visual lines: %d", block_count, total_visual_lines)
 
-        # Update input field height
-        self.input_field.setMinimumHeight(new_input_height)
-        self.input_field.setMaximumHeight(new_input_height)
+            # Ensure at least 1 line
+            line_count = max(1, total_visual_lines)
+            new_input_height_cal = (line_count * InputSettings.LINE_HEIGHT) + InputSettings.BASE_PADDING
+            new_input_height = min(new_input_height_cal, InputSettings.MAX_HEIGHT)
+            
+            self.logger.debug("Input height calculation: lines=%d, calculated=%d, final=%d (max=%d)", 
+                            line_count, new_input_height_cal, new_input_height, InputSettings.MAX_HEIGHT)
 
-        is_currently_window_expanded = False
-        if 'is_currenlty_expanded' in self.state_manager_callbacks:
-            is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded'](
-            )
+            # Update input field height
+            self.input_field.setMinimumHeight(new_input_height)
+            self.input_field.setMaximumHeight(new_input_height)
+            self.logger.debug("Updated input field height to: %d", new_input_height)
 
-        # Calculate new window height
-        if self.original_window_height and not is_currently_window_expanded:
-            # Base window expansion on number of lines beyond the first line
-            extra_lines = max(0, line_count - 1)
-            window_height_increase = extra_lines * InputSettings.LINE_HEIGHT
-            new_window_height = self.original_window_height + window_height_increase
+            is_currently_window_expanded = False
+            if 'is_currenlty_expanded' in self.state_manager_callbacks:
+                try:
+                    is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded']()
+                    self.logger.debug("Window expansion state: %s", is_currently_window_expanded)
+                except Exception as e:
+                    self.logger.error("Error checking window expansion state: %s", e)
 
-            # Ensure reasonable bounds
-            min_height = self.min_window_height
-            max_height = min_height + 300  # Allow substantial expansion
-            new_window_height = max(min_height, min(
-                new_window_height, max_height))
+            # Calculate new window height
+            if self.original_window_height and not is_currently_window_expanded:
+                self.logger.debug("Calculating window resize - original_height=%d", self.original_window_height)
+                
+                # Base window expansion on number of lines beyond the first line
+                extra_lines = max(0, line_count - 1)
+                window_height_increase = extra_lines * InputSettings.LINE_HEIGHT
+                new_window_height = self.original_window_height + window_height_increase
 
-            # Only resize window if height actually changed
-            current_window_height = self.parent.height()
-            if abs(new_window_height - current_window_height) > 5:  # 5px tolerance
-                self.logger.debug(
-                    f"Resizing window: {current_window_height} -> {new_window_height} (lines: {line_count})")
-                self.parent.animate_resize(
-                    self.parent.width(), new_window_height, fast=True)
+                self.logger.debug("Window height calculation: extra_lines=%d, increase=%d, new_height=%d", 
+                                extra_lines, window_height_increase, new_window_height)
 
-        if self.response_area.isVisible():
-            QTimer.singleShot(10, self.position_copy_button)
+                # Ensure reasonable bounds
+                min_height = self.min_window_height
+                max_height = min_height + 300  # Allow substantial expansion
+                new_window_height = max(min_height, min(new_window_height, max_height))
+                
+                self.logger.debug("Window height bounds: min=%d, max=%d, bounded_height=%d", 
+                                min_height, max_height, new_window_height)
+
+                # Only resize window if height actually changed
+                current_window_height = self.parent.height()
+                height_difference = abs(new_window_height - current_window_height)
+                
+                if height_difference > 5:  # 5px tolerance
+                    self.logger.debug("Resizing window: %d -> %d (difference: %d, lines: %d)", 
+                                    current_window_height, new_window_height, height_difference, line_count)
+                    try:
+                        self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
+                        self.logger.debug("Window resize animation started successfully")
+                    except Exception as e:
+                        self.logger.error("Error during window resize animation: %s", e)
+                else:
+                    self.logger.debug("Skipping window resize - difference too small: %d pixels", height_difference)
+            else:
+                if not self.original_window_height:
+                    self.logger.debug("Skipping window resize - no original_window_height set")
+                if is_currently_window_expanded:
+                    self.logger.debug("Skipping window resize - window is currently expanded")
+
+            if self.response_area.isVisible():
+                self.logger.debug("Scheduling copy button positioning")
+                QTimer.singleShot(10, self.position_copy_button)
+            else:
+                self.logger.debug("Response area not visible, skipping copy button positioning")
+
+        except Exception as e:
+            self.logger.error("Unexpected error in handle_multiline_resize: %s", e, exc_info=True)
 
     def is_multiline_input(self):
         return self.input_type_is_multiline
