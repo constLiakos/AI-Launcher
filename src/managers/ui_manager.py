@@ -48,6 +48,11 @@ class UIManager(QObject):
         self.stt_button_debounce_timer.setSingleShot(True)
         self.stt_button_debounce_timer.timeout.connect(
             self._handle_stt_button_debounced)
+        
+        self.settings_button_debounce_timer = QTimer()
+        self.settings_button_debounce_timer.setSingleShot(True)
+        self.settings_button_debounce_timer.timeout.connect(
+            self._handle_settings_button_debounced)
 
         self.current_visual_state = "normal"
         self.is_expanded = False
@@ -82,7 +87,8 @@ class UIManager(QObject):
         if 'stt_clicked' in callbacks:
             self.stt_callback = callbacks['stt_clicked']
         if 'settings_clicked' in callbacks:
-            self.settings_button.clicked.connect(callbacks['settings_clicked'])
+            # self.settings_button.clicked.connect(callbacks['settings_clicked'])
+            self.settings_button_callback = callbacks['settings_clicked']
         if 'copy_clicked' in callbacks:
             self.copy_button.clicked.connect(callbacks['copy_clicked'])
         # Store animation callbacks
@@ -440,6 +446,7 @@ class UIManager(QObject):
         self.settings_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
         input_layout.addWidget(self.settings_button)
+        self.settings_button.clicked.connect(self._handle_settings_button_click)
 
         container_layout.addLayout(input_layout)
 
@@ -640,6 +647,17 @@ class UIManager(QObject):
         """Execute the actual STT callback after debounce."""
         if hasattr(self, 'stt_callback') and self.stt_callback:
             self.stt_callback()
+
+    def _handle_settings_button_click(self):
+        """Handle STT button click with debouncing."""
+        # Reset timer and start new one
+        self.settings_button_debounce_timer.stop()
+        self.settings_button_debounce_timer.start(50)
+    
+    def _handle_settings_button_debounced(self):
+        """Handle settings button click after debounce delay."""
+        if hasattr(self, 'settings_button_callback'):
+            self.settings_button_callback()
 
 #   ##########################################################################################
 #       State Functions
