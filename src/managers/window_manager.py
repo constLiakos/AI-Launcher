@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor
 
+from utils.constants import ElementSize, Timing, WindowSize
+
 class WindowManager(QObject):
     # Signals for communication (no direct parent calls)
     tray_message_requested = pyqtSignal(str, str)  # title, message
@@ -24,9 +26,9 @@ class WindowManager(QObject):
         self.resize_start_geometry = None
         self.drag_position = None
         
-        # Resize detection margins
-        self._resize_margin_horizontal = 10
-        self._resize_margin_vertical = 10
+        # Resize detection margins - using constants
+        self._resize_margin_horizontal = ElementSize.TRIGGER_EDGE_RESIZE_MARGIN_HORIZONTAL
+        self._resize_margin_vertical = ElementSize.TRIGGER_EDGE_RESIZE_MARGIN_VERTICAL
         
         # Position save timer to debounce position saving
         self.position_save_timer = QTimer()
@@ -56,8 +58,8 @@ class WindowManager(QObject):
         # Set attributes
         self._window.setAttribute(Qt.WA_TranslucentBackground)
         
-        # Set minimum size
-        self._window.setMinimumSize(300, 100)
+        # Set minimum size - using constants
+        self._window.setMinimumSize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
         
         # Restore saved geometry
         self.restore_geometry()
@@ -108,7 +110,8 @@ class WindowManager(QObject):
         if self._animation and self._animation.state() == QPropertyAnimation.Running:
             self._animation.stop()
             
-        duration = 100 if fast else 200
+        # Use constants for animation duration
+        duration = Timing.RESIZE_ANIMATION_FAST_DURATION if fast else Timing.RESIZE_ANIMATION_DURATION
         self._animation = QPropertyAnimation(self._window, b"geometry")
         self._animation.setDuration(duration)
         
@@ -278,32 +281,33 @@ class WindowManager(QObject):
             
     def handle_move_event(self, event):
         """Handle window move events"""
-        # Debounce position saving for any move event
+        # Debounce position saving for any move event - using constant
         if hasattr(self, 'position_save_timer'):
             self.position_save_timer.stop()
-            self.position_save_timer.start(2000)
+            self.position_save_timer.start(2000)  # This could also be a constant if you want
             self.logger.debug("Position save timer restarted (2sec debounce)")
 
     def restore_geometry(self):
         """Restore window position from config."""
         try:
-            x = self.config.get('position_x', 100)
-            y = self.config.get('position_y', 100)
+            # Use constants for default position
+            x = self.config.get('position_x', WindowSize.DEFAULT_X)
+            y = self.config.get('position_y', WindowSize.DEFAULT_Y)
             
             self.logger.debug(f"Restoring geometry from config: ({x}, {y})")
             
             # Validate position is on screen
             screen = QApplication.primaryScreen().geometry()
             if x < 0 or y < 0 or x > screen.width() - 100 or y > screen.height() - 100:
-                self.logger.debug(f"Position ({x}, {y}) is off-screen, using default (100, 100)")
-                x, y = 100, 100
+                self.logger.debug(f"Position ({x}, {y}) is off-screen, using default ({WindowSize.DEFAULT_X}, {WindowSize.DEFAULT_Y})")
+                x, y = WindowSize.DEFAULT_X, WindowSize.DEFAULT_Y
             
             self._window.move(x, y)
             self.logger.debug(f"Restored window position to ({x}, {y})")
             
         except Exception as e:
             self.logger.error(f"Error restoring geometry: {e}")
-            self._window.move(100, 100)
+            self._window.move(WindowSize.DEFAULT_X, WindowSize.DEFAULT_Y)
 
     def save_geometry(self):
         """Save window position to config."""
