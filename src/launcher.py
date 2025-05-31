@@ -166,11 +166,11 @@ class Launcher(QMainWindow):
         # Focus on input field
         if hasattr(self.ui_manager, 'input_field'):
             self.ui_manager.input_field.setFocus()
-            self.logger.debug("Input field focused")
+            logger.debug("Input field focused")
         else:
-            self.logger.debug("No input field to focus")
+            logger.debug("No input field to focus")
             
-        self.logger.info("Window shown successfully")
+        logger.info("Window shown successfully")
 
     def _clear_response_on_minimize(self):
         """Clear response area and contract UI when showing window"""
