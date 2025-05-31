@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QObject, pyqtSignal, QRect, QPropertyAnimation, QEasingCurve, QPoint
+from PyQt5.QtCore import QObject, pyqtSignal, QRect, QPropertyAnimation, QEasingCurve, QPoint, QTimer
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor
@@ -19,14 +19,19 @@ class WindowManager(QObject):
         self._was_minimized = False
 
         # Window state tracking
-        self._is_dragging = False
-        self._is_resizing = False
-        self._drag_start = None
-        self._resize_start = None
-        self._resize_edge = None
+        self.resize_direction = None
+        self.resize_start_pos = None
+        self.resize_start_geometry = None
+        self.drag_position = None
         
         # Resize detection margins
-        self._resize_margin = 10
+        self._resize_margin_horizontal = 10
+        self._resize_margin_vertical = 10
+        
+        # Position save timer to debounce position saving
+        self.position_save_timer = QTimer()
+        self.position_save_timer.setSingleShot(True)
+        self.position_save_timer.timeout.connect(self.save_geometry)
         
     def set_window(self, window):
         """Set the window to manage - called after window creation"""
@@ -50,6 +55,9 @@ class WindowManager(QObject):
         
         # Set attributes
         self._window.setAttribute(Qt.WA_TranslucentBackground)
+        
+        # Set minimum size
+        self._window.setMinimumSize(300, 100)
         
         # Restore saved geometry
         self.restore_geometry()
@@ -75,7 +83,6 @@ class WindowManager(QObject):
         else:
             self.logger.warning("WindowManager: Cannot show window - no window reference")
             
-            
     def hide_window(self):
         """Hide window and notify via signal"""
         if self._window:
@@ -88,8 +95,6 @@ class WindowManager(QObject):
             self.tray_message_requested.emit("AI Launcher", "Hidden to system tray")
         else:
             self.logger.warning("WindowManager: Cannot hide window - no window reference")
-            
-
         
     def animate_resize(self, width, height, fast=False):
         """Self-contained animation"""
@@ -115,36 +120,50 @@ class WindowManager(QObject):
         self._animation.setEasingCurve(QEasingCurve.OutCubic)
         self._animation.start()
             
-    def _get_resize_edge(self, pos):
-        """Determine which edge is being resized"""
+    def get_resize_direction(self, pos):
+        """Determine resize direction based on mouse position - left, right, bottom only"""
         if not self._window:
             return None
             
         rect = self._window.rect()
-        margin = self._resize_margin
+        left = pos.x() <= self._resize_margin_horizontal
+        right = pos.x() >= rect.width() - self._resize_margin_horizontal
+        bottom = pos.y() >= rect.height() - self._resize_margin_vertical
         
-        left = pos.x() <= margin
-        right = pos.x() >= rect.width() - margin
-        top = pos.y() <= margin
-        bottom = pos.y() >= rect.height() - margin
-        
-        if left and top:
-            return 'top-left'
-        elif right and top:
-            return 'top-right'
-        elif left and bottom:
-            return 'bottom-left'
-        elif right and bottom:
-            return 'bottom-right'
+        direction = None
+        if bottom and left:
+            direction = "bottom-left"
+        elif bottom and right:
+            direction = "bottom-right"
         elif left:
-            return 'left'
+            direction = "left"
         elif right:
-            return 'right'
-        elif top:
-            return 'top'
+            direction = "right"
         elif bottom:
-            return 'bottom'
-        return None
+            direction = "bottom"
+            
+        if direction:
+            self.logger.debug(f"Resize direction detected: {direction} at pos ({pos.x()}, {pos.y()})")
+        return direction
+
+    def update_cursor(self, direction):
+        """Update cursor based on resize direction"""
+        if not self._window:
+            return
+            
+        if direction == "bottom-left":
+            self._window.setCursor(Qt.SizeBDiagCursor)
+        elif direction == "bottom-right":
+            self._window.setCursor(Qt.SizeFDiagCursor)
+        elif direction == "left" or direction == "right":
+            self._window.setCursor(Qt.SizeHorCursor)
+        elif direction == "bottom":
+            self._window.setCursor(Qt.SizeVerCursor)
+        else:
+            self._window.setCursor(Qt.ArrowCursor)
+            
+        if direction:
+            self.logger.debug(f"Cursor updated for direction: {direction}")
 
     def quit_application(self):
         """Quit application cleanly"""
@@ -153,117 +172,96 @@ class WindowManager(QObject):
             self.save_geometry()
         QApplication.quit()
 
-
-    def _set_cursor_for_edge(self, edge):
-        """Set appropriate cursor for resize edge"""
-        if not self._window:
-            return
-            
-        cursor_map = {
-            'top-left': Qt.SizeFDiagCursor,
-            'top-right': Qt.SizeBDiagCursor,
-            'bottom-left': Qt.SizeBDiagCursor,
-            'bottom-right': Qt.SizeFDiagCursor,
-            'left': Qt.SizeHorCursor,
-            'right': Qt.SizeHorCursor,
-            'top': Qt.SizeVerCursor,
-            'bottom': Qt.SizeVerCursor,
-        }
-        
-        if edge in cursor_map:
-            self._window.setCursor(cursor_map[edge])
-        else:
-            self._window.setCursor(Qt.ArrowCursor)
-            
-    # Mouse event handlers - self-contained
+    # Mouse event handlers - modified for new behavior
     def handle_mouse_press(self, event):
         """Handle mouse press for dragging/resizing"""
         if not self._window:
             return
             
-        self._drag_start = event.globalPos()
-        self._resize_edge = self._get_resize_edge(event.pos())
-        
-        if self._resize_edge:
-            self._is_resizing = True
-            self._resize_start = self._window.geometry()
-            self.logger.debug(f"WindowManager: Starting resize from edge: {self._resize_edge}")
-        else:
-            self._is_dragging = True
-            self.logger.debug("WindowManager: Starting window drag")
+        if event.button() == Qt.LeftButton:
+            self.resize_direction = self.get_resize_direction(event.pos())
+            
+            if self.resize_direction:
+                # Starting resize
+                self.logger.debug(f"Starting resize in direction: {self.resize_direction}")
+                self.resize_start_pos = event.globalPos()
+                self.resize_start_geometry = self._window.geometry()
+            else:
+                # Starting drag (top area or anywhere without resize direction)
+                self.logger.debug("Starting window drag")
+                self.drag_position = event.globalPos() - self._window.frameGeometry().topLeft()
+            
+            event.accept()
             
     def handle_mouse_move(self, event):
         """Handle mouse move for dragging/resizing"""
         if not self._window:
             return
             
-        if self._is_resizing and self._drag_start and self._resize_start:
-            self._handle_resize(event)
-        elif self._is_dragging and self._drag_start:
-            self._handle_drag(event)
+        if event.buttons() == Qt.LeftButton:
+            if self.resize_direction and self.resize_start_pos:
+                # Handle resizing
+                self.handle_resize(event.globalPos())
+            elif hasattr(self, 'drag_position') and self.drag_position is not None:
+                # Handle dragging
+                new_pos = event.globalPos() - self.drag_position
+                self._window.move(new_pos)
+                self.logger.debug(f"Window dragged to: ({new_pos.x()}, {new_pos.y()})")
+                # Debounce position saving
+                self.position_save_timer.stop()
+                self.position_save_timer.start(500)
+            event.accept()
         else:
-            # Update cursor based on position
-            edge = self._get_resize_edge(event.pos())
-            self._set_cursor_for_edge(edge)
+            # Update cursor when hovering
+            direction = self.get_resize_direction(event.pos())
+            self.update_cursor(direction)
             
-    def _handle_drag(self, event):
-        """Handle window dragging"""
-        delta = event.globalPos() - self._drag_start
-        new_pos = self._window.pos() + delta
-        self._window.move(new_pos)
-        self._drag_start = event.globalPos()
-        
-    def _handle_resize(self, event):
-        """Handle window resizing"""
-        delta = event.globalPos() - self._drag_start
-        original_geo = self._resize_start
-        
-        new_x = original_geo.x()
-        new_y = original_geo.y()
-        new_width = original_geo.width()
-        new_height = original_geo.height()
-        
-        # Calculate new geometry based on resize edge
-        if 'left' in self._resize_edge:
-            new_x = original_geo.x() + delta.x()
-            new_width = original_geo.width() - delta.x()
-        elif 'right' in self._resize_edge:
-            new_width = original_geo.width() + delta.x()
+    def handle_resize(self, global_pos):
+        """Handle window resizing based on direction"""
+        if not self.resize_start_pos or not self.resize_start_geometry:
+            self.logger.debug("No resize start position or geometry, skipping resize")
+            return
             
-        if 'top' in self._resize_edge:
-            new_y = original_geo.y() + delta.y()
-            new_height = original_geo.height() - delta.y()
-        elif 'bottom' in self._resize_edge:
-            new_height = original_geo.height() + delta.y()
-            
+        delta = global_pos - self.resize_start_pos
+        start_geo = self.resize_start_geometry
+        
+        new_x = start_geo.x()
+        new_y = start_geo.y()
+        new_width = start_geo.width()
+        new_height = start_geo.height()
+        
         # Apply minimum size constraints
-        min_width = 300
-        min_height = 100
+        min_size = self._window.minimumSize()
         
-        if new_width < min_width:
-            if 'left' in self._resize_edge:
-                new_x = original_geo.x() + original_geo.width() - min_width
-            new_width = min_width
+        # Calculate new geometry based on resize direction
+        if "left" in self.resize_direction:
+            new_width = max(min_size.width(), start_geo.width() - delta.x())
+            new_x = start_geo.x() + start_geo.width() - new_width
+        elif "right" in self.resize_direction:
+            new_width = max(min_size.width(), start_geo.width() + delta.x())
             
-        if new_height < min_height:
-            if 'top' in self._resize_edge:
-                new_y = original_geo.y() + original_geo.height() - min_height
-            new_height = min_height
+        if "bottom" in self.resize_direction:
+            new_height = max(min_size.height(), start_geo.height() + delta.y())
             
+        # Apply the new geometry
         self._window.setGeometry(new_x, new_y, new_width, new_height)
+        self.logger.debug(f"Window resized to: ({new_x}, {new_y}) {new_width}x{new_height}")
         
     def handle_mouse_release(self, event):
-        """Handle mouse release"""
-        if self._is_dragging:
-            self.logger.debug("WindowManager: Drag completed")
-        elif self._is_resizing:
-            self.logger.debug("WindowManager: Resize completed")
-            
-        self._is_dragging = False
-        self._is_resizing = False
-        self._drag_start = None
-        self._resize_start = None
-        self._resize_edge = None
+        """Clean up after mouse release"""
+        if event.button() == Qt.LeftButton:
+            if self.resize_direction:
+                self.logger.debug(f"Finished resizing in direction: {self.resize_direction}")
+            else:
+                self.logger.debug("Finished dragging window")
+                
+            # Clean up state
+            self.resize_direction = None
+            self.resize_start_pos = None
+            self.resize_start_geometry = None
+            self.drag_position = None
+            self._window.setCursor(Qt.ArrowCursor)
+            event.accept()
         
     def handle_close_event(self, event):
         """Handle close event - hide instead of quit"""
@@ -272,30 +270,18 @@ class WindowManager(QObject):
         self.hide_window()
         
     def handle_leave_event(self, event):
-        """Reset cursor on leave"""
-        if self._window:
+        """Reset cursor when mouse leaves window"""
+        if self._window and not self.resize_direction:  # Only reset if not currently resizing
             self._window.setCursor(Qt.ArrowCursor)
+            self.logger.debug("Mouse left window, cursor reset to arrow")
             
     def handle_move_event(self, event):
-        """Handle window move event"""
-        # Save geometry when window is moved
-        if self._window and not self._is_dragging:
-            self.save_geometry()
-
-    # def restore_geometry(self):
-    #     """Restore geometry from config"""
-    #     saved_geo = self.config.get('window_geometry')
-    #     if saved_geo and self._window:
-    #         try:
-    #             self._window.setGeometry(
-    #                 saved_geo['x'], saved_geo['y'],
-    #                 saved_geo['width'], saved_geo['height']
-    #             )
-    #             self.logger.debug(f"WindowManager: Geometry restored: {saved_geo}")
-    #         except (KeyError, TypeError) as e:
-    #             self.logger.error(f"WindowManager: Error restoring geometry: {e}")
-    #     else:
-    #         self.logger.debug("WindowManager: No saved geometry found")
+        """Handle window move events"""
+        # Debounce position saving for any move event
+        if hasattr(self, 'position_save_timer'):
+            self.position_save_timer.stop()
+            self.position_save_timer.start(2000)
+            self.logger.debug("Position save timer restarted (2sec debounce)")
 
     def restore_geometry(self):
         """Restore window position from config."""
@@ -322,19 +308,12 @@ class WindowManager(QObject):
         """Save window position to config."""
         if not self._window:
             return
-        geometry = self._window.geometry()
-        geometry_data = {
-            'x': geometry.x(),
-            'y': geometry.y(),
-            'width': geometry.width(),
-            'height': geometry.height()
-        }
-
+            
         try:
             pos = self._window.pos()
-            self.config.set('position_x', geometry_data['x'])
-            self.config.set('position_y', geometry_data['y'])
-            self.logger.debug(f"Saved window position: ({geometry_data['x']}, {geometry_data['y']})")
+            self.config.set('position_x', pos.x())
+            self.config.set('position_y', pos.y())
+            self.logger.debug(f"Saved window position: ({pos.x()}, {pos.y()})")
             
         except Exception as e:
             self.logger.error(f"Error saving geometry: {e}")
