@@ -184,7 +184,6 @@ class Launcher(QMainWindow):
         self._reconnect_ui_signals()
 
         # Set up aliases for backward compatibility
-        self.response_area = self.ui_manager.response_area
         self.stt_button = self.ui_manager.stt_button
         self.settings_button = self.ui_manager.settings_button
         self.copy_button = self.ui_manager.copy_button
@@ -242,8 +241,8 @@ class Launcher(QMainWindow):
             max_response_height = max(
                 int(max_response_height), min_response_height)
 
-            self.response_area.setMinimumHeight(min_response_height)
-            self.response_area.setMaximumHeight(max_response_height)
+            self.ui_manager.response_area.setMinimumHeight(min_response_height)
+            self.ui_manager.response_area.setMaximumHeight(max_response_height)
 
     def hide_response(self):
         """Hide response using StateManager."""
@@ -251,12 +250,12 @@ class Launcher(QMainWindow):
         #
         self.animate_resize(WindowSize.COMPACT_WIDTH,
                             WindowSize.COMPACT_HEIGHT, fast=True)
-        QTimer.singleShot(50, lambda: self.response_area.setVisible(False))
+        QTimer.singleShot(50, lambda: self.ui_manager.response_area.setVisible(False))
 
     def copy_response(self):
         """Copy accumulated response text to clipboard."""
         try:
-            response_text = self.state_manager.accumulated_response or self.response_area.toPlainText()
+            response_text = self.state_manager.accumulated_response or self.ui_manager.response_area.toPlainText()
             if response_text.strip():
                 clipboard = QApplication.clipboard()
                 clipboard.setText(response_text)
@@ -382,7 +381,7 @@ class Launcher(QMainWindow):
         # Convert basic markdown to HTML
         html_content = self.markdown_render._basic_markdown_to_html(
             response_text)
-        self.response_area.setHtml(html_content)
+        self.ui_manager.response_area.setHtml(html_content)
 
     def _handle_request_lifecycle(self, request_id, action):
         """Centralized request lifecycle management."""
@@ -408,9 +407,9 @@ class Launcher(QMainWindow):
 
     def _auto_scroll_response(self):
         """Separate auto-scroll logic."""
-        cursor = self.response_area.textCursor()
+        cursor = self.ui_manager.response_area.textCursor()
         cursor.movePosition(cursor.End)
-        self.response_area.setTextCursor(cursor)
+        self.ui_manager.response_area.setTextCursor(cursor)
 
     def _handle_completion(self, request_id):
         """Handle request completion with conversation storage."""
@@ -446,7 +445,7 @@ class Launcher(QMainWindow):
             self.ui_manager.expand_ui()
 
         # Display error
-        self.response_area.setHtml(error_text)
+        self.ui_manager.response_area.setHtml(error_text)
 
         # Return UI to normal state
         self.ui_manager.set_visual_state("normal")
@@ -521,7 +520,7 @@ class Launcher(QMainWindow):
             self.animate_resize(WindowSize.COMPACT_WIDTH,
                                 WindowSize.COMPACT_HEIGHT)
             QTimer.singleShot(50, lambda: (
-                self.response_area.setVisible(False),
+                self.ui_manager.response_area.setVisible(False),
                 self.copy_button.setVisible(False)
             ))
 
@@ -655,7 +654,7 @@ class Launcher(QMainWindow):
         if new_state == "normal" and not self.state_manager.get_current_prompt():
             logger.debug(
                 "State is normal with no prompt - checking if response should be hidden")
-            if self.response_area.isVisible():
+            if self.ui_manager.response_area.isVisible():
                 logger.debug("Hiding response area")
                 self.hide_response()
 
@@ -668,7 +667,7 @@ class Launcher(QMainWindow):
     def on_response_ready(self, response):
         """Handle when response is ready to display."""
         logger.debug(f"Response ready, length: {len(response)} characters")
-        self.response_area.setHtml(response)
+        self.ui_manager.response_area.setHtml(response)
 
     def on_request_cancelled(self):
         """Handle request cancellation from StateManager."""
