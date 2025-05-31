@@ -10,7 +10,6 @@ class AnimationManager(QObject):
     def __init__(self, parent_widget, logger:logging.Logger, style_manager:StyleManager):
         super().__init__(parent_widget)
         self.logger = logger.getChild('animation_manager')
-        self.parent = parent_widget
         self.thinking_timer = QTimer()
         self.thinking_timer.timeout.connect(self.update_thinking_animation)
         self.thinking_phase = 0
