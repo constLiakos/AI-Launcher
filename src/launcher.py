@@ -184,7 +184,6 @@ class Launcher(QMainWindow):
         self._reconnect_ui_signals()
 
         # Set up aliases for backward compatibility
-        self.stt_button = self.ui_manager.stt_button
         self.settings_button = self.ui_manager.settings_button
         self.copy_button = self.ui_manager.copy_button
         self.main_container = self.ui_manager.main_container
@@ -338,10 +337,10 @@ class Launcher(QMainWindow):
         logger.debug(f"STT state changed to: {state}")
 
         if state == "recording":
-            self.stt_button.setObjectName("sttButtonRecording")
+            self.ui_manager.stt_button.setObjectName("sttButtonRecording")
             self.update_stt_button_appearance(state)
         elif state == "idle":
-            self.stt_button.setObjectName("sttButton")
+            self.ui_manager.stt_button.setObjectName("sttButton")
             self.update_stt_button_appearance(state)
         else:
             logger.info("Wrong State when updating stt button")
@@ -364,15 +363,15 @@ class Launcher(QMainWindow):
 
     def update_stt_button_appearance(self, state):
         """Update STT button appearance based on state."""
-        # self.stt_button.setStyle(self.stt_button.style())
+        # self.ui_manager.stt_button.setStyle(self.ui_manager.stt_button.style())
         if state == "recording":
-            self.stt_button.setIcon(QIcon(str(Files.MIC_RECORDING_ICON_PATH)))
-            self.stt_button.style().unpolish(self.stt_button)
-            self.stt_button.style().polish(self.stt_button)
+            self.ui_manager.stt_button.setIcon(QIcon(str(Files.MIC_RECORDING_ICON_PATH)))
+            self.ui_manager.stt_button.style().unpolish(self.ui_manager.stt_button)
+            self.ui_manager.stt_button.style().polish(self.ui_manager.stt_button)
         elif state == "idle":
-            self.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
-            self.stt_button.style().unpolish(self.stt_button)
-            self.stt_button.style().polish(self.stt_button)
+            self.ui_manager.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
+            self.ui_manager.stt_button.style().unpolish(self.ui_manager.stt_button)
+            self.ui_manager.stt_button.style().polish(self.ui_manager.stt_button)
 
     def _update_response_display(self):
         """Update response display with basic markdown formatting."""
