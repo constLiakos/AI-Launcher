@@ -65,7 +65,7 @@ class TrayManager(QSystemTrayIcon):
         # Set tooltip
         self.tray_icon.setToolTip(Text.TRAY_TOOLTIP)
 
-    def show_background_message(self):
+    def show_default_message(self):
         """Show a message when the application is minimized to tray."""
         if hasattr(self, 'tray_icon') and self.tray_icon.isVisible():
             self.tray_icon.showMessage(
@@ -94,3 +94,13 @@ class TrayManager(QSystemTrayIcon):
         """Handle tray icon activation."""
         if reason == QSystemTrayIcon.DoubleClick:
             self.show_window()
+
+    def show_message(self, title, message):
+        """Show a message in the system tray."""
+        if hasattr(self, 'tray_icon') and self.tray_icon.isVisible():
+            self.tray_icon.showMessage(
+                title,
+                message,
+                QSystemTrayIcon.Information,
+                Timing.TRAY_MESSAGE_DURATION
+            )
