@@ -8,7 +8,6 @@ from utils.constants import (
     ElementSize, Files, InputSettings, Text, WindowSize)
 
 
-
 class UIManager(QObject):
 
     expansion_changed = pyqtSignal(bool)
@@ -39,11 +38,10 @@ class UIManager(QObject):
         self.multiline_toggle_debounce_timer.setSingleShot(True)
         self.multiline_toggle_debounce_timer.timeout.connect(
             self._handle_multiline_toggle_debounced)
-        
+
         self.current_visual_state = "normal"
         self.is_expanded = False
         self.response_visible = False
-
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -88,16 +86,6 @@ class UIManager(QObject):
         self.multiline_toggle_button.clicked.connect(
             self._handle_multiline_toggle_click)
 
-    def _setup_shortcuts(self):
-        """Setup keyboard shortcuts."""
-        # ESC to hide to tray
-        escape_shortcut = QShortcut(QKeySequence(Qt.Key_Escape), self.parent)
-        escape_shortcut.activated.connect(self.parent.hide_window)
-
-        # Ctrl+Q to quit completely
-        quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self.parent)
-        quit_shortcut.activated.connect(self.parent.quit_application)
-
 #   ##########################################################################################
 #       UI Functions
 #   ##########################################################################################
@@ -109,7 +97,6 @@ class UIManager(QObject):
     def expand_ui(self):
         """Expand UI to show response area - alias for show_response_area."""
         self.show_response_area()
-
 
     def _apply_visual_state(self, state):
         """Apply visual changes based on state."""
@@ -125,7 +112,8 @@ class UIManager(QObject):
             elif state == "thinking":
                 self.input_field.setObjectName("inputFieldThinking")
                 if 'start_thinking' in self.animation_callbacks:
-                    self.animation_callbacks['start_thinking'](self.input_field)
+                    self.animation_callbacks['start_thinking'](
+                        self.input_field)
             elif state == "error":
                 if 'stop_thinking' in self.animation_callbacks:
                     self.animation_callbacks['stop_thinking']()
@@ -572,12 +560,13 @@ class UIManager(QObject):
         if self.current_visual_state != state:
             old_state = self.current_visual_state
             self.current_visual_state = state
-            self.logger.debug(f"Visual state changed from '{old_state}' to '{state}'")
-            
+            self.logger.debug(
+                f"Visual state changed from '{old_state}' to '{state}'")
+
             # Apply visual changes immediately
             self._apply_visual_state(state)
             self.visual_state_changed.emit(state)
- 
+
     def get_visual_state(self):
         return self.current_visual_state
 
@@ -605,3 +594,13 @@ class UIManager(QObject):
 
         font.setPointSize(12)
         widget.setFont(font)
+
+    def _setup_shortcuts(self):
+        """Setup keyboard shortcuts."""
+        # ESC to hide to tray
+        escape_shortcut = QShortcut(QKeySequence(Qt.Key_Escape), self.parent)
+        escape_shortcut.activated.connect(self.parent.hide_window)
+
+        # Ctrl+Q to quit completely
+        quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self.parent)
+        quit_shortcut.activated.connect(self.parent.quit_application)
