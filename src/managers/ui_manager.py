@@ -38,6 +38,11 @@ class UIManager(QObject):
         self.multiline_toggle_debounce_timer.setSingleShot(True)
         self.multiline_toggle_debounce_timer.timeout.connect(
             self._handle_multiline_toggle_debounced)
+        
+        self.copy_button_debounce_timer = QTimer()
+        self.copy_button_debounce_timer.setSingleShot(True)
+        self.copy_button_debounce_timer.timeout.connect(
+            self._handle_copy_button_debounced)
 
         self.current_visual_state = "normal"
         self.is_expanded = False
@@ -539,6 +544,17 @@ class UIManager(QObject):
         self.copy_button.setVisible(False)
         self.copy_button.setParent(self.main_container)
         self.copy_button.raise_()
+
+    def _handle_copy_button_click(self):
+        """Handle copy button click with debouncing."""
+        # Reset timer and start new one
+        self.copy_button_debounce_timer.stop()
+        self.copy_button_debounce_timer.start(150)  # 150ms debounce
+
+    def _handle_copy_button_debounced(self):
+        """Execute the actual copy callback after debounce."""
+        if hasattr(self, 'copy_callback') and self.copy_callback:
+            self.copy_callback()
 
     def _handle_multiline_toggle_click(self):
         """Handle multiline toggle with debouncing."""
