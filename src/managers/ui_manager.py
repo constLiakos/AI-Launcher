@@ -43,6 +43,11 @@ class UIManager(QObject):
         self.copy_button_debounce_timer.setSingleShot(True)
         self.copy_button_debounce_timer.timeout.connect(
             self._handle_copy_button_debounced)
+        
+        self.stt_button_debounce_timer = QTimer()
+        self.stt_button_debounce_timer.setSingleShot(True)
+        self.stt_button_debounce_timer.timeout.connect(
+            self._handle_stt_button_debounced)
 
         self.current_visual_state = "normal"
         self.is_expanded = False
@@ -75,7 +80,7 @@ class UIManager(QObject):
             self.input_field.installEventFilter(self.parent)
 
         if 'stt_clicked' in callbacks:
-            self.stt_button.clicked.connect(callbacks['stt_clicked'])
+            self.stt_callback = callbacks['stt_clicked']
         if 'settings_clicked' in callbacks:
             self.settings_button.clicked.connect(callbacks['settings_clicked'])
         if 'copy_clicked' in callbacks:
@@ -378,6 +383,7 @@ class UIManager(QObject):
         self.stt_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
         input_layout.addWidget(self.stt_button)
+        self.stt_button.clicked.connect(self._handle_stt_button_click)
 
         # Settings button
         self.settings_button = QPushButton()
@@ -565,6 +571,17 @@ class UIManager(QObject):
     def _handle_multiline_toggle_debounced(self):
         """Execute the actual multiline toggle callback after debounce."""
         self._toggle_input_type()
+
+    def _handle_stt_button_click(self):
+        """Handle STT button click with debouncing."""
+        # Reset timer and start new one
+        self.stt_button_debounce_timer.stop()
+        self.stt_button_debounce_timer.start(50)  # 200ms debounce
+
+    def _handle_stt_button_debounced(self):
+        """Execute the actual STT callback after debounce."""
+        if hasattr(self, 'stt_callback') and self.stt_callback:
+            self.stt_callback()
 
 #   ##########################################################################################
 #       State Functions
