@@ -79,19 +79,6 @@ class Launcher(QMainWindow):
         self.state_manager.clear_multiline_input_sg.connect(
             self.clear_multiline_input)
 
-    # @pyqtSlot(bool)
-    # def on_expansion_changed(self, is_expanded):
-    #     """Handle UI expansion changes."""
-    #     if is_expanded:
-    #         # Calculate window size based on input type
-    #         if self.ui_manager.is_multiline_input():
-    #             width, height = WindowSize.EXPANDED_MULTILINE_INPUT_WIDTH, WindowSize.EXPANDED_MULTILINE_INPUT_HEIGHT
-    #         else:
-    #             width, height = WindowSize.EXPANDED_SINGLELINE_INPUT_WIDTH, WindowSize.EXPANDED_SINGLELINE_INPUT_HEIGHT
-    #         self.animate_resize(width, height)
-    #     else:
-    #         self.animate_resize(WindowSize.COMPACT_WIDTH,
-    #                             WindowSize.COMPACT_HEIGHT)
 
     def _initialize_core_components(self):
         """Initialize config, API client, etc."""
@@ -211,7 +198,7 @@ class Launcher(QMainWindow):
 
         # Reposition copy button
         if hasattr(self, 'copy_button') and self.ui_manager.copy_button.isVisible():
-            self.position_copy_button()
+            self.ui_manager.position_copy_button()
 
         # Dynamically adjust response area constraints based on window size
         if hasattr(self, 'response_area'):
@@ -333,7 +320,9 @@ class Launcher(QMainWindow):
     @pyqtSlot()
     def clear_multiline_input(self):
         """Clear Input"""
-        self.ui_manager.handle_multiline_resize()
+        # self.ui_manager.handle_multiline_resize()
+        # pass
+
 
     @pyqtSlot()
     def on_recording_completed(self):
