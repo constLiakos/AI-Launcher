@@ -636,7 +636,7 @@ class Launcher(QMainWindow):
             
             if new_multiline != old_multiline:
                 logger.info(f"Multiline input mode changing from {old_multiline} to {new_multiline}")
-                self.state_manager.set_input_type(new_multiline)
+                self.ui_manager.set_input_type(new_multiline)
                 logger.debug("State manager updated with new input type")
                 
                 # Update button appearance
