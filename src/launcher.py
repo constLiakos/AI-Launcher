@@ -182,10 +182,6 @@ class Launcher(QMainWindow):
         # Connect signals
         self._reconnect_ui_signals()
 
-        # Set up aliases for backward compatibility
-        self.main_container = self.ui_manager.main_container
-
-
     def update_stt_button_visibility(self):
         """Update mic button visibility."""
         self.stt_enabled = self.config.get('stt_enabled', STT.DEFAULT_ENABLED)
