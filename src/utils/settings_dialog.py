@@ -421,7 +421,7 @@ class SettingsDialog(QDialog):
             self.theme_changed.emit(new_theme)
         
         self.logger.info("Settings saved successfully")
-        self.hide()
+        self.accept()
 
     def show_about_dialog(self):
         """Show the About dialog."""
