@@ -75,23 +75,23 @@ class Launcher(QMainWindow):
         self.state_manager.recording_completed_sg.connect(
             self.on_recording_completed)
        # UIManager signals (UI state)
-        self.ui_manager.expansion_changed.connect(self.on_expansion_changed)
+        self.ui_manager.expansion_changed.connect(self.on_expanded_changed)
         self.state_manager.clear_multiline_input_sg.connect(
             self.clear_multiline_input)
 
-    @pyqtSlot(bool)
-    def on_expansion_changed(self, is_expanded):
-        """Handle UI expansion changes."""
-        if is_expanded:
-            # Calculate window size based on input type
-            if self.ui_manager.is_multiline_input():
-                width, height = WindowSize.EXPANDED_MULTILINE_INPUT_WIDTH, WindowSize.EXPANDED_MULTILINE_INPUT_HEIGHT
-            else:
-                width, height = WindowSize.EXPANDED_SINGLELINE_INPUT_WIDTH, WindowSize.EXPANDED_SINGLELINE_INPUT_HEIGHT
-            self.animate_resize(width, height)
-        else:
-            self.animate_resize(WindowSize.COMPACT_WIDTH,
-                                WindowSize.COMPACT_HEIGHT)
+    # @pyqtSlot(bool)
+    # def on_expansion_changed(self, is_expanded):
+    #     """Handle UI expansion changes."""
+    #     if is_expanded:
+    #         # Calculate window size based on input type
+    #         if self.ui_manager.is_multiline_input():
+    #             width, height = WindowSize.EXPANDED_MULTILINE_INPUT_WIDTH, WindowSize.EXPANDED_MULTILINE_INPUT_HEIGHT
+    #         else:
+    #             width, height = WindowSize.EXPANDED_SINGLELINE_INPUT_WIDTH, WindowSize.EXPANDED_SINGLELINE_INPUT_HEIGHT
+    #         self.animate_resize(width, height)
+    #     else:
+    #         self.animate_resize(WindowSize.COMPACT_WIDTH,
+    #                             WindowSize.COMPACT_HEIGHT)
 
     def _initialize_core_components(self):
         """Initialize config, API client, etc."""
@@ -235,14 +235,6 @@ class Launcher(QMainWindow):
 
             self.ui_manager.response_area.setMinimumHeight(min_response_height)
             self.ui_manager.response_area.setMaximumHeight(max_response_height)
-
-    def hide_response(self):
-        """Hide response using StateManager."""
-        self.state_manager.hide_response()
-        #
-        self.animate_resize(WindowSize.COMPACT_WIDTH,
-                            WindowSize.COMPACT_HEIGHT, fast=True)
-        QTimer.singleShot(50, lambda: self.ui_manager.response_area.setVisible(False))
 
     def copy_response(self):
         """Copy accumulated response text to clipboard."""
@@ -511,10 +503,13 @@ class Launcher(QMainWindow):
         else:
             self.animate_resize(WindowSize.COMPACT_WIDTH,
                                 WindowSize.COMPACT_HEIGHT)
-            QTimer.singleShot(50, lambda: (
-                self.ui_manager.response_area.setVisible(False),
+            QTimer.singleShot(10, lambda: (
+                self.ui_manager.response_area.setVisible(False)
+            ))
+            QTimer.singleShot(30, lambda: (
                 self.ui_manager.copy_button.setVisible(False)
             ))
+
 
     def show_status(self, message):
         """Print status instead of showing in UI."""
@@ -646,9 +641,9 @@ class Launcher(QMainWindow):
         if new_state == "normal" and not self.state_manager.get_current_prompt():
             logger.debug(
                 "State is normal with no prompt - checking if response should be hidden")
-            if self.ui_manager.response_area.isVisible():
-                logger.debug("Hiding response area")
-                self.hide_response()
+            # if self.ui_manager.response_area.isVisible():
+            #     logger.debug("Hiding response area")
+            #     self.ui_manager.hide_response()
 
     def on_processing_changed(self, is_processing):
         """Handle processing state changes from StateManager."""
@@ -679,8 +674,9 @@ class Launcher(QMainWindow):
             self.ui_manager.set_visual_state("typing")
         else:
             self.ui_manager.set_visual_state("normal")
-            if self.ui_manager.is_currently_expanded():
-                self.ui_manager.contract_ui()
+            # if self.ui_manager.is_currently_expanded():
+                # self.ui_manager.contract_ui()
+            self.ui_manager.hide_response()
 
         if not text.strip() and self.ui_manager.is_multiline_input():
             self.ui_manager.handle_multiline_resize()

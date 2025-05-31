@@ -100,10 +100,6 @@ class UIManager(QObject):
 #       UI Functions
 #   ##########################################################################################
 
-    def contract_ui(self):
-        """Contract UI to hide response area - alias for hide_response."""
-        self.hide_response()
-
     def expand_ui(self):
         """Expand UI to show response area - alias for show_response_area."""
         self.show_response_area()
@@ -504,11 +500,13 @@ class UIManager(QObject):
         This is purely UI logic - hiding/showing widgets and managing layout.
         """
         if self.response_visible:
-            self.response_area.setVisible(False)
+            # self.response_area.setVisible(False)
             self.copy_button.setVisible(False)
             self.response_visible = False
             self.is_expanded = False
             self.expansion_changed.emit(False)
+            # self.parent.animate_resize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT, fast=True)
+            QTimer.singleShot(50, lambda: self.response_area.setVisible(False))
             self.logger.debug("Response area hidden")
 
     def is_response_visible(self):
