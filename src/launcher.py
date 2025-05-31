@@ -45,6 +45,7 @@ class Launcher(QMainWindow):
         self.should_quit = False
         self.hotkey_manager.setup_hotkey()
         self.hotkey_manager.hotkey_pressed.connect(self.show_window)
+        self.hotkey_manager.stt_hotkey_pressed.connect(self._on_stt_hotkey_pressed)
 
     def _setup_logging(self, logdir, debug):
         """Setup logging configuration."""
@@ -59,6 +60,10 @@ class Launcher(QMainWindow):
                 logging.StreamHandler()  # Still shows in console
             ]
         )
+
+    def _on_stt_hotkey_pressed(self):
+        self.show_window()
+        QTimer.singleShot(200, self.recording_manager.toggle_recording)
 
     def _setup_signal_connections(self):
         """Setup Connection Signals"""
@@ -640,7 +645,7 @@ class Launcher(QMainWindow):
         """Clean up after mouse release."""
         self.window_manager.handle_mouse_release(event)
 
-    def moveEvent(self, event):
+    def lmoveEvent(self, event):
         """Handle any window move event."""
         super().moveEvent(event)
         self.window_manager.handle_move_event(event)
