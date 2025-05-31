@@ -1,6 +1,6 @@
 # AI Launcher
 
-[![Version](https://img.shields.io/badge/version-v1.0.8-blue.svg)](https://github.com/constLiakos/AI-Launcher/releases)
+[![Version](https://img.shields.io/badge/version-v1.0.9-blue.svg)](https://github.com/constLiakos/AI-Launcher/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](#)
 
@@ -14,7 +14,8 @@
 - **🔄 System Tray Integration**: Always accessible with right-click menu
 - **📡 Real-time Streaming**: See responses as they're generated
 - **🎤 Voice Input**: Speech-to-text with microphone support
-- **📝 Markdown Support**: Rich text formatting with HTML rendering
+- **📝 Multiline Input**: Toggle between single-line and multiline input modes with adaptive window resizing
+- **📄 Markdown Support**: Rich text formatting with HTML rendering
 - **🎨 Modern Interface**: Sleek, frameless design with smooth animations
 - **⚙️ Customizable**: Configurable hotkeys, API settings, and preferences
 
@@ -70,7 +71,8 @@ scripts\build.bat
 | **➖ Escape** | Hide to system tray |
 | **Ctrl+Q** | Quit application |
 | **Ctrl+S** | Open settings |
-| **↵ Enter** | Send message |
+| **↵ Enter** | Send message (single-line mode) / New line (multiline mode) |
+| **🔄 Toggle Button** | Switch between single-line and multiline input |
 
 ## 🤖 Supported Providers
 
