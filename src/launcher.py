@@ -156,7 +156,6 @@ class Launcher(QMainWindow):
     def _reconnect_ui_signals(self):
         """Reusable signal connection method"""
         self.ui_manager.connect_signals(self._get_signal_callbacks())
-        self.ui_manager.input_field = self.ui_manager.input_field
 
     # Remove the old hotkey methods and replace with:
     def restart_hotkey_listener(self):
