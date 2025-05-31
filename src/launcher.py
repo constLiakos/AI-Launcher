@@ -45,10 +45,6 @@ class Launcher(QMainWindow):
         self.should_quit = False
         self.hotkey_manager.setup_hotkey()
 
-        self.stt_debounce_timer = QTimer()
-        self.stt_debounce_timer.setSingleShot(True)
-        self.stt_debounce_timer.timeout.connect(self._execute_stt_toggle)
-        self.pending_stt_action = False
 
     def _setup_logging(self, logdir, debug):
         """Setup logging configuration."""
@@ -145,7 +141,7 @@ class Launcher(QMainWindow):
         return {
             'input_changed': self.on_input_changed,
             'return_pressed': self.force_send_request,
-            'stt_clicked': self._debounced_stt_toggle,
+            'stt_clicked': self.recording_manager.toggle_recording,
             'settings_clicked': self.open_settings,
             'copy_clicked': self.copy_response,
             'start_thinking_animation': self.animation_manager.start_thinking_animation,
@@ -191,19 +187,6 @@ class Launcher(QMainWindow):
         self.copy_button = self.ui_manager.copy_button
         self.main_container = self.ui_manager.main_container
 
-    def _debounced_stt_toggle(self):
-        """Debounced STT toggle to prevent rapid clicking issues."""
-        if self.stt_debounce_timer.isActive():
-            return  # Ignore if debounce is active
-        
-        self.pending_stt_action = True
-        self.stt_debounce_timer.start(50)  # 300ms debounce
-
-    def _execute_stt_toggle(self):
-        """Execute the actual STT toggle after debounce period."""
-        if self.pending_stt_action:
-            self.recording_manager.toggle_recording()
-            self.pending_stt_action = False
 
     def update_stt_button_visibility(self):
         """Update mic button visibility."""
