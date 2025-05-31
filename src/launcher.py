@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 class Launcher(QMainWindow):
     def __init__(self, logdir: str, debug=False):
         super().__init__()
-
         self._setup_logging(logdir, debug)
         self._initialize_core_components()
         self._initialize_managers()
@@ -83,17 +82,17 @@ class Launcher(QMainWindow):
     def _initialize_core_components(self):
         """Initialize config, API client, etc."""
         self.config = Config()
-        self.window_manager = WindowManager(logger, self, self.config)
         self.api_client = ApiClient(logger, self.config)
         self.stt_api_client = None
+        self.window_manager = WindowManager(logger, self.config)
 
     def _initialize_managers(self):
-        "Initialize managers"
-        convrestation_history_limit = self.config.get(
+        """Initialize managers"""
+        conversation_history_limit = self.config.get(
             'message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT)
         # Initialize managers
         self.conversation_manager = ConversationManager(
-            logger, max_conversations=convrestation_history_limit)
+            logger, max_conversations=conversation_history_limit)
         self.style_manager = StyleManager(logger)
         self.animation_manager = AnimationManager(
             self, logger, self.style_manager)
@@ -104,10 +103,100 @@ class Launcher(QMainWindow):
             logger, state_manager=self.state_manager, config=self.config)
         self.tray_manager = TrayManager(
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
-
         self.ui_manager = UIManager(
             self, logger, self.config)
+        
+        # Set up WindowManager after window exists
+        self.window_manager.set_window(self)
         self.window_manager.setup_window_properties()
+        
+        # Connect WindowManager signals
+        self.window_manager.tray_message_requested.connect(
+            self._on_tray_message_requested
+        )
+        self.window_manager.window_minimized.connect(
+            self._on_window_minimized
+        )
+        self.window_manager.window_restored.connect(
+            self._on_window_restored
+        )
+
+
+    def _on_tray_message_requested(self, title, message):
+        """Handle tray message request from WindowManager"""
+        try:
+            if hasattr(self, 'tray_manager') and self.tray_manager:
+                self.tray_manager.show_message(title, message)
+                logger.debug(f"Tray message shown: {title} - {message}")
+            else:
+                logger.warning("TrayManager not available for message display")
+        except Exception as e:
+            logger.error(f"Error showing tray message: {e}")
+
+    def _on_window_minimized(self):
+        """Handle window minimized event"""
+        logger.debug("Window minimized - checking clear settings")
+        # You can add any logic here for when window is minimized
+        logger.info("Hiding window to system tray")
+        
+        # Show tray message if tray is available
+        if hasattr(self.tray_manager, 'tray_icon'):
+            logger.debug("Showing background tray message")
+            self.tray_manager.show_default_message()
+        else:
+            logger.debug("No tray manager available for background message")
+        
+        # Clear history if configured
+        clear_history_on_minimize = self.config.get('clear_history_on_minimize', False)
+        if clear_history_on_minimize:
+            logger.debug("Clearing conversation history (config enabled)")
+            self.conversation_manager.clear_history()
+
+        # Check if we should clear response on minimize
+        clear_on_minimize = self.config.get('clear_on_minimize', False)
+        if clear_on_minimize:
+            logger.debug("Clearing previous response on window show (config enabled)")
+            self._clear_response_on_minimize()
+        
+        logger.info("Window hidden successfully")
+        
+    def _on_window_restored(self):
+        """Handle window restored from minimized state"""
+        logger.debug("Window restored from minimized state")
+
+        # Focus on input field
+        if hasattr(self.ui_manager, 'input_field'):
+            self.ui_manager.input_field.setFocus()
+            self.logger.debug("Input field focused")
+        else:
+            self.logger.debug("No input field to focus")
+            
+        self.logger.info("Window shown successfully")
+
+    def _clear_response_on_minimize(self):
+        """Clear response area and contract UI when showing window"""
+        try:
+            # Clear the response area
+            if hasattr(self, 'ui_manager') and self.ui_manager:
+                self.ui_manager.response_area.clear()
+                logger.debug("Response area cleared")
+                
+                # Contract the UI if it's expanded
+                if self.ui_manager.is_currently_expanded():
+                    self.ui_manager.hide_response()
+                    logger.debug("UI contracted after clearing response")
+                    
+                # Clear state manager's accumulated response
+                if hasattr(self, 'state_manager'):
+                    # self.state_manager.clear_accumulated_response()
+                    self.ui_manager.hide_response()
+                    logger.debug("State manager response cleared")
+                    
+                # Reset input field focus
+                self.ui_manager.input_field.setFocus()
+                
+        except Exception as e:
+            logger.error(f"Error clearing response on show: {e}")
 
     def stt_configure(self):
         """Initialize STT API client with better error handling."""
