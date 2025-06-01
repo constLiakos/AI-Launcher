@@ -221,7 +221,6 @@ class Launcher(QMainWindow):
             'copy_clicked': self.copy_response,
             'start_thinking_animation': self.animation_manager.start_thinking_animation,
             'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
-            'is_currenlty_expanded': self.ui_manager.is_currently_expanded,
         }
     def _get_signal_input_callbacks(self):
         """Centralize callback definitions to avoid duplication"""

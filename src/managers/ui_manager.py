@@ -74,8 +74,6 @@ class UIManager(QObject):
             self.animation_callbacks['start_thinking'] = callbacks['start_thinking_animation']
         if 'stop_thinking_animation' in callbacks:
             self.animation_callbacks['stop_thinking'] = callbacks['stop_thinking_animation']
-        if 'is_currenlty_expanded' in callbacks:
-            self.state_manager_callbacks['is_currenlty_expanded'] = callbacks['is_currenlty_expanded']
 
         self.multiline_toggle_button.clicked.connect(self._toggle_input_type)
 
@@ -246,19 +244,10 @@ class UIManager(QObject):
             self.logger.debug(
                 "Updated input field height to: %d", new_input_height)
 
-            is_currently_window_expanded = False
-            if 'is_currenlty_expanded' in self.state_manager_callbacks:
-                try:
-                    is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded'](
-                    )
-                    self.logger.debug("Window expansion state: %s",
-                                      is_currently_window_expanded)
-                except Exception as e:
-                    self.logger.error(
-                        "Error checking window expansion state: %s", e)
+            self.logger.debug("Window expansion state: %s", self.is_currently_expanded())
 
             # Calculate new window height
-            if self.original_window_height and not is_currently_window_expanded:
+            if self.original_window_height and not self.is_currently_expanded():
                 self.logger.debug(
                     "Calculating window resize - original_height=%d", self.original_window_height)
 
@@ -302,7 +291,7 @@ class UIManager(QObject):
                 if not self.original_window_height:
                     self.logger.debug(
                         "Skipping window resize - no original_window_height set")
-                if is_currently_window_expanded:
+                if self.is_currently_expanded():
                     self.logger.debug(
                         "Skipping window resize - window is currently expanded")
 
@@ -333,16 +322,8 @@ class UIManager(QObject):
             else:
                 current_text = self.input_field.text()
 
-            is_currently_window_expanded = False
-            if 'is_currenlty_expanded' in self.state_manager_callbacks:
-                is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded'](
-                )
-            else:
-                self.logger.error(
-                    "Error accessing callback: is_currenlty_expanded")
-
             # Reset to original window height if switching from multiline
-            if self.input_type_is_multiline and not is_multiline_input and self.original_window_height and not is_currently_window_expanded:
+            if self.input_type_is_multiline and not is_multiline_input and self.original_window_height and not self.is_currently_expanded():
                 self.parent.animate_resize(
                     self.parent.width(), self.original_window_height, fast=True)
 
