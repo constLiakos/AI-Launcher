@@ -352,17 +352,6 @@ class Launcher(QMainWindow):
         self.setStyleSheet(
             self.style_manager.get_complete_style(self.current_theme))
 
-    def cancel_current_request(self):
-        """Cancel current request - delegates to StateManager."""
-        if not self.state_manager.is_processing:
-            return
-
-        # Additional UI cleanup if needed
-        if hasattr(self.api_client, 'cancel_request'):
-            try:
-                self.api_client.cancel_request()
-            except Exception as e:
-                logger.error(f"Error cancelling API request: {e}")
 
     @pyqtSlot(str)
     def send_request(self, prompt):

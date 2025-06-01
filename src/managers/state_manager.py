@@ -166,6 +166,7 @@ class StateManager(QObject):
         Cancel current request and cleanup application state.
         Only handles application logic - no UI state changes.
         """
+        self.logger.debug("Called cancel_current_request")
         if not self.is_processing:
             self.logger.debug("No request to cancel")
             return
