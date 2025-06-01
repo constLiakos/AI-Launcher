@@ -74,9 +74,6 @@ class Launcher(QMainWindow):
             self.on_recording_completed)
        # UIManager signals (UI state)
         self.ui_manager.expansion_changed.connect(self.on_expanded_changed)
-        self.state_manager.clear_multiline_input_sg.connect(
-            self.clear_multiline_input)
-
 
     def _initialize_core_components(self):
         """Initialize config, API client, etc."""
@@ -404,13 +401,6 @@ class Launcher(QMainWindow):
             self.update_stt_button_appearance(state)
         else:
             logger.info("Wrong State when updating stt button")
-
-    @pyqtSlot()
-    def clear_multiline_input(self):
-        """Clear Input"""
-        # self.ui_manager.handle_multiline_resize()
-        # pass
-
 
     @pyqtSlot()
     def on_recording_completed(self):

@@ -14,7 +14,6 @@ class StateManager(QObject):
     request_ready = pyqtSignal(str)
     stt_state_changed = pyqtSignal(str)
     recording_completed_sg = pyqtSignal()
-    clear_multiline_input_sg = pyqtSignal()
 
     def __init__(self, config, logger:logging.Logger):
         super().__init__()
@@ -215,9 +214,6 @@ class StateManager(QObject):
         if self.streaming_worker:
             self.logger.debug("Cleaning up streaming worker during state cleanup")
             self.cleanup_worker_safely()
-        
-        # 6. Signal UI components that need to reset (like multiline input height)
-        self.clear_multiline_input_sg.emit()
         
         self.logger.debug("State cleanup completed")
 
