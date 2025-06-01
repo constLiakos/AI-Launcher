@@ -757,7 +757,7 @@ class Launcher(QMainWindow):
                 # self.ui_manager.contract_ui()
             self.ui_manager.hide_response()
 
-        if not text.strip() and self.ui_manager.is_multiline_input():
+        if  self.ui_manager.is_multiline_input():
             self.ui_manager.handle_multiline_resize()
 
     def force_send_request(self):

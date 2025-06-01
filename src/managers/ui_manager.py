@@ -471,8 +471,6 @@ class UIManager(QObject):
             self.input_field.setHorizontalScrollBarPolicy(
                 Qt.ScrollBarAlwaysOff)
 
-            # Connect to content change to handle resizing
-            self.input_field.textChanged.connect(self.handle_multiline_resize)
 
         else:
             # Single-line input
