@@ -367,9 +367,6 @@ class Launcher(QMainWindow):
         if not self.state_manager.is_processing:
             return
 
-        # StateManager handles worker cleanup and state management
-        self.state_manager.cancel_current_request()
-
         # Additional UI cleanup if needed
         if hasattr(self.api_client, 'cancel_request'):
             try:
