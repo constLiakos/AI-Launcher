@@ -227,12 +227,21 @@ class Launcher(QMainWindow):
             'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
             'is_currenlty_expanded': self.ui_manager.is_currently_expanded,
         }
+    def _get_signal_input_callbacks(self):
+        """Centralize callback definitions to avoid duplication"""
+        return {
+            'input_changed': self.on_input_changed,
+            'return_pressed': self.force_send_request,
+        }
 
     def _reconnect_ui_signals(self):
         """Reusable signal connection method"""
         self.ui_manager.connect_signals(self._get_signal_callbacks())
 
-    # Remove the old hotkey methods and replace with:
+    def _reconnect_input_signals(self):
+        """Reusable signal connection method"""
+        self.ui_manager.connect_input_signals(self._get_signal_input_callbacks())
+
     def restart_hotkey_listener(self):
         """Restart the global hotkey listener with new settings."""
         self.hotkey_manager.restart_listener()
@@ -274,7 +283,7 @@ class Launcher(QMainWindow):
 
     def on_input_type_changed(self):
         """Called by UIManager when input type changes"""
-        self._reconnect_ui_signals()
+        self._reconnect_input_signals()
 
     def position_copy_button(self):
         """Position copy button."""

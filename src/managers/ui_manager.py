@@ -80,6 +80,24 @@ class UIManager(QObject):
 
         self.multiline_toggle_button.clicked.connect(self._toggle_input_type)
 
+    def connect_input_signals(self, callbacks):
+        """Connect UI signals to callbacks."""
+        
+        self._disconnect_input_signals()
+
+        if 'input_changed' in callbacks:
+            if hasattr(self.input_field, 'toPlainText'):
+                # QTextEdit - textChanged doesn't pass text
+                self.input_field.textChanged.connect(
+                    lambda: callbacks['input_changed'](self.get_input_text()))
+            else:
+                # QLineEdit - textChanged passes text
+                self.input_field.textChanged.connect(
+                    callbacks['input_changed'])
+        if 'return_pressed' in callbacks:
+            # Install event filter on parent to handle key events
+            self.input_field.installEventFilter(self.parent)
+
 #   ##########################################################################################
 #       UI Functions
 #   ##########################################################################################
@@ -481,6 +499,18 @@ class UIManager(QObject):
                     self.multiline_toggle_button.clicked.disconnect()
                 except TypeError:
                     pass
+        except Exception as e:
+            self.logger.error(f"Error disconnecting signals: {e}")
+
+    def _disconnect_input_signals(self):
+        """Disconnect all signals before reconnecting"""
+        try:
+            # Disconnect input field signals safely
+            if hasattr(self.input_field, 'textChanged'):
+                try:
+                    self.input_field.textChanged.disconnect()
+                except TypeError:
+                    pass  # No connections to disconnect
         except Exception as e:
             self.logger.error(f"Error disconnecting signals: {e}")
 
