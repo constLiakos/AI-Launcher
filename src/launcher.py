@@ -355,13 +355,6 @@ class Launcher(QMainWindow):
         self.setStyleSheet(
             self.style_manager.get_complete_style(self.current_theme))
 
-    # def _cleanup_worker(self):
-    #     """Cleanup worker thread safely."""
-    #     if self.state_manager.streaming_worker:
-    #         if self.state_manager.streaming_worker.isRunning():
-    #             self.state_manager.streaming_worker.terminate()
-    #         self.state_manager.streaming_worker = None
-
     def cancel_current_request(self):
         """Cancel current request - delegates to StateManager."""
         if not self.state_manager.is_processing:
