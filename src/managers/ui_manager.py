@@ -324,7 +324,7 @@ class UIManager(QObject):
         """Reset input field to original single-line height."""
         pass
 
-    def recreate_input_field(self, multiline_input):
+    def recreate_input_field(self, is_multiline_input):
         """Recreate input field when mode changes."""
         if self.input_field:
             # Store current text
@@ -342,7 +342,7 @@ class UIManager(QObject):
                     "Error accessing callback: is_currenlty_expanded")
 
             # Reset to original window height if switching from multiline
-            if self.input_type_is_multiline and not multiline_input and self.original_window_height and not is_currently_window_expanded:
+            if self.input_type_is_multiline and not is_multiline_input and self.original_window_height and not is_currently_window_expanded:
                 self.parent.animate_resize(
                     self.parent.width(), self.original_window_height, fast=True)
 
@@ -351,15 +351,15 @@ class UIManager(QObject):
             old_input_field = self.input_field
 
             # Reset height tracking when switching modes
-            if not multiline_input:  # Only reset window height when going to single-line
+            if not is_multiline_input:  # Only reset window height when going to single-line
                 self.original_window_height = None
 
             # Update mode and create new field
-            self.input_type_is_multiline = multiline_input
+            self.input_type_is_multiline = is_multiline_input
             self._create_input_field()
 
             # Store original heights for new multiline mode
-            if multiline_input:
+            if is_multiline_input:
                 self._store_original_heights()
 
             # Replace the widget in the layout (maintains position)
@@ -371,6 +371,10 @@ class UIManager(QObject):
                 self.input_field.setText(current_text)
             elif hasattr(self.input_field, 'setPlainText'):
                 self.input_field.setPlainText(current_text)
+
+            # If multiline resize based on the text
+            if is_multiline_input:
+                self.handle_multiline_resize()
 
     def set_input_state(self, state):
         """Set visual state of input field: 'normal', 'thinking' """
