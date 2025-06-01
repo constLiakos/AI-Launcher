@@ -493,7 +493,7 @@ class Launcher(QMainWindow):
         self.ui_manager.input_field.setFocus()
 
         # Clean up worker through StateManager
-        self.state_manager.cleanup_worker_safely()
+        self.state_manager._cleanup_worker_thread()
 
     def _execute_request(self, request_id):
         """Execute request using StateManager's worker creation."""

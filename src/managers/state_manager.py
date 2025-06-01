@@ -182,7 +182,7 @@ class StateManager(QObject):
             self.logger.debug("Stopping streaming worker")
             self.streaming_worker.stop()
             # Don't wait too long for cleanup
-            QTimer.singleShot(100, self._cleanup_worker)
+            QTimer.singleShot(100, self._cleanup_worker_thread)
         self.processing_changed.emit(False)
         self.request_cancelled.emit()
 
@@ -214,7 +214,7 @@ class StateManager(QObject):
         # 5. Clean up any active worker
         if self.streaming_worker:
             self.logger.debug("Cleaning up streaming worker during state cleanup")
-            self.cleanup_worker_safely()
+            self._cleanup_worker_thread()
         
         self.logger.debug("State cleanup completed")
 
@@ -249,14 +249,6 @@ class StateManager(QObject):
         self.processing_changed.emit(False)
         
         return True
-    def cleanup_worker_safely(self):
-        """Safely cleanup the current worker."""
-        if self.streaming_worker:
-            self.logger.debug("Cleaning up streaming worker safely")
-            if self.streaming_worker.isRunning():
-                self.streaming_worker.stop()
-            self.streaming_worker.deleteLater()
-            self.streaming_worker = None
 
     # Getters for current state
     def get_current_prompt(self):
@@ -297,18 +289,29 @@ class StateManager(QObject):
     def recording_completed(self):
         self.recording_completed_sg.emit()
 
-
-    def _cleanup_worker(self):
-        """Internal cleanup method for timer-based cleanup."""
-        if self.streaming_worker:
-            self.logger.debug("Cleaning up worker thread")
-            if self.streaming_worker.isRunning():
-                self.streaming_worker.terminate()
-            self.streaming_worker = None
-
-
     def _send_request_signal(self):
         """Internal method to emit request signal."""
         self.logger.debug(f"Sending request signal for prompt: '{self.current_prompt[:50]}{'...' if len(self.current_prompt) > 50 else ''}'")
         if self.current_prompt.strip():
             self.request_ready.emit(self.current_prompt)
+
+    def _cleanup_worker_thread(self):
+        """Properly cleanup the worker thread."""
+        if not self.streaming_worker:
+            return
+            
+        self.logger.debug("Cleaning up worker thread")
+        
+        # Stop the worker
+        if self.streaming_worker.isRunning():
+            self.streaming_worker.stop()
+            
+            # Wait for thread to finish gracefully
+            if not self.streaming_worker.wait(1000):  # Wait max 1 second
+                self.logger.warning("Worker thread didn't stop gracefully, terminating")
+                self.streaming_worker.terminate()
+                self.streaming_worker.wait(500)  # Wait for termination
+        
+        # Now safe to delete
+        self.streaming_worker.deleteLater()
+        self.streaming_worker = None
