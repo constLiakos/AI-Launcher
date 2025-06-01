@@ -41,7 +41,6 @@ class UIManager(QObject):
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
         self.input_type_is_multiline = multiline_input
-        self._setup_window_properties()
         self._create_main_container()
         self._create_input_section()
         self._create_response_section()
@@ -142,15 +141,6 @@ class UIManager(QObject):
             self.original_window_height = self.parent.height()
             self.logger.debug(
                 f"Stored original window height: {self.original_window_height}")
-
-    def _setup_window_properties(self):
-        """Configure window properties."""
-        self.parent.setWindowFlags(
-            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.parent.setAttribute(Qt.WA_TranslucentBackground)
-        self.parent.resize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
-        self.parent.setMinimumSize(
-            WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
 
     def _create_main_container(self):
         """Create the main container widget."""
