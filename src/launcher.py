@@ -738,15 +738,16 @@ class Launcher(QMainWindow):
         self.state_manager.set_prompt(text, self.ui_manager.is_multiline_input())
 
         if text.strip():
+            # Text exists
+            if  self.ui_manager.is_multiline_input():
+                    self.ui_manager.handle_multiline_resize()
             self.ui_manager.set_visual_state("typing")
         else:
+            # Text does not exist
             self.ui_manager.set_visual_state("normal")
-            # if self.ui_manager.is_currently_expanded():
-                # self.ui_manager.contract_ui()
             self.ui_manager.hide_response()
 
-        if  self.ui_manager.is_multiline_input():
-            self.ui_manager.handle_multiline_resize()
+
 
     def force_send_request(self):
         """Delegate to StateManager."""

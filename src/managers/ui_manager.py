@@ -563,6 +563,8 @@ class UIManager(QObject):
         """
         if self.response_visible:
             # self.response_area.setVisible(False)
+            if self.is_multiline_input():
+                self.handle_multiline_resize()
             self.copy_button.setVisible(False)
             self.response_visible = False
             self.is_expanded = False
