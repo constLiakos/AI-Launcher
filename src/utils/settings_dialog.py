@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from managers.style_manager import StyleManager
 from pynput.keyboard import HotKey
 from utils.about_dialog import AboutDialog
-from utils.constants import LLM, Conversation, Hotkey, SettingsDialogSize, Text, Theme, Timing
+from utils.constants import LLM, Conversation, Hotkey, STTDialogSize, SettingsDialogSize, Text, Theme, Timing
 from utils.stt_settings_dialog import STTSettingsDialog
 from utils.version import VERSION
 
@@ -56,39 +56,6 @@ class SettingsDialog(QDialog):
         
         self.setLayout(layout)
         self.logger.debug("SettingsDialog UI setup completed")
-
-    def _create_error_message(self):
-        """Create error message widget."""
-        error_widget = QLabel()
-        error_widget.setObjectName("errorMessage")
-        error_widget.setAlignment(Qt.AlignCenter)
-        error_widget.setWordWrap(True)
-        error_widget.hide()  # Initially hidden
-        error_widget.setMinimumHeight(0)
-        error_widget.setMaximumHeight(60)
-        error_widget.setContentsMargins(10, 5, 10, 5)
-        
-        # Apply warning style
-        warning_style = """
-            QLabel#errorMessage {
-                background-color: #fff3cd;
-                border: 1px solid #ffeaa7;
-                border-radius: 5px;
-                color: #856404;
-                font-weight: bold;
-                padding: 8px 12px;
-                margin: 5px 0px;
-            }
-        """
-        error_widget.setStyleSheet(warning_style)
-        
-        return error_widget
-    
-    def _show_error_message(self, message):
-        """Show error message in the dialog."""
-        self.error_message.setText(message)
-        self.error_message.show()
-        QTimer.singleShot(5000, self.error_message.hide)
 
     def _setup_window(self):
         """Configure window properties."""
@@ -300,41 +267,74 @@ class SettingsDialog(QDialog):
         self.logger.debug(f"Theme loaded: {current_theme}")
         return combo
 
-    def _create_button_layout(self):
-        """Create button layout with About, Cancel, and Save buttons."""
-        button_layout = QHBoxLayout()
-        button_layout.setSpacing(SettingsDialogSize.BUTTON_LAYOUT_SPACING)
-        
-        # About button (left side)
-        about_btn = QPushButton("About")
-        about_btn.setObjectName("aboutButton")
-        about_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
-        about_btn.clicked.connect(self.show_about_dialog)
 
-        # STT Settings button (middle-left)
-        stt_settings_btn = QPushButton("STT Settings")
-        stt_settings_btn.setObjectName("sttSettingsButton")
-        stt_settings_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
-        stt_settings_btn.clicked.connect(self.show_stt_settings_dialog)
+    def show_about_dialog(self):
+        """Show the About dialog."""
+        self.logger.debug("Opening About dialog")
+        if self.about_dialog is None:
+            self.about_dialog = AboutDialog(self.logger, self)
+        self.about_dialog.show()
+        self.about_dialog.raise_()
+        self.about_dialog.activateWindow()
+
+    def show_stt_settings_dialog(self):
+        """Show the STT Settings dialog."""
+        self.logger.debug("Opening STT Settings dialog")
+        if self.stt_settings_dialog is None:
+            self.stt_settings_dialog = STTSettingsDialog(self.logger.parent, self.config, self)
+            current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
+            self.stt_settings_dialog.style_manager.set_theme(current_theme)
+            self.stt_settings_dialog.apply_styles() 
+            self.stt_settings_dialog.load_settings()
+
+            # Connect the settings_changed signal to the desired slot in Launcher
+            self.stt_settings_dialog.settings_changed.connect(self.parent().on_stt_settings_changed)
+
+            self.stt_settings_dialog.show()
+            self.stt_settings_dialog.raise_()
+            self.stt_settings_dialog.activateWindow()
+
+
+#   ##########################################################################################
+#       Popup Warning Messages Functions
+#   ##########################################################################################
+
+    def _create_error_message(self):
+        """Create error message widget."""
+        error_widget = QLabel()
+        error_widget.setObjectName("errorMessage")
+        error_widget.setAlignment(Qt.AlignCenter)
+        error_widget.setWordWrap(True)
+        error_widget.hide()  # Initially hidden
+        error_widget.setMinimumHeight(0)
+        error_widget.setMaximumHeight(60)
+        error_widget.setContentsMargins(10, 5, 10, 5)
         
-        # Cancel and Save buttons (right side)
-        cancel_btn = QPushButton("Cancel")
-        cancel_btn.setObjectName("cancelButton")
-        cancel_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
-        cancel_btn.clicked.connect(self.hide)
+        # Apply warning style
+        warning_style = """
+            QLabel#errorMessage {
+                background-color: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 5px;
+                color: #856404;
+                font-weight: bold;
+                padding: 8px 12px;
+                margin: 5px 0px;
+            }
+        """
+        error_widget.setStyleSheet(warning_style)
         
-        save_btn = QPushButton("Save")
-        save_btn.setObjectName("saveButton")
-        save_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
-        save_btn.clicked.connect(self.save_settings)
-        
-        button_layout.addWidget(about_btn)
-        button_layout.addWidget(stt_settings_btn)
-        button_layout.addStretch()
-        button_layout.addWidget(cancel_btn)
-        button_layout.addWidget(save_btn)
-        
-        return button_layout
+        return error_widget
+    
+    def _show_error_message(self, message):
+        """Show error message in the dialog."""
+        self.error_message.setText(message)
+        self.error_message.show()
+        QTimer.singleShot(5000, self.error_message.hide)
+
+#   ##########################################################################################
+#       Style Functions
+#   ##########################################################################################
 
     def apply_styles(self):
         """Apply styles using StyleManager."""
@@ -371,6 +371,11 @@ class SettingsDialog(QDialog):
 
         form_widget_style = self.style_manager.get_widget_style()
         self.form_widget.setStyleSheet(form_widget_style)
+
+
+#   ##########################################################################################
+#       Load | Save Functions
+#   ##########################################################################################
 
     def save_settings(self):
         self.logger.info("Saving settings")
@@ -468,28 +473,82 @@ class SettingsDialog(QDialog):
         self.logger.info("Settings saved successfully")
         self.accept()
 
-    def show_about_dialog(self):
-        """Show the About dialog."""
-        self.logger.debug("Opening About dialog")
-        if self.about_dialog is None:
-            self.about_dialog = AboutDialog(self.logger, self)
-        self.about_dialog.show()
-        self.about_dialog.raise_()
-        self.about_dialog.activateWindow()
+#   ##########################################################################################
+#       Create UI Elements Functions
+#   ##########################################################################################
 
-    def show_stt_settings_dialog(self):
-        """Show the STT Settings dialog."""
-        self.logger.debug("Opening STT Settings dialog")
-        if self.stt_settings_dialog is None:
-            self.stt_settings_dialog = STTSettingsDialog(self.logger.parent, self.config, self)
-            current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
-            self.stt_settings_dialog.style_manager.set_theme(current_theme)
-            self.stt_settings_dialog.apply_styles() 
-            self.stt_settings_dialog.load_settings()
+    def _create_button_layout(self):
+        """Create button layout with About, Cancel, and Save buttons."""
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(SettingsDialogSize.BUTTON_LAYOUT_SPACING)
+        
+        # About button (left side)
+        about_btn = QPushButton("About")
+        about_btn.setObjectName("aboutButton")
+        about_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
+        about_btn.clicked.connect(self.show_about_dialog)
 
-            # Connect the settings_changed signal to the desired slot in Launcher
-            self.stt_settings_dialog.settings_changed.connect(self.parent().on_stt_settings_changed)
+        hotkey_recorder_btn = self._create_hotkey_recoreder_button()
+        button_layout.addWidget(hotkey_recorder_btn)
 
-            self.stt_settings_dialog.show()
-            self.stt_settings_dialog.raise_()
-            self.stt_settings_dialog.activateWindow()
+        # STT Settings button (middle-left)
+        stt_settings_btn = QPushButton("STT Settings")
+        stt_settings_btn.setObjectName("sttSettingsButton")
+        stt_settings_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
+        stt_settings_btn.clicked.connect(self.show_stt_settings_dialog)
+        
+        # Cancel and Save buttons (right side)
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setObjectName("cancelButton")
+        cancel_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
+        cancel_btn.clicked.connect(self.hide)
+        
+        save_btn = QPushButton("Save")
+        save_btn.setObjectName("saveButton")
+        save_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
+        save_btn.clicked.connect(self.save_settings)
+        
+        button_layout.addWidget(about_btn)
+        button_layout.addWidget(stt_settings_btn)
+        button_layout.addStretch()
+        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(save_btn)
+        
+        return button_layout
+    
+#   ##########################################################################################
+#       Hotkey Recorder Functions
+#   ##########################################################################################
+
+    def _create_hotkey_recoreder_button(self):
+        hotkey_recorder_btn = QPushButton("Recorder")
+        hotkey_recorder_btn.setObjectName("mainHotkeyRecorderBTN")
+        hotkey_recorder_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
+        hotkey_recorder_btn.clicked.connect(self._on_hotkey_recorder_clicked)
+        return hotkey_recorder_btn
+
+
+    def _on_hotkey_recorder_clicked(self):
+        """Handle hotkey recorder button click."""
+        from utils.hotkey_recorder import HotkeyRecorderDialog
+        
+        # Get current hotkey from config or input field
+        current_hotkey = self.config.get('hotkey', '')  # or get from UI field
+        
+        dialog = HotkeyRecorderDialog(
+            parent=self,
+            current_hotkey=current_hotkey,
+            title="Record Main Hotkey"
+        )
+        
+        def on_hotkey_recorded(hotkey_string):
+            # Update your hotkey input field or config
+            # Example: self.hotkey_input.setText(hotkey_string)
+            # Or: self.config.set('hotkey', hotkey_string)
+            print(f"Recorded hotkey: {hotkey_string}")
+            # if 'hotkey_input' in self:
+            self.hotkey_input.setText(hotkey_string)
+            # self.hotkey_input.text()
+        
+        dialog.hotkey_recorded.connect(on_hotkey_recorded)
+        dialog.exec_()

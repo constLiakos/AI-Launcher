@@ -53,6 +53,53 @@ class STTSettingsDialog(QDialog):
                           STTDialogSize.WINDOW_HEIGHT - 150)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
 
+    def _update_fields_enabled_state(self):
+        enabled = self.enable_stt_checkbox.isChecked()
+        self.stt_api_key_input.setEnabled(enabled)
+        self.stt_api_base_input.setEnabled(enabled)
+        self.stt_model_input.setEnabled(enabled)
+        self.stt_hotkey_input.setEnabled(enabled)
+        self.stt_request_timeout_input.setEnabled(enabled)
+        self.logger.debug(f"STT fields enabled state: {enabled}")
+
+#   ##########################################################################################
+#       Create UI Elements Functions
+#   ##########################################################################################
+
+
+    def _create_button_layout(self):
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(STTDialogSize.BUTTON_LAYOUT_SPACING)
+
+        cancel_btn = QPushButton("Cancel")
+        cancel_btn.setObjectName("cancelButton")
+        cancel_btn.setMinimumHeight(STTDialogSize.BUTTON_MIN_HEIGHT)
+        cancel_btn.clicked.connect(self.hide)
+
+        save_btn = QPushButton("Save")
+        save_btn.setObjectName("saveButton")
+        save_btn.setMinimumHeight(STTDialogSize.BUTTON_MIN_HEIGHT)
+        save_btn.clicked.connect(self.save_stt_settings)
+
+        hotkey_recorder_btn = self._create_hotkey_recoreder_button()
+        button_layout.addWidget(hotkey_recorder_btn)
+
+        button_layout.addStretch()
+        button_layout.addWidget(cancel_btn)
+        button_layout.addWidget(save_btn)
+
+        return button_layout
+
+    def _create_input_field(self, default_value, placeholder, object_name="settingsInputField", is_password=False):
+        field = QLineEdit()
+        field.setText(str(default_value))
+        field.setObjectName(object_name)
+        field.setPlaceholderText(placeholder)
+        field.setMinimumHeight(35)
+        if is_password:
+            field.setEchoMode(QLineEdit.Password)
+        return field
+
     def _create_title_label(self):
         title_label = QLabel("Speech-to-Text Settings")
         title_label.setObjectName("titleLabel")
@@ -111,44 +158,44 @@ class STTSettingsDialog(QDialog):
 
         return form_layout
 
-    def _create_input_field(self, default_value, placeholder, object_name="settingsInputField", is_password=False):
-        field = QLineEdit()
-        field.setText(str(default_value))
-        field.setObjectName(object_name)
-        field.setPlaceholderText(placeholder)
-        field.setMinimumHeight(35)
-        if is_password:
-            field.setEchoMode(QLineEdit.Password)
-        return field
+#   ##########################################################################################
+#       Hotkey Recorder Functions
+#   ##########################################################################################
 
-    def _update_fields_enabled_state(self):
-        enabled = self.enable_stt_checkbox.isChecked()
-        self.stt_api_key_input.setEnabled(enabled)
-        self.stt_api_base_input.setEnabled(enabled)
-        self.stt_model_input.setEnabled(enabled)
-        self.stt_hotkey_input.setEnabled(enabled)
-        self.stt_request_timeout_input.setEnabled(enabled)
-        self.logger.debug(f"STT fields enabled state: {enabled}")
+    def _create_hotkey_recoreder_button(self):
+        hotkey_recorder_btn = QPushButton("Recorder")
+        hotkey_recorder_btn.setObjectName("mainHotkeyRecorderBTN")
+        hotkey_recorder_btn.setMinimumHeight(STTDialogSize.BUTTON_MIN_HEIGHT)
+        hotkey_recorder_btn.clicked.connect(self._on_hotkey_recorder_clicked)
+        return hotkey_recorder_btn
 
-    def _create_button_layout(self):
-        button_layout = QHBoxLayout()
-        button_layout.setSpacing(STTDialogSize.BUTTON_LAYOUT_SPACING)
 
-        cancel_btn = QPushButton("Cancel")
-        cancel_btn.setObjectName("cancelButton")
-        cancel_btn.setMinimumHeight(STTDialogSize.BUTTON_MIN_HEIGHT)
-        cancel_btn.clicked.connect(self.hide)
+    def _on_hotkey_recorder_clicked(self):
+        """Handle hotkey recorder button click."""
+        from utils.hotkey_recorder import HotkeyRecorderDialog
+        
+        # Get current hotkey from config or input field
+        current_hotkey = self.config.get('hotkey', '')  # or get from UI field
+        
+        dialog = HotkeyRecorderDialog(
+            parent=self,
+            current_hotkey=current_hotkey,
+            title="Record Main Hotkey"
+        )
+        
+        def on_hotkey_recorded(hotkey_string):
+            # Update your hotkey input field or config
+            # Example: self.hotkey_input.setText(hotkey_string)
+            # Or: self.config.set('hotkey', hotkey_string)
+            print(f"Recorded hotkey: {hotkey_string}")
+            self.stt_hotkey_input.setText(hotkey_string)
+        
+        dialog.hotkey_recorded.connect(on_hotkey_recorded)
+        dialog.exec_()
 
-        save_btn = QPushButton("Save")
-        save_btn.setObjectName("saveButton")
-        save_btn.setMinimumHeight(STTDialogSize.BUTTON_MIN_HEIGHT)
-        save_btn.clicked.connect(self.save_stt_settings)
-
-        button_layout.addStretch()
-        button_layout.addWidget(cancel_btn)
-        button_layout.addWidget(save_btn)
-
-        return button_layout
+#   ##########################################################################################
+#       Load | Save Functions
+#   ##########################################################################################
 
     def load_settings(self):
         self.logger.debug("Loading STT settings")
@@ -183,6 +230,7 @@ class STTSettingsDialog(QDialog):
         stt_api_base = self.stt_api_base_input.text()
         stt_model = self.stt_model_input.text()
         stt_hotkey = self.stt_hotkey_input.text().strip()
+
 
         if stt_enabled:
             # Check if any essential fields are not set
@@ -236,6 +284,10 @@ class STTSettingsDialog(QDialog):
         self.logger.info("STT settings saved successfully")
         self.hide()
 
+#   ##########################################################################################
+#       Style Functions
+#   ##########################################################################################
+
     def apply_styles(self):
         self.logger.debug("Applying styles to STTSettingsDialog")
         current_theme = self.config.get('theme', 'Dark')
@@ -286,6 +338,9 @@ class STTSettingsDialog(QDialog):
         # Hide after the specified duration
         QTimer.singleShot(duration, message_label.hide)
 
+#   ##########################################################################################
+#       Popup Warning Messages Functions
+#   ##########################################################################################
 
     def _create_error_message(self):
         """Create error message widget."""
@@ -319,3 +374,4 @@ class STTSettingsDialog(QDialog):
         self.error_message.setText(message)
         self.error_message.show()
         QTimer.singleShot(5000, self.error_message.hide)
+
