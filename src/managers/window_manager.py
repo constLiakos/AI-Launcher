@@ -48,14 +48,13 @@ class WindowManager(QObject):
         self.logger.debug("WindowManager: Setting up window properties")
         # Set window flags
         self._window.setWindowFlags(
-            Qt.FramelessWindowHint | 
-            Qt.WindowStaysOnTopHint | 
-            Qt.Tool
-        )        
+            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         # Set attributes
         self._window.setAttribute(Qt.WA_TranslucentBackground)
         # Set minimum size - using constants
-        self._window.setMinimumSize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
+        self._window.resize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
+        self._window.setMinimumSize(
+            WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
         # Restore saved geometry
         self.restore_geometry()
         self.logger.debug("WindowManager: Window properties setup complete")
