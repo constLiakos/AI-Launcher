@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 class Launcher(QMainWindow):
     def __init__(self, logdir: str, debug=False):
         super().__init__()
-        self.setMouseTracking(True)
         self._setup_logging(logdir, debug)
         self._initialize_core_components()
         self._initialize_managers()
