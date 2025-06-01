@@ -34,26 +34,6 @@ class UIManager(QObject):
         self.animation_callbacks = {}
         self.state_manager_callbacks = {}
 
-        self.multiline_toggle_debounce_timer = QTimer()
-        self.multiline_toggle_debounce_timer.setSingleShot(True)
-        self.multiline_toggle_debounce_timer.timeout.connect(
-            self._handle_multiline_toggle_debounced)
-        
-        self.copy_button_debounce_timer = QTimer()
-        self.copy_button_debounce_timer.setSingleShot(True)
-        self.copy_button_debounce_timer.timeout.connect(
-            self._handle_copy_button_debounced)
-        
-        self.stt_button_debounce_timer = QTimer()
-        self.stt_button_debounce_timer.setSingleShot(True)
-        self.stt_button_debounce_timer.timeout.connect(
-            self._handle_stt_button_debounced)
-        
-        self.settings_button_debounce_timer = QTimer()
-        self.settings_button_debounce_timer.setSingleShot(True)
-        self.settings_button_debounce_timer.timeout.connect(
-            self._handle_settings_button_debounced)
-
         self.current_visual_state = "normal"
         self.is_expanded = False
         self.response_visible = False
@@ -70,6 +50,9 @@ class UIManager(QObject):
 
     def connect_signals(self, callbacks):
         """Connect UI signals to callbacks."""
+
+        self._disconnect_all_signals()
+
         if 'input_changed' in callbacks:
             if hasattr(self.input_field, 'toPlainText'):
                 # QTextEdit - textChanged doesn't pass text
@@ -79,19 +62,15 @@ class UIManager(QObject):
                 # QLineEdit - textChanged passes text
                 self.input_field.textChanged.connect(
                     callbacks['input_changed'])
-
         if 'return_pressed' in callbacks:
             # Install event filter on parent to handle key events
             self.input_field.installEventFilter(self.parent)
-
         if 'stt_clicked' in callbacks:
-            self.stt_callback = callbacks['stt_clicked']
+            self.stt_button.clicked.connect(callbacks['stt_clicked'])
         if 'settings_clicked' in callbacks:
-            # self.settings_button.clicked.connect(callbacks['settings_clicked'])
-            self.settings_button_callback = callbacks['settings_clicked']
+            self.settings_button.clicked.connect(callbacks['settings_clicked'])
         if 'copy_clicked' in callbacks:
             self.copy_button.clicked.connect(callbacks['copy_clicked'])
-        # Store animation callbacks
         if 'start_thinking_animation' in callbacks:
             self.animation_callbacks['start_thinking'] = callbacks['start_thinking_animation']
         if 'stop_thinking_animation' in callbacks:
@@ -99,8 +78,7 @@ class UIManager(QObject):
         if 'is_currenlty_expanded' in callbacks:
             self.state_manager_callbacks['is_currenlty_expanded'] = callbacks['is_currenlty_expanded']
 
-        self.multiline_toggle_button.clicked.connect(
-            self._handle_multiline_toggle_click)
+        self.multiline_toggle_button.clicked.connect(self._toggle_input_type)
 
 #   ##########################################################################################
 #       UI Functions
@@ -183,10 +161,10 @@ class UIManager(QObject):
     def handle_multiline_resize(self):
         """Handle resizing of multiline input field and window based on content."""
         self.logger.debug("Starting multiline resize handling")
-        
+
         if not self.input_type_is_multiline or not hasattr(self.input_field, 'document'):
-            self.logger.debug("Skipping resize: input_type_is_multiline=%s, has_document=%s", 
-                            self.input_type_is_multiline, hasattr(self.input_field, 'document'))
+            self.logger.debug("Skipping resize: input_type_is_multiline=%s, has_document=%s",
+                              self.input_type_is_multiline, hasattr(self.input_field, 'document'))
             return
 
         try:
@@ -209,15 +187,15 @@ class UIManager(QObject):
             while block.isValid():
                 block_count += 1
                 block_layout = block.layout()
-                
+
                 if block_layout:
                     # Count line breaks within this block (wrapped lines)
                     line_count_in_block = block_layout.lineCount()
                     # At least 1 line per block
                     lines_added = max(1, line_count_in_block)
                     total_visual_lines += lines_added
-                    self.logger.debug("Block %d: layout lines=%d, added=%d", 
-                                    block_count, line_count_in_block, lines_added)
+                    self.logger.debug("Block %d: layout lines=%d, added=%d",
+                                      block_count, line_count_in_block, lines_added)
                 else:
                     # Fallback: estimate wrapped lines based on text length and width
                     block_text = block.text()
@@ -227,88 +205,109 @@ class UIManager(QObject):
                     else:
                         try:
                             font_metrics = self.input_field.fontMetrics()
-                            text_width_pixels = font_metrics.horizontalAdvance(block_text)
-                            estimated_lines = max(1, (text_width_pixels // max(1, text_width)) + 1)
+                            text_width_pixels = font_metrics.horizontalAdvance(
+                                block_text)
+                            estimated_lines = max(
+                                1, (text_width_pixels // max(1, text_width)) + 1)
                             total_visual_lines += estimated_lines
-                            self.logger.debug("Block %d: fallback estimation - text_width_pixels=%d, estimated_lines=%d", 
-                                            block_count, text_width_pixels, estimated_lines)
+                            self.logger.debug("Block %d: fallback estimation - text_width_pixels=%d, estimated_lines=%d",
+                                              block_count, text_width_pixels, estimated_lines)
                         except Exception as e:
-                            self.logger.error("Error calculating fallback line estimation for block %d: %s", block_count, e)
+                            self.logger.error(
+                                "Error calculating fallback line estimation for block %d: %s", block_count, e)
                             total_visual_lines += 1  # Safe fallback
-                            
+
                 block = block.next()
 
-            self.logger.debug("Processed %d blocks, total visual lines: %d", block_count, total_visual_lines)
+            self.logger.debug(
+                "Processed %d blocks, total visual lines: %d", block_count, total_visual_lines)
 
             # Ensure at least 1 line
             line_count = max(1, total_visual_lines)
-            new_input_height_cal = (line_count * InputSettings.LINE_HEIGHT) + InputSettings.BASE_PADDING
-            new_input_height = min(new_input_height_cal, InputSettings.MAX_HEIGHT)
-            
-            self.logger.debug("Input height calculation: lines=%d, calculated=%d, final=%d (max=%d)", 
-                            line_count, new_input_height_cal, new_input_height, InputSettings.MAX_HEIGHT)
+            new_input_height_cal = (
+                line_count * InputSettings.LINE_HEIGHT) + InputSettings.BASE_PADDING
+            new_input_height = min(new_input_height_cal,
+                                   InputSettings.MAX_HEIGHT)
+
+            self.logger.debug("Input height calculation: lines=%d, calculated=%d, final=%d (max=%d)",
+                              line_count, new_input_height_cal, new_input_height, InputSettings.MAX_HEIGHT)
 
             # Update input field height
             self.input_field.setMinimumHeight(new_input_height)
             self.input_field.setMaximumHeight(new_input_height)
-            self.logger.debug("Updated input field height to: %d", new_input_height)
+            self.logger.debug(
+                "Updated input field height to: %d", new_input_height)
 
             is_currently_window_expanded = False
             if 'is_currenlty_expanded' in self.state_manager_callbacks:
                 try:
-                    is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded']()
-                    self.logger.debug("Window expansion state: %s", is_currently_window_expanded)
+                    is_currently_window_expanded = self.state_manager_callbacks['is_currenlty_expanded'](
+                    )
+                    self.logger.debug("Window expansion state: %s",
+                                      is_currently_window_expanded)
                 except Exception as e:
-                    self.logger.error("Error checking window expansion state: %s", e)
+                    self.logger.error(
+                        "Error checking window expansion state: %s", e)
 
             # Calculate new window height
             if self.original_window_height and not is_currently_window_expanded:
-                self.logger.debug("Calculating window resize - original_height=%d", self.original_window_height)
-                
+                self.logger.debug(
+                    "Calculating window resize - original_height=%d", self.original_window_height)
+
                 # Base window expansion on number of lines beyond the first line
                 extra_lines = max(0, line_count - 1)
                 window_height_increase = extra_lines * InputSettings.LINE_HEIGHT
                 new_window_height = self.original_window_height + window_height_increase
 
-                self.logger.debug("Window height calculation: extra_lines=%d, increase=%d, new_height=%d", 
-                                extra_lines, window_height_increase, new_window_height)
+                self.logger.debug("Window height calculation: extra_lines=%d, increase=%d, new_height=%d",
+                                  extra_lines, window_height_increase, new_window_height)
 
                 # Ensure reasonable bounds
                 min_height = self.min_window_height
                 max_height = min_height + 300  # Allow substantial expansion
-                new_window_height = max(min_height, min(new_window_height, max_height))
-                
-                self.logger.debug("Window height bounds: min=%d, max=%d, bounded_height=%d", 
-                                min_height, max_height, new_window_height)
+                new_window_height = max(min_height, min(
+                    new_window_height, max_height))
+
+                self.logger.debug("Window height bounds: min=%d, max=%d, bounded_height=%d",
+                                  min_height, max_height, new_window_height)
 
                 # Only resize window if height actually changed
                 current_window_height = self.parent.height()
-                height_difference = abs(new_window_height - current_window_height)
-                
+                height_difference = abs(
+                    new_window_height - current_window_height)
+
                 if height_difference > 5:  # 5px tolerance
-                    self.logger.debug("Resizing window: %d -> %d (difference: %d, lines: %d)", 
-                                    current_window_height, new_window_height, height_difference, line_count)
+                    self.logger.debug("Resizing window: %d -> %d (difference: %d, lines: %d)",
+                                      current_window_height, new_window_height, height_difference, line_count)
                     try:
-                        self.parent.animate_resize(self.parent.width(), new_window_height, fast=True)
-                        self.logger.debug("Window resize animation started successfully")
+                        self.parent.animate_resize(
+                            self.parent.width(), new_window_height, fast=True)
+                        self.logger.debug(
+                            "Window resize animation started successfully")
                     except Exception as e:
-                        self.logger.error("Error during window resize animation: %s", e)
+                        self.logger.error(
+                            "Error during window resize animation: %s", e)
                 else:
-                    self.logger.debug("Skipping window resize - difference too small: %d pixels", height_difference)
+                    self.logger.debug(
+                        "Skipping window resize - difference too small: %d pixels", height_difference)
             else:
                 if not self.original_window_height:
-                    self.logger.debug("Skipping window resize - no original_window_height set")
+                    self.logger.debug(
+                        "Skipping window resize - no original_window_height set")
                 if is_currently_window_expanded:
-                    self.logger.debug("Skipping window resize - window is currently expanded")
+                    self.logger.debug(
+                        "Skipping window resize - window is currently expanded")
 
             if self.response_area.isVisible():
                 self.logger.debug("Scheduling copy button positioning")
                 QTimer.singleShot(10, self.position_copy_button)
             else:
-                self.logger.debug("Response area not visible, skipping copy button positioning")
+                self.logger.debug(
+                    "Response area not visible, skipping copy button positioning")
 
         except Exception as e:
-            self.logger.error("Unexpected error in handle_multiline_resize: %s", e, exc_info=True)
+            self.logger.error(
+                "Unexpected error in handle_multiline_resize: %s", e, exc_info=True)
 
     def is_multiline_input(self):
         return self.input_type_is_multiline
@@ -437,7 +436,6 @@ class UIManager(QObject):
         self.stt_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
         input_layout.addWidget(self.stt_button)
-        self.stt_button.clicked.connect(self._handle_stt_button_click)
 
         # Settings button
         self.settings_button = QPushButton()
@@ -446,9 +444,45 @@ class UIManager(QObject):
         self.settings_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
         input_layout.addWidget(self.settings_button)
-        self.settings_button.clicked.connect(self._handle_settings_button_click)
 
         container_layout.addLayout(input_layout)
+
+    def _disconnect_all_signals(self):
+        """Disconnect all signals before reconnecting"""
+        try:
+            # Disconnect input field signals safely
+            if hasattr(self.input_field, 'textChanged'):
+                try:
+                    self.input_field.textChanged.disconnect()
+                except TypeError:
+                    pass  # No connections to disconnect
+
+            # Disconnect button signals safely
+            if hasattr(self.stt_button, 'clicked'):
+                try:
+                    self.stt_button.clicked.disconnect()
+                except TypeError:
+                    pass
+
+            if hasattr(self.settings_button, 'clicked'):
+                try:
+                    self.settings_button.clicked.disconnect()
+                except TypeError:
+                    pass
+
+            if hasattr(self.copy_button, 'clicked'):
+                try:
+                    self.copy_button.clicked.disconnect()
+                except TypeError:
+                    pass
+
+            if hasattr(self.multiline_toggle_button, 'clicked'):
+                try:
+                    self.multiline_toggle_button.clicked.disconnect()
+                except TypeError:
+                    pass
+        except Exception as e:
+            self.logger.error(f"Error disconnecting signals: {e}")
 
     def _create_input_field(self):
         """Create appropriate input field based on multiline setting."""
@@ -460,7 +494,7 @@ class UIManager(QObject):
 
             # Set initial height to single line equivalent
             font_metrics = self.input_field.fontMetrics()
-            single_line_height = font_metrics.height()  # 30px for padding
+            single_line_height = font_metrics.height()
 
             # Store original heights
             self.original_input_height = single_line_height
@@ -470,7 +504,6 @@ class UIManager(QObject):
             self.input_field.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
             self.input_field.setHorizontalScrollBarPolicy(
                 Qt.ScrollBarAlwaysOff)
-
 
         else:
             # Single-line input
@@ -553,23 +586,26 @@ class UIManager(QObject):
         if self.response_area.isVisible():
             response_pos = self.response_area.pos()
             response_geometry = self.response_area.geometry()
-            
-            self.logger.debug(f"Response area position: {response_pos}, geometry: {response_geometry}")
+
+            self.logger.debug(
+                f"Response area position: {response_pos}, geometry: {response_geometry}")
 
             button_x = (response_pos.x() + response_geometry.width() -
                         self.copy_button.width() - ElementSize.SCROLLBAR_SIZE -
                         ElementSize.COPY_BUTTON_RIGHT_MARGIN)
             button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
-            
-            self.logger.debug(f"Calculated copy button position: x={button_x}, y={button_y}")
+
+            self.logger.debug(
+                f"Calculated copy button position: x={button_x}, y={button_y}")
 
             self.copy_button.move(button_x, button_y)
             self.copy_button.raise_()
             self.copy_button.setVisible(True)
-            
+
             self.logger.debug("Copy button positioned and made visible")
         else:
-            self.logger.debug("Response area not visible, copy button not positioned")
+            self.logger.debug(
+                "Response area not visible, copy button not positioned")
 
     def update_stt_button_appearance(self, state):
         """Update STT button appearance."""
@@ -613,49 +649,6 @@ class UIManager(QObject):
         self.copy_button.setVisible(False)
         self.copy_button.setParent(self.main_container)
         self.copy_button.raise_()
-
-    def _handle_copy_button_click(self):
-        """Handle copy button click with debouncing."""
-        # Reset timer and start new one
-        self.copy_button_debounce_timer.stop()
-        self.copy_button_debounce_timer.start(150)  # 150ms debounce
-
-    def _handle_copy_button_debounced(self):
-        """Execute the actual copy callback after debounce."""
-        if hasattr(self, 'copy_callback') and self.copy_callback:
-            self.copy_callback()
-
-    def _handle_multiline_toggle_click(self):
-        """Handle multiline toggle with debouncing."""
-        # Reset timer and start new one
-        self.multiline_toggle_debounce_timer.stop()
-        self.multiline_toggle_debounce_timer.start(20)
-
-    def _handle_multiline_toggle_debounced(self):
-        """Execute the actual multiline toggle callback after debounce."""
-        self._toggle_input_type()
-
-    def _handle_stt_button_click(self):
-        """Handle STT button click with debouncing."""
-        # Reset timer and start new one
-        self.stt_button_debounce_timer.stop()
-        self.stt_button_debounce_timer.start(50)  # 200ms debounce
-
-    def _handle_stt_button_debounced(self):
-        """Execute the actual STT callback after debounce."""
-        if hasattr(self, 'stt_callback') and self.stt_callback:
-            self.stt_callback()
-
-    def _handle_settings_button_click(self):
-        """Handle STT button click with debouncing."""
-        # Reset timer and start new one
-        self.settings_button_debounce_timer.stop()
-        self.settings_button_debounce_timer.start(50)
-    
-    def _handle_settings_button_debounced(self):
-        """Handle settings button click after debounce delay."""
-        if hasattr(self, 'settings_button_callback'):
-            self.settings_button_callback()
 
 #   ##########################################################################################
 #       State Functions
