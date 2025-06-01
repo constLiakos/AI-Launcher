@@ -2,7 +2,7 @@
 import logging
 from pathlib import Path
 from PyQt5.QtWidgets import (
-    QMainWindow, QApplication, QAction, QShortcut)
+    QMainWindow, QApplication, QAction, QShortcut, QLabel)
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QIcon, QKeySequence
 
@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 class Launcher(QMainWindow):
     def __init__(self, logdir: str, debug=False):
         super().__init__()
+        self.setMouseTracking(True)
         self._setup_logging(logdir, debug)
         self._initialize_core_components()
         self._initialize_managers()
@@ -38,7 +39,6 @@ class Launcher(QMainWindow):
         self.stt_configure()
         self.update_stt_button_visibility()
         self.apply_modern_style()
-        self.window_manager.restore_geometry()
         self.tray_manager.setup_system_tray()
         # Flag to track if app should really quit
         self.should_quit = False
@@ -716,7 +716,7 @@ class Launcher(QMainWindow):
         """Clean up after mouse release."""
         self.window_manager.handle_mouse_release(event)
 
-    def lmoveEvent(self, event):
+    def moveEvent(self, event):
         """Handle any window move event."""
         super().moveEvent(event)
         self.window_manager.handle_move_event(event)
