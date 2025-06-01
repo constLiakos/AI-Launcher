@@ -2,6 +2,7 @@ import logging
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                              QLineEdit, QPushButton, QFormLayout, QCheckBox, QWidget)
 from PyQt5.QtCore import Qt, pyqtSignal, QTimer
+from pynput.keyboard import HotKey
 
 from managers.style_manager import StyleManager
 from utils.constants import STTDialogSize, STT
@@ -30,6 +31,10 @@ class STTSettingsDialog(QDialog):
         layout.setSpacing(10)
 
         layout.addWidget(self._create_title_label())
+
+        # Add error message widget (initially hidden)
+        self.error_message = self._create_error_message()
+        layout.addWidget(self.error_message)
 
         self.form_widget = QWidget()
         self.form_widget.setObjectName("sttFormWidget")
@@ -195,7 +200,19 @@ class STTSettingsDialog(QDialog):
             if stt_enabled:
                 self.config.set('stt_api_base', stt_api_base)
                 self.config.set('stt_model', stt_model)
-                self.config.set('stt_hotkey', stt_hotkey)
+
+                if stt_hotkey:
+                    try:
+                        # Test if hotkey string is valid by attempting to create a HotKey object
+                        test_hotkey = HotKey.parse(stt_hotkey)
+                        self.config.set('stt_hotkey', stt_hotkey)
+                        self.logger.debug(f"Hotkey saved: {stt_hotkey}")
+                    except ValueError as e:
+                        self.logger.error(f"Invalid hotkey format '{stt_hotkey}': {e}")
+                        self._show_error_message(f"Invalid hotkey format. Please use format like 'ctrl+shift+f' or '<ctrl>+<shift>+f'")
+                        return
+                else:
+                    self.logger.debug("Empty hotkey, using default")
 
                 try:
                     timeout = int(self.stt_request_timeout_input.text())
@@ -268,3 +285,37 @@ class STTSettingsDialog(QDialog):
 
         # Hide after the specified duration
         QTimer.singleShot(duration, message_label.hide)
+
+
+    def _create_error_message(self):
+        """Create error message widget."""
+        error_widget = QLabel()
+        error_widget.setObjectName("errorMessage")
+        error_widget.setAlignment(Qt.AlignCenter)
+        error_widget.setWordWrap(True)
+        error_widget.hide()  # Initially hidden
+        error_widget.setMinimumHeight(0)
+        error_widget.setMaximumHeight(60)
+        error_widget.setContentsMargins(10, 5, 10, 5)
+        
+        # Apply warning style
+        warning_style = """
+            QLabel#errorMessage {
+                background-color: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 5px;
+                color: #856404;
+                font-weight: bold;
+                padding: 8px 12px;
+                margin: 5px 0px;
+            }
+        """
+        error_widget.setStyleSheet(warning_style)
+        
+        return error_widget
+    
+    def _show_error_message(self, message):
+        """Show error message in the dialog."""
+        self.error_message.setText(message)
+        self.error_message.show()
+        QTimer.singleShot(5000, self.error_message.hide)

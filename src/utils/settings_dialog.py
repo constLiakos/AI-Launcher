@@ -1,8 +1,9 @@
 import logging
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                             QLineEdit, QPushButton, QFormLayout, QFrame, QCheckBox, QComboBox, QTextEdit, QSizePolicy, QWidget, QScrollArea)
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from managers.style_manager import StyleManager
+from pynput.keyboard import HotKey
 from utils.about_dialog import AboutDialog
 from utils.constants import LLM, Conversation, Hotkey, SettingsDialogSize, Text, Theme, Timing
 from utils.stt_settings_dialog import STTSettingsDialog
@@ -40,6 +41,10 @@ class SettingsDialog(QDialog):
         
         # Add components
         layout.addWidget(self._create_title_label())
+
+        # Add error message widget (initially hidden)
+        self.error_message = self._create_error_message()
+        layout.addWidget(self.error_message)
         
         scroll_area = self._create_scroll_area()
         # Catchy this one, set transparent background
@@ -51,6 +56,39 @@ class SettingsDialog(QDialog):
         
         self.setLayout(layout)
         self.logger.debug("SettingsDialog UI setup completed")
+
+    def _create_error_message(self):
+        """Create error message widget."""
+        error_widget = QLabel()
+        error_widget.setObjectName("errorMessage")
+        error_widget.setAlignment(Qt.AlignCenter)
+        error_widget.setWordWrap(True)
+        error_widget.hide()  # Initially hidden
+        error_widget.setMinimumHeight(0)
+        error_widget.setMaximumHeight(60)
+        error_widget.setContentsMargins(10, 5, 10, 5)
+        
+        # Apply warning style
+        warning_style = """
+            QLabel#errorMessage {
+                background-color: #fff3cd;
+                border: 1px solid #ffeaa7;
+                border-radius: 5px;
+                color: #856404;
+                font-weight: bold;
+                padding: 8px 12px;
+                margin: 5px 0px;
+            }
+        """
+        error_widget.setStyleSheet(warning_style)
+        
+        return error_widget
+    
+    def _show_error_message(self, message):
+        """Show error message in the dialog."""
+        self.error_message.setText(message)
+        self.error_message.show()
+        QTimer.singleShot(5000, self.error_message.hide)
 
     def _setup_window(self):
         """Configure window properties."""
@@ -375,11 +413,18 @@ class SettingsDialog(QDialog):
             self.logger.error(f"Invalid delay value '{self.delay_input.text()}': {e}, using default")
             self.config.set('request_delay', 2.0)
             
-        # Save hotkey
+        # Save hotkey with validation
         hotkey_text = self.hotkey_input.text().strip()
         if hotkey_text:
-            self.config.set('hotkey', hotkey_text)
-            self.logger.debug(f"Hotkey saved: {hotkey_text}")
+            try:
+                # Test if hotkey string is valid by attempting to create a HotKey object
+                test_hotkey = HotKey.parse(hotkey_text)
+                self.config.set('hotkey', hotkey_text)
+                self.logger.debug(f"Hotkey saved: {hotkey_text}")
+            except ValueError as e:
+                self.logger.error(f"Invalid hotkey format '{hotkey_text}': {e}")
+                self._show_error_message(f"Invalid hotkey format. Please use format like 'ctrl+shift+f' or '<ctrl>+<shift>+f'")
+                return  # Don't save settings and keep dialog open
         else:
             self.config.set('hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW)
             self.logger.debug("Empty hotkey, using default")
