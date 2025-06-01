@@ -14,7 +14,7 @@ class WindowManager(QObject):
     
     def __init__(self, logger, config):
         super().__init__()
-        self.logger = logger
+        self.logger = logger.getChild('window_manager')
         self.config = config
         self._window = None
         self._animation = None
@@ -39,31 +39,25 @@ class WindowManager(QObject):
         """Set the window to manage - called after window creation"""
         self._window = window
         self.logger.debug("WindowManager: Window reference set")
-        
+    
     def setup_window_properties(self):
         """Setup window properties - self-contained"""
         if not self._window:
             self.logger.warning("WindowManager: No window set for setup")
             return
-            
         self.logger.debug("WindowManager: Setting up window properties")
-        
         # Set window flags
         self._window.setWindowFlags(
             Qt.FramelessWindowHint | 
             Qt.WindowStaysOnTopHint | 
             Qt.Tool
-        )
-        
+        )        
         # Set attributes
         self._window.setAttribute(Qt.WA_TranslucentBackground)
-        
         # Set minimum size - using constants
         self._window.setMinimumSize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT)
-        
         # Restore saved geometry
         self.restore_geometry()
-        
         self.logger.debug("WindowManager: Window properties setup complete")
         
     def show_window(self):
@@ -198,12 +192,15 @@ class WindowManager(QObject):
             
     def handle_mouse_move(self, event):
         """Handle mouse move for dragging/resizing"""
+        self.logger.debug("handle_mouse_move")
         if not self._window:
+            self.logger.debug("Mouse move ignored - no window available")
             return
             
         if event.buttons() == Qt.LeftButton:
             if self.resize_direction and self.resize_start_pos:
                 # Handle resizing
+                self.logger.debug(f"Handling resize in direction: {self.resize_direction}")
                 self.handle_resize(event.globalPos())
             elif hasattr(self, 'drag_position') and self.drag_position is not None:
                 # Handle dragging
@@ -213,10 +210,15 @@ class WindowManager(QObject):
                 # Debounce position saving
                 self.position_save_timer.stop()
                 self.position_save_timer.start(500)
+                self.logger.debug("Position save timer restarted (500ms)")
+            else:
+                self.logger.debug("Left button pressed but no active drag or resize operation")
             event.accept()
         else:
             # Update cursor when hovering
             direction = self.get_resize_direction(event.pos())
+            if direction:
+                self.logger.debug(f"Cursor updated for resize direction: {direction}")
             self.update_cursor(direction)
             
     def handle_resize(self, global_pos):
@@ -284,8 +286,8 @@ class WindowManager(QObject):
         # Debounce position saving for any move event - using constant
         if hasattr(self, 'position_save_timer'):
             self.position_save_timer.stop()
-            self.position_save_timer.start(2000)  # This could also be a constant if you want
-            self.logger.debug("Position save timer restarted (2sec debounce)")
+            self.position_save_timer.start(1000) 
+            self.logger.debug("Position save timer restarted (50ms debounce)")
 
     def restore_geometry(self):
         """Restore window position from config."""
