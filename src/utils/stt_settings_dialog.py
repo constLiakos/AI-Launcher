@@ -64,6 +64,15 @@ class STTSettingsDialog(QDialog):
         self.stt_model_input.setEnabled(enabled)
         self.stt_hotkey_input.setEnabled(enabled)
         self.stt_request_timeout_input.setEnabled(enabled)
+        
+        # Also enable/disable the hotkey recorder button
+        hotkey_container = self.stt_hotkey_input.parent()
+        if hotkey_container:
+            for child in hotkey_container.children():
+                if isinstance(child, QPushButton) and child.objectName() == "hotkeyRecorderBTN":
+                    child.setEnabled(enabled)
+                    break
+        
         self.logger.debug(f"STT fields enabled state: {enabled}")
 
 #   ##########################################################################################
@@ -84,9 +93,6 @@ class STTSettingsDialog(QDialog):
         save_btn.setObjectName("saveButton")
         save_btn.setMinimumHeight(STTDialogSize.BUTTON_MIN_HEIGHT)
         save_btn.clicked.connect(self.save_stt_settings)
-
-        hotkey_recorder_btn = self._create_hotkey_recoreder_button()
-        button_layout.addWidget(hotkey_recorder_btn)
 
         button_layout.addStretch()
         button_layout.addWidget(cancel_btn)
@@ -161,12 +167,9 @@ class STTSettingsDialog(QDialog):
                 'attr_name': 'stt_model_input'
             },
             {
-                'widget': self._create_input_field(
-                    STT.DEFAULT_HOTKEY if hasattr(STT, 'DEFAULT_HOTKEY') else '', 
-                    "Enter STT Hotkey (e.g., Ctrl+Shift+S)"
-                ),
+                'widget': self._create_stt_hotkey_field(),
                 'label': "STT Activation Hotkey:",
-                'attr_name': 'stt_hotkey_input'
+                'attr_name': None
             },
             {
                 'widget': self._create_input_field(
@@ -181,7 +184,8 @@ class STTSettingsDialog(QDialog):
         # Add all fields to form
         for config in field_configs:
             widget = config['widget']
-            setattr(self, config['attr_name'], widget)
+            if config['attr_name']:
+                setattr(self, config['attr_name'], widget)
             
             if config['label'] is None:
                 form_layout.addRow(widget)
@@ -191,6 +195,37 @@ class STTSettingsDialog(QDialog):
                 form_layout.addRow(label, widget)
 
         return form_layout
+    
+    def _create_stt_hotkey_field(self):
+        """Create STT hotkey input field with recorder button."""
+        # Create container widget for hotkey input and button
+        hotkey_container = QWidget()
+        hotkey_layout = QHBoxLayout(hotkey_container)
+        hotkey_layout.setContentsMargins(0, 0, 0, 0)
+        hotkey_layout.setSpacing(8)
+        
+        # Create the input field
+        stt_hotkey_input = self._create_input_field(
+            STT.DEFAULT_HOTKEY if hasattr(STT, 'DEFAULT_HOTKEY') else '',
+            "Enter STT Hotkey (e.g., Ctrl+Shift+S)"
+        )
+        
+        # Create the recorder button
+        hotkey_recorder_btn = QPushButton("Record")
+        hotkey_recorder_btn.setObjectName("hotkeyRecorderBTN")
+        hotkey_recorder_btn.setMinimumHeight(35)
+        hotkey_recorder_btn.setMaximumWidth(80)
+        hotkey_recorder_btn.clicked.connect(self._on_hotkey_recorder_clicked)
+        
+        # Add to layout
+        hotkey_layout.addWidget(stt_hotkey_input)
+        hotkey_layout.addWidget(hotkey_recorder_btn)
+        
+        # Store reference to input field for later access
+        self.stt_hotkey_input = stt_hotkey_input
+        self.hotkey_recorder_btn = hotkey_recorder_btn
+        
+        return hotkey_container
     
     def _create_enable_stt_checkbox(self):
         """Create the enable STT checkbox."""
@@ -203,14 +238,6 @@ class STTSettingsDialog(QDialog):
 #   ##########################################################################################
 #       Hotkey Recorder Functions
 #   ##########################################################################################
-
-    def _create_hotkey_recoreder_button(self):
-        hotkey_recorder_btn = QPushButton(Text.SETTINGS_DIALOG_HOTKEY_BUTTON_NAME)
-        hotkey_recorder_btn.setObjectName("hotkeyRecorderBTN")
-        hotkey_recorder_btn.setMinimumHeight(STTDialogSize.BUTTON_MIN_HEIGHT)
-        hotkey_recorder_btn.clicked.connect(self._on_hotkey_recorder_clicked)
-        return hotkey_recorder_btn
-
 
     def _on_hotkey_recorder_clicked(self):
         """Handle hotkey recorder button click."""
@@ -344,6 +371,7 @@ class STTSettingsDialog(QDialog):
         # Apply style to the form widget background if needed
         form_widget_style = self.style_manager.get_widget_style()
         self.form_widget.setStyleSheet(form_widget_style)
+        self.hotkey_recorder_btn.setStyleSheet(self.style_manager.button_styles.get_hotkeyRecorderBTN_style())
 
     def showEvent(self, event):
         super().showEvent(event)
