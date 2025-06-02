@@ -609,6 +609,21 @@ class StyleManager:
                 padding: 8px 16px;
             }}
             """
+        def get_hotkeyRecorderBTN_style(self):
+            colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("get_hotkeyRecorderBTN_style")
+            return f"""
+            #hotkeyRecorderBTN {{
+                background: {colors['button_stt_recording_bg']};
+                color: {colors['button_secondary_text']};
+                border: none
+            }}
+            
+            #hotkeyRecorderBTN:hover {{
+                background: {colors['button_stt_recording_hover_bg']};
+                color: {colors['button_secondary_text']};
+            }}
+            """
         
     def get_emoji_font(self):
         """Get emoji-compatible font for use in other components."""

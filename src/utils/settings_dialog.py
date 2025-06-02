@@ -215,11 +215,34 @@ class SettingsDialog(QDialog):
         )
 
     def _create_hotkey_field(self):
-        """Create hotkey input field."""
-        return self._create_input_field(
+        """Create hotkey input field with recorder button."""
+        # Create container widget for hotkey input and button
+        hotkey_container = QWidget()
+        hotkey_layout = QHBoxLayout(hotkey_container)
+        hotkey_layout.setContentsMargins(0, 0, 0, 0)
+        hotkey_layout.setSpacing(8)
+        
+        # Create the input field
+        hotkey_input = self._create_input_field(
             'hotkey', Hotkey.DEFAULT_HOTKEY_TOGGLE_MINIMIZE_WINDOW,
             Text.SETTINGS_DIALOGUE_HOTKEY_TOGGLE_MINIMIZE_WINDOW_PLACEHOLDER
         )
+        
+        # Create the recorder button
+        hotkey_recorder_btn = QPushButton("Record")
+        hotkey_recorder_btn.setObjectName("hotkeyRecorderBTN")
+        hotkey_recorder_btn.setMinimumHeight(35)
+        hotkey_recorder_btn.setMaximumWidth(80)
+        hotkey_recorder_btn.clicked.connect(self._on_hotkey_recorder_clicked)
+        
+        # Add to layout
+        hotkey_layout.addWidget(hotkey_input)
+        hotkey_layout.addWidget(hotkey_recorder_btn)
+        
+        # Store reference to input field for later access
+        self._hotkey_input_field = hotkey_input
+        
+        return hotkey_container
 
     def _create_checkbox_field(self, config_key, default_value, text, object_name="settingsCheckBox"):
         """Create a standard checkbox field."""
@@ -362,6 +385,7 @@ class SettingsDialog(QDialog):
         # Apply specialized styles
         self.system_prompt_input.setStyleSheet(self.style_manager.get_settings_textarea_style())
         self.theme_combo.setStyleSheet(self.style_manager.get_settings_combobox_style())
+        self.hotkey_input.setStyleSheet(input_style + self.style_manager.button_styles.get_hotkeyRecorderBTN_style())
 
         form_widget_style = self.style_manager.get_widget_style()
         self.form_widget.setStyleSheet(form_widget_style)
@@ -413,7 +437,8 @@ class SettingsDialog(QDialog):
             self.config.set('request_delay', 2.0)
             
         # Save hotkey with validation
-        hotkey_text = self.hotkey_input.text().strip()
+        hotkey_text = self._hotkey_input_field.text().strip()
+
         if hotkey_text:
             try:
                 # Test if hotkey string is valid by attempting to create a HotKey object
@@ -482,9 +507,6 @@ class SettingsDialog(QDialog):
         about_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
         about_btn.clicked.connect(self.show_about_dialog)
 
-        hotkey_recorder_btn = self._create_hotkey_recoreder_button()
-        button_layout.addWidget(hotkey_recorder_btn)
-
         # STT Settings button (middle-left)
         stt_settings_btn = QPushButton("STT Settings")
         stt_settings_btn.setObjectName("sttSettingsButton")
@@ -527,7 +549,7 @@ class SettingsDialog(QDialog):
         from utils.hotkey_recorder import HotkeyRecorderDialog
         
         # Get current hotkey from config or input field
-        current_hotkey = self.config.get('hotkey', '')  # or get from UI field
+        current_hotkey = self.config.get('hotkey', '')
         
         dialog = HotkeyRecorderDialog(
             parent=self,
@@ -538,7 +560,7 @@ class SettingsDialog(QDialog):
         
         def on_hotkey_recorded(hotkey_string):
             self.logger.debug(f"Recorded hotkey: {hotkey_string}")
-            self.hotkey_input.setText(hotkey_string)
+            self._hotkey_input_field.setText(hotkey_string)
         
         dialog.hotkey_recorded.connect(on_hotkey_recorded)
         dialog.exec_()
