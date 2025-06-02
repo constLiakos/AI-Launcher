@@ -278,7 +278,7 @@ class Theme:
 class Timing:
     """Timing constants for animations and delays"""
     # Request delays
-    DEFAULT_REQUEST_DELAY_SECONDS = 1.0
+    DEFAULT_REQUEST_DELAY_SECONDS = 1.5
 
     # Animation durations
     RESIZE_ANIMATION_DURATION = 200
