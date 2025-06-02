@@ -57,6 +57,7 @@ class StyleManager:
             'button_secondary_text': '#374151',
             'button_stt_idle_bg': "#5CA1F7",
             'button_stt_recording_bg': "#f8baba",
+            'button_stt_recording_hover_bg': "#eea2a2",
             'button_stt_hover_bg': "#4A8AE8"
         }
     
@@ -87,6 +88,7 @@ class StyleManager:
             'button_secondary_text': '#ffffff',
             'button_stt_idle_bg': "#5CA1F7",
             'button_stt_recording_bg': "#f8baba",
+            'button_stt_recording_hover_bg': "#eea2a2",
             'button_stt_hover_bg': "#4A8AE8"
         }
 
@@ -204,16 +206,25 @@ class StyleManager:
         """Get button styles for settings dialog."""
         colors = self.get_theme_colors()
         return f"""
+        QPushButton {{
+            background: {colors['button_secondary_bg']};
+            color: {colors['button_secondary_text']};
+            border: 2px solid {colors['border_normal']};
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 8px 16px;
+            min-width: 50px;
+        }}
+        QPushButton:hover {{
+            background: {colors['border_normal']};
+            color: {colors['button_secondary_text']};
+        }}
         #saveButton {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['primary']}, stop:1 #3b82f6);
+                stop:0 {colors['primary']}, stop:1 #3b82f6);  
             color: {colors['white']};
             border: none;
-            border-radius: 12px;
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: 600;
-            min-width: 100px;
         }}
         
         #saveButton:hover {{
@@ -230,15 +241,20 @@ class StyleManager:
             background: {colors['button_secondary_bg']};
             color: {colors['button_secondary_text']};
             border: 2px solid {colors['border_normal']};
-            border-radius: 12px;
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: 600;
-            min-width: 100px;
         }}
         
         #cancelButton:hover {{
             background: {colors['border_normal']};
+            color: {colors['button_secondary_text']};
+        }}
+        #hotkeyRecorderBTN {{
+            background: {colors['button_stt_recording_bg']};
+            color: {colors['button_secondary_text']};
+            border: none
+        }}
+        
+        #hotkeyRecorderBTN:hover {{
+            background: {colors['button_stt_recording_hover_bg']};
             color: {colors['button_secondary_text']};
         }}
         """
@@ -372,6 +388,7 @@ class StyleManager:
         colors = self.get_theme_colors()
         self.logger.debug("Generated main application button styles")
         return f"""
+
         #settingsButton {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 {colors['primary']}, stop:1 #3b82f6);
@@ -636,23 +653,6 @@ class StyleManager:
                 border: none;
                 border-radius: 8px;
                 padding: 8px 16px;
-            }}
-            """
-        def get_stt_settings_button(self):
-            colors = self.parent.get_theme_colors()
-            self.parent.logger.debug("Generated stt button style")
-            return f"""
-            QPushButton {{
-                background: {colors['primary']};
-                color: white;
-                border: none;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 500;
-                padding: 8px 16px;
-            }}
-            QPushButton:hover {{
-                background: #3b82f6;
             }}
             """
         

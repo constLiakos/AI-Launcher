@@ -363,12 +363,6 @@ class SettingsDialog(QDialog):
         self.system_prompt_input.setStyleSheet(self.style_manager.get_settings_textarea_style())
         self.theme_combo.setStyleSheet(self.style_manager.get_settings_combobox_style())
 
-        stt_settings_button = self.findChild(QPushButton, "sttSettingsButton")
-        if stt_settings_button:
-            button_style = self.style_manager.button_styles.get_stt_settings_button()
-            if button_style:
-                 stt_settings_button.setStyleSheet(button_style)
-
         form_widget_style = self.style_manager.get_widget_style()
         self.form_widget.setStyleSheet(form_widget_style)
 
@@ -522,7 +516,7 @@ class SettingsDialog(QDialog):
 
     def _create_hotkey_recoreder_button(self):
         hotkey_recorder_btn = QPushButton(Text.SETTINGS_DIALOG_HOTKEY_BUTTON_NAME)
-        hotkey_recorder_btn.setObjectName("mainHotkeyRecorderBTN")
+        hotkey_recorder_btn.setObjectName("hotkeyRecorderBTN")
         hotkey_recorder_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
         hotkey_recorder_btn.clicked.connect(self._on_hotkey_recorder_clicked)
         return hotkey_recorder_btn
