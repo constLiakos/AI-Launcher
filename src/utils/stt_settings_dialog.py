@@ -344,8 +344,6 @@ class STTSettingsDialog(QDialog):
                 # There is no need to reset fields, just save the enabled state
                 self.logger.debug("STT disabled; no fields reset.")
 
-        self.config.set('stt_enabled', stt_enabled)
-
         self.settings_changed.emit()
 
         self.logger.info("STT settings saved successfully")
