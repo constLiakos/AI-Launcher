@@ -521,7 +521,7 @@ class SettingsDialog(QDialog):
 #   ##########################################################################################
 
     def _create_hotkey_recoreder_button(self):
-        hotkey_recorder_btn = QPushButton("Recorder")
+        hotkey_recorder_btn = QPushButton(Text.SETTINGS_DIALOG_HOTKEY_BUTTON_NAME)
         hotkey_recorder_btn.setObjectName("mainHotkeyRecorderBTN")
         hotkey_recorder_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
         hotkey_recorder_btn.clicked.connect(self._on_hotkey_recorder_clicked)
@@ -542,13 +542,8 @@ class SettingsDialog(QDialog):
         )
         
         def on_hotkey_recorded(hotkey_string):
-            # Update your hotkey input field or config
-            # Example: self.hotkey_input.setText(hotkey_string)
-            # Or: self.config.set('hotkey', hotkey_string)
-            print(f"Recorded hotkey: {hotkey_string}")
-            # if 'hotkey_input' in self:
+            self.logger.debug(f"Recorded hotkey: {hotkey_string}")
             self.hotkey_input.setText(hotkey_string)
-            # self.hotkey_input.text()
         
         dialog.hotkey_recorded.connect(on_hotkey_recorded)
         dialog.exec_()

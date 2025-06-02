@@ -1,11 +1,11 @@
 import logging
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-                             QLineEdit, QPushButton, QFormLayout, QCheckBox, QWidget)
+                             QLineEdit, QPushButton, QFormLayout, QCheckBox, QWidget, QScrollArea, QFrame, QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from pynput.keyboard import HotKey
 
 from managers.style_manager import StyleManager
-from utils.constants import STTDialogSize, STT
+from utils.constants import STTDialogSize, STT, Text
 
 
 class STTSettingsDialog(QDialog):
@@ -38,8 +38,12 @@ class STTSettingsDialog(QDialog):
 
         self.form_widget = QWidget()
         self.form_widget.setObjectName("sttFormWidget")
-        form_layout = self._create_form_layout(self.form_widget)
-        layout.addWidget(self.form_widget)
+        # form_layout = self._create_form_layout(self.form_widget)
+        # layout.addWidget(self.form_widget)
+        scroll_area = self._create_scroll_area()
+        # Catchy this one, set transparent background
+        scroll_area.setObjectName("scroll_area1")
+        layout.addWidget(scroll_area)
 
         layout.addLayout(self._create_button_layout())
 
@@ -105,6 +109,22 @@ class STTSettingsDialog(QDialog):
         title_label.setObjectName("titleLabel")
         title_label.setAlignment(Qt.AlignCenter)
         return title_label
+    
+    def _create_scroll_area(self):
+        """Create scroll area with form layout."""
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setFrameShape(QFrame.NoFrame)
+        scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        self.form_widget = QWidget()
+        self.form_widget.setObjectName("formWidget")
+        form_layout = self._create_form_layout(self.form_widget)
+        
+        scroll_area.setWidget(self.form_widget)
+        return scroll_area
 
     def _create_form_layout(self, parent_widget):
         form_layout = QFormLayout(parent_widget)
@@ -112,58 +132,80 @@ class STTSettingsDialog(QDialog):
         form_layout.setVerticalSpacing(15)
         form_layout.setLabelAlignment(Qt.AlignLeft)
 
-        # Enable STT Checkbox
-        self.enable_stt_checkbox = QCheckBox("Enable Speech-to-Text")
-        self.enable_stt_checkbox.setObjectName("settingsCheckBox")
-        self.enable_stt_checkbox.setMinimumHeight(35)
-        self.enable_stt_checkbox.stateChanged.connect(
-            self._update_fields_enabled_state)
-        form_layout.addRow(self.enable_stt_checkbox)
+        # Define field configurations
+        field_configs = [
+            {
+                'widget': self._create_enable_stt_checkbox(),
+                'label': None,  # No label for checkbox as it has its own text
+                'attr_name': 'enable_stt_checkbox'
+            },
+            {
+                'widget': self._create_input_field('', "Enter STT API Key", is_password=True),
+                'label': "STT API Key:",
+                'attr_name': 'stt_api_key_input'
+            },
+            {
+                'widget': self._create_input_field(
+                    STT.DEFAULT_API_BASE if hasattr(STT, 'DEFAULT_API_BASE') else '', 
+                    "Enter STT API Base URL"
+                ),
+                'label': "STT API Base:",
+                'attr_name': 'stt_api_base_input'
+            },
+            {
+                'widget': self._create_input_field(
+                    STT.DEFAULT_MODEL if hasattr(STT, 'DEFAULT_MODEL') else '', 
+                    "Enter STT Model Name"
+                ),
+                'label': "STT Model:",
+                'attr_name': 'stt_model_input'
+            },
+            {
+                'widget': self._create_input_field(
+                    STT.DEFAULT_HOTKEY if hasattr(STT, 'DEFAULT_HOTKEY') else '', 
+                    "Enter STT Hotkey (e.g., Ctrl+Shift+S)"
+                ),
+                'label': "STT Activation Hotkey:",
+                'attr_name': 'stt_hotkey_input'
+            },
+            {
+                'widget': self._create_input_field(
+                    str(STT.DEFAULT_REQUEST_TIMEOUT) if hasattr(STT, 'DEFAULT_REQUEST_TIMEOUT') else '30', 
+                    "Enter request timeout in seconds"
+                ),
+                'label': "STT Request Timeout (s):",
+                'attr_name': 'stt_request_timeout_input'
+            }
+        ]
 
-        # STT API Key
-        self.stt_api_key_input = self._create_input_field(
-            '', "Enter STT API Key", is_password=True
-        )
-        form_layout.addRow(QLabel("STT API Key:"), self.stt_api_key_input)
-
-        # STT API Base
-        self.stt_api_base_input = self._create_input_field(
-            STT.DEFAULT_API_BASE if hasattr(
-                STT, 'DEFAULT_API_BASE') else '', "Enter STT API Base URL"
-        )
-        form_layout.addRow(QLabel("STT API Base:"), self.stt_api_base_input)
-
-        # STT Model Name
-        self.stt_model_input = self._create_input_field(
-            STT.DEFAULT_MODEL if hasattr(
-                STT, 'DEFAULT_MODEL') else '', "Enter STT Model Name"
-        )
-        form_layout.addRow(QLabel("STT Model:"), self.stt_model_input)
-
-        # STT Hotkey
-        self.stt_hotkey_input = self._create_input_field(
-            STT.DEFAULT_HOTKEY if hasattr(
-                STT, 'DEFAULT_HOTKEY') else '', "Enter STT Hotkey (e.g., Ctrl+Shift+S)"
-        )
-        form_layout.addRow(QLabel("STT Activation Hotkey:"),
-                           self.stt_hotkey_input)
-
-        # STT Request Timeout
-        self.stt_request_timeout_input = self._create_input_field(
-            str(STT.DEFAULT_REQUEST_TIMEOUT) if hasattr(
-                STT, 'DEFAULT_REQUEST_TIMEOUT') else '30', "Enter request timeout in seconds"
-        )
-        form_layout.addRow(QLabel("STT Request Timeout (s):"),
-                           self.stt_request_timeout_input)
+        # Add all fields to form
+        for config in field_configs:
+            widget = config['widget']
+            setattr(self, config['attr_name'], widget)
+            
+            if config['label'] is None:
+                # For checkbox without separate label
+                form_layout.addRow(widget)
+            else:
+                label = QLabel(config['label'])
+                form_layout.addRow(label, widget)
 
         return form_layout
+    
+    def _create_enable_stt_checkbox(self):
+        """Create the enable STT checkbox."""
+        checkbox = QCheckBox("Enable Speech-to-Text")
+        checkbox.setObjectName("settingsCheckBox")
+        checkbox.setMinimumHeight(35)
+        checkbox.stateChanged.connect(self._update_fields_enabled_state)
+        return checkbox
 
 #   ##########################################################################################
 #       Hotkey Recorder Functions
 #   ##########################################################################################
 
     def _create_hotkey_recoreder_button(self):
-        hotkey_recorder_btn = QPushButton("Recorder")
+        hotkey_recorder_btn = QPushButton(Text.SETTINGS_DIALOG_HOTKEY_BUTTON_NAME)
         hotkey_recorder_btn.setObjectName("mainHotkeyRecorderBTN")
         hotkey_recorder_btn.setMinimumHeight(STTDialogSize.BUTTON_MIN_HEIGHT)
         hotkey_recorder_btn.clicked.connect(self._on_hotkey_recorder_clicked)
@@ -184,10 +226,7 @@ class STTSettingsDialog(QDialog):
         )
         
         def on_hotkey_recorded(hotkey_string):
-            # Update your hotkey input field or config
-            # Example: self.hotkey_input.setText(hotkey_string)
-            # Or: self.config.set('hotkey', hotkey_string)
-            print(f"Recorded hotkey: {hotkey_string}")
+            self.logger.debug(f"Recorded hotkey: {hotkey_string}")
             self.stt_hotkey_input.setText(hotkey_string)
         
         dialog.hotkey_recorded.connect(on_hotkey_recorded)
