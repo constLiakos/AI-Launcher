@@ -585,7 +585,6 @@ class Launcher(QMainWindow):
         logger.info("STT Settings Changed")
         self.stt_configure()
         self.update_stt_button_visibility()
-        self.stt_api_client = SttApiClient(logger, self.config)
 
     def open_settings(self):
         """Open the settings dialog."""
