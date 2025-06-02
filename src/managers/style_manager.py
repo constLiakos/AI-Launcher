@@ -37,7 +37,8 @@ class StyleManager:
             'secondary': '#8B5CF6',
             'success': '#22C55E',
             'error': '#EF4444',
-            'warning': '#F97316',
+            'warning': '#856404',
+            'warning_bg': '#fff3cd',
             'pink': '#EC4899',
             'white': '#FFFFFF',
             'dark': '#2D3142',
@@ -54,6 +55,7 @@ class StyleManager:
             'dialog_bg_end': '#e2e8f0',
             'response_bg': 'rgba(248, 250, 252, 0.9)',
             'button_secondary_bg': '#f3f4f6',
+            'button_secondary_hover_bg': '#d1d5db',
             'button_secondary_text': '#374151',
             'button_stt_idle_bg': "#5CA1F7",
             'button_stt_recording_bg': "#f8baba",
@@ -69,6 +71,7 @@ class StyleManager:
             'success': '#22C55E',
             'error': '#EF4444',
             'warning': '#F97316',
+            'warning_bg': '#fff3cd',
             'pink': '#EC4899',
             'white': '#FFFFFF',
             'dark': '#2D3142',
@@ -85,6 +88,7 @@ class StyleManager:
             'dialog_bg_end': '#1a1d29',
             'response_bg': 'rgba(55, 65, 81, 0.9)',
             'button_secondary_bg': '#4b5563',
+            'button_secondary_hover_bg': '#2d3142',
             'button_secondary_text': '#ffffff',
             'button_stt_idle_bg': "#5CA1F7",
             'button_stt_recording_bg': "#f8baba",
@@ -206,20 +210,9 @@ class StyleManager:
         """Get button styles for settings dialog."""
         colors = self.get_theme_colors()
         return f"""
-        QPushButton {{
-            background: {colors['button_secondary_bg']};
-            color: {colors['button_secondary_text']};
-            border: 2px solid {colors['border_normal']};
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            padding: 8px 16px;
-            min-width: 50px;
-        }}
-        QPushButton:hover {{
-            background: {colors['border_normal']};
-            color: {colors['button_secondary_text']};
-        }}
+        {self.button_styles.get_default_button()}
+
+
         #saveButton {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 {colors['primary']}, stop:1 #3b82f6);  
@@ -238,14 +231,9 @@ class StyleManager:
         }}
         
         #cancelButton {{
-            background: {colors['button_secondary_bg']};
-            color: {colors['button_secondary_text']};
-            border: 2px solid {colors['border_normal']};
         }}
         
         #cancelButton:hover {{
-            background: {colors['border_normal']};
-            color: {colors['button_secondary_text']};
         }}
         #hotkeyRecorderBTN {{
             background: {colors['button_stt_recording_bg']};
@@ -589,59 +577,25 @@ class StyleManager:
         def __init__(self, parent_instance):
             self.parent = parent_instance
 
-        # def get_primary_button(self):
-        #     colors = self.parent.get_theme_colors()
-        #     self.parent.logger.debug("Generated primary button style")
-        #     return f"""
-        #     QPushButton {{
-        #         background: {colors['primary']};
-        #         color: white;
-        #         border: none;
-        #         border-radius: 8px;
-        #         font-size: 14px;
-        #         font-weight: 500;
-        #         padding: 8px 16px;
-        #     }}
-        #     QPushButton:hover {{
-        #         background: #3b82f6;
-        #     }}
-        #     """
-        # def get_about_button(self):
-        #     colors = self.parent.get_theme_colors()
-        #     self.parent.logger.debug("Generated about button style")
-        #     return f"""
-        #     QPushButton {{
-        #         background: {colors['primary']};
-        #         color: white;
-        #         border: none;
-        #         border-radius: 8px;
-        #         font-size: 14px;
-        #         font-weight: 500;
-        #         padding: 8px 16px;
-        #     }}
-        #     QPushButton:hover {{
-        #         background: #3b82f6;
-        #     }}
-        #     """
-        
-        # def get_copy_button_default_style(self):
-        #     colors = self.parent.get_theme_colors()
-        #     self.parent.logger.debug("Generated copy button default style")
-        #     return f"""
-        #     QPushButton {{
-        #         background: {colors['primary']};
-        #         color: white;
-        #         border: none;
-        #         border-radius: 8px;
-        #         font-size: 14px;
-        #         font-weight: 500;
-        #         padding: 8px 16px;
-        #     }}
-        #     QPushButton:hover {{
-        #         background: #3b82f6;
-        #     }}
-        #     """
-        
+        def get_default_button(self):
+            colors = self.parent.get_theme_colors()
+            return f"""
+            QPushButton {{
+                background: {colors['button_secondary_bg']};
+                color: {colors['button_secondary_text']};
+                border: none;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 500;
+                padding: 8px 16px;
+                min-width: 50px;
+            }}
+            QPushButton:hover {{
+                background: {colors['button_secondary_hover_bg']};
+                color: {colors['button_secondary_text']};
+            }}
+            """
+                
         def get_copy_button_success_style(self):
             """Get success style for copy button."""
             colors = self.parent.get_theme_colors()
@@ -750,7 +704,7 @@ class StyleManager:
         """Get style for combo boxes."""
         colors = self.get_theme_colors()
         return f"""
-        QComboBox {{
+        #settingsComboBox {{
             padding: 12px 16px;
             border: 2px solid {colors['border_normal']};
             border-radius: 12px;
@@ -759,17 +713,85 @@ class StyleManager:
             color: {colors['text_color']};
             min-height: 20px;
         }}
-        QComboBox:focus {{
+        #settingsComboBox:focus {{
             border: 2px solid {colors['border_focus']};
             outline: none;
             background: {colors['field_bg_focus']};
+        }}
+        
+        /* Target dropdown with specific parent */
+        #settingsComboBox QAbstractItemView {{
+            border: 2px solid {colors['border_normal']} !important;
+            border-radius: 8px !important;
+            background: {colors['field_bg']} !important;
+            color: {colors['text_color']} !important;
+            selection-background-color: {colors['border_focus']} !important;
+        }}
+        #settingsComboBox QAbstractItemView::item {{
+            padding: 8px 12px;
+            background: transparent;
+        }}
+        #settingsComboBox QAbstractItemView::item:hover {{
+            background: {colors['field_bg_focus']} !important;
+        }}
+        #settingsComboBox QAbstractItemView::item:selected {{
+            background: {colors['border_focus']} !important;
         }}
         """
 
     def get_widget_style(self):
         """Get style for combo boxes."""
-        return """
-        QWidget#formWidget{
-            background-color: 'transparent';
-        }
+        colors = self.get_theme_colors()
+        return f"""
+        QWidget{{
+            background: {colors['field_bg']};
+            border: none;
+            color: {colors['text_color']};
+        }}
+        """
+    
+    def get_hotkey_recorder_style(self):
+        """Hotkey Recorder Widget Style"""
+        colors = self.get_theme_colors()
+        return f"""
+        {self.button_styles.get_default_button()}
+        #title{{
+            color: {colors['text_color']};
+            border: none;
+            padding: 12px 15px;
+            font-size: 15px;
+            font-weight: 500;
+        }}
+        #window{{
+            color: {colors['text_color']};
+            background-color: {colors['field_bg']}; 
+            border: 2px solid {colors['border_normal']};
+            border-radius: 5px;
+            padding: 15px 20px;
+            font-size: 14px;
+            font-weight: 400;
+        }}
+        #current_label{{
+            color: {colors['text_color']};
+            font-size: 12px;
+            font-weight: 300;
+            font-style: italic;
+        }}
+        #hotkey_display{{
+            color: {colors['text_color']};
+            border: none;
+            font-size: 14px;
+            font-weight: 400;
+        }}
+        #instructions{{
+            color: {colors['text_color']};
+            background-color: {colors['field_bg']}; 
+            border: 2px solid {colors['border_normal']};
+            border-radius: 5px;
+            padding: 5px 5px;
+            font-size: 12px;
+            font-weight: 400;
+        }}
+
+             
         """

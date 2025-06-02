@@ -3,14 +3,21 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QKeySequence
 import logging
 
+from managers.style_manager import StyleManager
+from utils.constants import Text
+
+
 class HotkeyRecorderDialog(QDialog):
     """Dialog for recording hotkey combinations."""
     
     hotkey_recorded = pyqtSignal(str)  # Emits the recorded hotkey string
     
-    def __init__(self, parent=None, current_hotkey="", title="Record Hotkey"):
+    def __init__(self, parent=None, current_hotkey="", title="Record Hotkey", config=None):
         super().__init__(parent)
         self.logger = logging.getLogger(__name__)
+        self.style_manager = StyleManager(self.logger)
+        self.config = config
+
         self.current_hotkey = current_hotkey
         self.recorded_keys = set()
         self.recorded_hotkey = ""
@@ -21,43 +28,36 @@ class HotkeyRecorderDialog(QDialog):
         self.setWindowFlags(Qt.Dialog | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
         
         self.setup_ui()
+        self.apply_styles()
+
         
     def setup_ui(self):
         """Setup the user interface."""
         layout = QVBoxLayout()
         
         # Title label
-        title_label = QLabel("Press your desired hotkey combination")
+        title_label = QLabel(Text.HOTKEY_DIALOG_TITLE)
         title_label.setAlignment(Qt.AlignCenter)
-        font = QFont()
-        font.setPointSize(12)
-        title_label.setFont(font)
+        title_label.setObjectName("title")
         layout.addWidget(title_label)
         
         # Current hotkey display
         if self.current_hotkey:
             current_label = QLabel(f"Current: {self.current_hotkey}")
             current_label.setAlignment(Qt.AlignCenter)
-            current_label.setStyleSheet("color: gray; font-style: italic;")
+            current_label.setObjectName("current_label")
             layout.addWidget(current_label)
         
         # Recorded hotkey display
-        self.hotkey_display = QLabel("Press keys...")
+        self.hotkey_display = QLabel(Text.HOTKEY_DIALOG_HOTKEY_DISPLAY)
         self.hotkey_display.setAlignment(Qt.AlignCenter)
-        self.hotkey_display.setStyleSheet(
-            "border: 2px solid #ccc; "
-            "padding: 15px; "
-            "font-size: 14px; "
-            "font-weight: bold; "
-            "background-color: #f9f9f9; "
-            "border-radius: 5px;"
-        )
+        self.hotkey_display.setObjectName("hotkey_display")
         layout.addWidget(self.hotkey_display)
         
         # Instructions
-        instructions = QLabel("Hold the keys you want, then click 'Save' or press Enter")
+        instructions = QLabel(Text.HOTKEY_DIALOG_INSTRUCTIONS)
         instructions.setAlignment(Qt.AlignCenter)
-        instructions.setStyleSheet("color: #666; font-size: 10px;")
+        instructions.setObjectName("instructions")
         layout.addWidget(instructions)
         
         # Buttons
@@ -82,6 +82,28 @@ class HotkeyRecorderDialog(QDialog):
         
         # Set focus to capture key events
         self.setFocusPolicy(Qt.StrongFocus)
+
+    def apply_styles(self):
+        # self.layout.setStyleSheet(self.style_manager.get_hotkey_recorder_style())
+
+        self.logger.debug("Applying styles to hotkey recorder")
+        # current_theme = self.config.get('theme', 'Dark')
+        if self.config:
+            current_theme = self.config.get('theme', 'Dark')
+            self.style_manager.set_theme(current_theme)
+        
+        dialog_styles = self.style_manager.get_hotkey_recorder_style()
+        self.setStyleSheet(dialog_styles)
+
+        # input_style = self.style_manager.get_settings_input_field_style()
+        # for field in [self.stt_api_key_input, self.stt_api_base_input,
+        #               self.stt_model_input, self.stt_hotkey_input]:
+        #     field.setStyleSheet(input_style)
+
+        # # Apply style to the form widget background if needed
+        # form_widget_style = self.style_manager.get_widget_style()
+        # self.form_widget.setStyleSheet(form_widget_style)
+        # self.
         
     def keyPressEvent(self, event):
         """Handle key press events to record hotkey combination."""

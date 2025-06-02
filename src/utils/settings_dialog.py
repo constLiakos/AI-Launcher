@@ -532,7 +532,8 @@ class SettingsDialog(QDialog):
         dialog = HotkeyRecorderDialog(
             parent=self,
             current_hotkey=current_hotkey,
-            title=Text.MAIN_HOTKEY_DIALOG_HOTKEY_TITLE
+            title=Text.MAIN_HOTKEY_DIALOG_HOTKEY_TITLE,
+            config=self.config
         )
         
         def on_hotkey_recorded(hotkey_string):

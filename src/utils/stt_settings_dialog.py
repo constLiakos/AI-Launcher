@@ -184,10 +184,10 @@ class STTSettingsDialog(QDialog):
             setattr(self, config['attr_name'], widget)
             
             if config['label'] is None:
-                # For checkbox without separate label
                 form_layout.addRow(widget)
             else:
                 label = QLabel(config['label'])
+                label.setObjectName("fieldLabel")
                 form_layout.addRow(label, widget)
 
         return form_layout
@@ -222,7 +222,8 @@ class STTSettingsDialog(QDialog):
         dialog = HotkeyRecorderDialog(
             parent=self,
             current_hotkey=current_hotkey,
-            title=Text.STT_HOTKEY_DIALOG_HOTKEY_TITLE
+            title=Text.STT_HOTKEY_DIALOG_HOTKEY_TITLE,
+            config=self.config
         )
         
         def on_hotkey_recorded(hotkey_string):

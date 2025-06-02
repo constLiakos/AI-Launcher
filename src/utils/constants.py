@@ -394,7 +394,9 @@ class Text:
     SETTINGS_DIALOG_HOTKEY_BUTTON_NAME = "Hotkey\nRecorder"
     MAIN_HOTKEY_DIALOG_HOTKEY_TITLE = "Record Main Hotkey"
     STT_HOTKEY_DIALOG_HOTKEY_TITLE = "Record STT Hotkey"
-
+    HOTKEY_DIALOG_INSTRUCTIONS = "Hold the keys you want, then click 'Save'"
+    HOTKEY_DIALOG_HOTKEY_DISPLAY = "Press keys..."
+    HOTKEY_DIALOG_TITLE = "Press your desired hotkey combination"
 
     ABOUT_DIALOGUE_LABEL = "About This Project"
     ABOUT_DIALOGUE_TEXT = """
