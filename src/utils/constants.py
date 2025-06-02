@@ -392,6 +392,9 @@ class Text:
     SETTINGS_DIALOGUE_CLEAR_CONVERSATION_HISTORY_ON_MINIMIZE_MESSAGE = "Clear conversation history when window reopens"
     # Settings Hotkey Buttons
     SETTINGS_DIALOG_HOTKEY_BUTTON_NAME = "Hotkey\nRecorder"
+    MAIN_HOTKEY_DIALOG_HOTKEY_TITLE = "Record Main Hotkey"
+    STT_HOTKEY_DIALOG_HOTKEY_TITLE = "Record STT Hotkey"
+
 
     ABOUT_DIALOGUE_LABEL = "About This Project"
     ABOUT_DIALOGUE_TEXT = """
