@@ -281,6 +281,11 @@ class StateManager(QObject):
         self.is_recording = False
         self.stt_state_changed.emit("idle")
         return True
+    
+    def stt_recording_failed(self):
+        """Stop speech-to-text recording."""
+        self.stt_state_changed.emit("idle")
+        return True
 
     def get_stt_state(self):
         """Get STT State"""

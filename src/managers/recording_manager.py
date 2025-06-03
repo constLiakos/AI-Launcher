@@ -53,6 +53,13 @@ class Recording_Manager:
         """Record audio data."""
         try:
             self.logger.debug("Starting Recording input stream")
+            
+            # Check if audio devices are available
+            devices = sd.query_devices()
+            input_devices = [d for d in devices if d['max_input_channels'] > 0]
+            if not input_devices:
+                raise RuntimeError("No audio input devices available")
+                
             with sd.InputStream(samplerate=self.fs, channels=1, dtype='int16', callback=self.audio_callback):
                 while self.recording:
                     sd.sleep(100)
@@ -66,8 +73,12 @@ class Recording_Manager:
             else:
                 self.logger.warning("No audio data recorded")
                 
+        except (sd.PortAudioError, RuntimeError) as e:
+            self.logger.error(f"Audio device error: {e}")
+            self.state_manager.stt_recording_failed()  # Add this method to reset state
         except Exception as e:
             self.logger.error(f"Recording failed: {e}")
+            self.state_manager.stt_recording_failed()
         finally:
             self.recording = False
 
