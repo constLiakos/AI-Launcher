@@ -205,7 +205,7 @@ class STT:
     """Constants related to Speech-to-Text functionality."""
     DEFAULT_API_BASE = 'https://api.openai.com/v1'
     DEFAULT_MODEL = "whisper-1"                             
-    DEFAULT_HOTKEY = "Ctrl+Shift+R"
+    DEFAULT_HOTKEY = "<ctrl>+<shift>+r"
     DEFAULT_REQUEST_TIMEOUT = 20
     DEFAULT_ENABLED = False
 
