@@ -83,7 +83,7 @@ class SettingsDialog(QDialog):
         self.form_widget = QWidget()
         self.form_widget.setObjectName("formWidget")
         form_layout = self._create_form_layout(self.form_widget)
-        
+        # form_layout.setContentsMargins(0, 0, 30, 0)  # Add right padding to form layout
         scroll_area.setWidget(self.form_widget) # MODIFIED: Use self.form_widget
         return scroll_area
 
