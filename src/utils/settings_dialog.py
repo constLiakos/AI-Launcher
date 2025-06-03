@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from managers.style_manager import StyleManager
 from pynput.keyboard import HotKey
 from utils.about_dialog import AboutDialog
+from utils.api_client import ApiClient
 from utils.constants import LLM, Conversation, Hotkey, STTDialogSize, SettingsDialogSize, Text, Theme, Timing
 from utils.stt_settings_dialog import STTSettingsDialog
 from utils.version import VERSION
@@ -188,10 +189,88 @@ class SettingsDialog(QDialog):
         )
 
     def _create_model_field(self):
-        """Create model name input field."""
-        return self._create_input_field(
-            'model', LLM.DEFAULT_LLM_MODEL, Text.SETTINGS_DIALOGUE_LLM_MODEL_PLACEHOLDER
-        )
+        """Create model selection combo box with editable text."""
+        combo = QComboBox()
+        combo.setEditable(True)  # Allow custom text entry
+        combo.setObjectName("settingsComboBox")
+        combo.setMinimumHeight(35)
+        
+        # Get current model from config
+        current_model = self.config.get('model', LLM.DEFAULT_LLM_MODEL)
+        
+        # Populate with available models
+        try:
+            available_models = self.get_available_models()
+            combo.addItems(available_models)
+            self.logger.debug(f"Loaded {len(available_models)} available models")
+        except Exception as e:
+            self.logger.warning(f"Failed to load available models: {e}")
+            # Add default model if API call fails
+            combo.addItem(LLM.DEFAULT_LLM_MODEL)
+        
+        # Set current model (either from dropdown or as custom text)
+        model_index = combo.findText(current_model)
+        if model_index >= 0:
+            combo.setCurrentIndex(model_index)
+        else:
+            # If current model not in list, set it as custom text
+            combo.setEditText(current_model)
+        
+        combo.setPlaceholderText(Text.SETTINGS_DIALOGUE_LLM_MODEL_PLACEHOLDER)
+        self.logger.debug(f"Model field loaded: {current_model}")
+        return combo
+    
+    def get_available_models(self):
+        """
+        Get list of available models from the API using current form settings.
+        """
+        # Check if UI is initialized
+        if not hasattr(self, 'api_base_url_input'):
+            self.logger.warning("UI not initialized yet, using saved config")
+            return self._get_models_from_saved_config()
+        
+        try:
+            temp_config = self._get_current_api_config()
+            temp_api_client = ApiClient(config=temp_config, logger=self.logger)
+            model_ids = temp_api_client.get_available_models()
+            
+            if LLM.DEFAULT_LLM_MODEL not in model_ids:
+                model_ids.append(LLM.DEFAULT_LLM_MODEL)
+                
+            return model_ids
+            
+        except Exception as e:
+            self.logger.warning(f"Failed to load models from API: {e}")
+            return [LLM.DEFAULT_LLM_MODEL]
+    
+    def _get_models_from_saved_config(self):
+        """Get models using the saved config when UI isn't ready yet."""
+        try:
+            temp_api_client = ApiClient(config=self.config, logger=self.logger)
+            return temp_api_client.get_available_models()
+        except Exception as e:
+            self.logger.warning(f"Failed to load models from saved config: {e}")
+            return [LLM.DEFAULT_LLM_MODEL]
+        
+    def _get_current_api_config(self):
+        """
+        Create a config object with current form values for API testing.
+        """
+        # Create a copy of the config with current form values
+        temp_config = type(self.config)()  # Create new instance of same config class
+        
+        # Copy existing config and override with current form values
+        for key, value in self.config.__dict__.items():
+            setattr(temp_config, key, value)
+        
+        # Override with current form values
+        temp_config.api_base_url = self.api_base_url_input.text().strip()
+        temp_config.api_key = self.api_key_input.text().strip()
+        temp_config.openai_api_key = self.openai_api_key_input.text().strip()
+        # Add any other API-related settings from your form
+        
+        return temp_config
+
 
     def _create_system_prompt_field(self):
         """Create system prompt text area."""
@@ -384,7 +463,13 @@ class SettingsDialog(QDialog):
         
         # Apply specialized styles
         self.system_prompt_input.setStyleSheet(self.style_manager.get_settings_textarea_style())
-        self.theme_combo.setStyleSheet(self.style_manager.get_settings_combobox_style())
+
+        # Apply combo box styles to both theme and model combos
+        combo_style = self.style_manager.get_settings_combobox_style()
+        self.theme_combo.setStyleSheet(combo_style)
+        self.model_input.setStyleSheet(combo_style)
+
+    
         self.hotkey_input.setStyleSheet(input_style + self.style_manager.button_styles.get_hotkeyRecorderBTN_style())
 
         form_widget_style = self.style_manager.get_widget_style()
@@ -409,7 +494,8 @@ class SettingsDialog(QDialog):
         self.logger.debug(f"API base saved: {api_base}")
         
         # Model
-        model = self.model_input.text()
+        # Model (updated to handle combo box)
+        model = self.model_input.currentText() if hasattr(self.model_input, 'currentText') else self.model_input.text()
         self.config.set('model', model)
         self.logger.debug(f"Model saved: {model}")
 

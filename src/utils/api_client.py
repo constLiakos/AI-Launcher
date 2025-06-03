@@ -140,3 +140,61 @@ class ApiClient:
                 self.logger.warning(f"Error during request cancellation: {str(e)}")
         else:
             self.logger.debug("No active request to cancel")
+
+    def get_available_models(self):
+        """Get list of available models from the API."""
+        self.logger.info("Fetching available models")
+        
+        try:
+            api_key = self.config.get('api_key')
+            api_base = self.config.get('api_base')
+            
+            if not api_key:
+                self.logger.error("API key not configured")
+                raise Exception("API key not configured. Please check settings.")
+
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}"
+            }
+
+            self.logger.debug(f"Requesting models from: {api_base}/models")
+            
+            response = requests.get(
+                f"{api_base}/models",
+                headers=headers,
+                timeout=LLM.DEFAULT_REQUEST_TIMEOUT
+            )
+
+            self.logger.debug(f"Models API response status: {response.status_code}")
+
+            if response.status_code != 200:
+                self.logger.error(f"Models API returned error status: {response.status_code}")
+                error_info = response.json() if response.content else {}
+                error_message = error_info.get("error", {}).get("message", "Unknown API error")
+                self.logger.error(f"Models API error message: {error_message}")
+                raise Exception(f"Models API Error: {error_message}")
+
+            models_data = response.json()
+            
+            # Extract model IDs from the response
+            if 'data' in models_data and isinstance(models_data['data'], list):
+                model_ids = [model.get('id') for model in models_data['data'] if model.get('id')]
+                self.logger.info(f"Retrieved {len(model_ids)} available models")
+                return model_ids
+            else:
+                self.logger.warning("Unexpected models API response format")
+                return []
+
+        except requests.exceptions.Timeout as e:
+            self.logger.error(f"Models request timeout: {str(e)}")
+            raise Exception(f"Models request timeout: {str(e)}")
+        except requests.exceptions.ConnectionError as e:
+            self.logger.error(f"Models connection error: {str(e)}")
+            raise Exception(f"Models connection error: {str(e)}")
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"Models network error: {str(e)}")
+            raise Exception(f"Models network error: {str(e)}")
+        except Exception as e:
+            self.logger.error(f"Failed to fetch available models: {str(e)}")
+            raise Exception(f"Failed to fetch available models: {str(e)}")
