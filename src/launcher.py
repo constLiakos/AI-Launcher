@@ -418,7 +418,7 @@ class Launcher(QMainWindow):
         response_text = self.state_manager.get_accumulated_response()
         logger.debug(f"accumulated response unformatted: \n{response_text}")
         # Convert basic markdown to HTML
-        html_content = self.markdown_render._basic_markdown_to_html(
+        html_content = self.markdown_render.to_html(
             response_text)
         logger.debug(f"accumulated response in html format: \n{html_content}")
         self.ui_manager.response_area.setHtml(html_content)
