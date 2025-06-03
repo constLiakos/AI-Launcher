@@ -54,13 +54,12 @@ class Recording_Manager:
         try:
             self.logger.debug("Starting Recording input stream")
             with sd.InputStream(samplerate=self.fs, channels=1, dtype='int16', callback=self.audio_callback):
-                while self.recording and self.state_manager.is_recording:
+                while self.recording:
                     sd.sleep(100)
 
             self.logger.debug("Recording completed")
             self.state_manager.recording_completed()
 
-            self.recording = False
             # Save audio after recording stops
             if len(self.frames) > 0:
                 self.save_audio()
@@ -69,8 +68,8 @@ class Recording_Manager:
                 
         except Exception as e:
             self.logger.error(f"Recording failed: {e}")
+        finally:
             self.recording = False
-
 
     def audio_callback(self, indata, frames, time_, status):
         """Audio input callback."""
@@ -85,7 +84,13 @@ class Recording_Manager:
             return
         
         self.logger.debug("Stopping audio recording")
-        # self.recording = False
+        self.recording = False
+        
+        # Wait for the recording thread to finish
+        if self.record_thread and self.record_thread.is_alive():
+            self.record_thread.join(timeout=2.0)  # Wait max 2 seconds
+            if self.record_thread.is_alive():
+                self.logger.warning("Recording thread did not stop gracefully")
 
     def save_audio(self):
         """Save recorded audio frames to file."""
