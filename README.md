@@ -1,6 +1,6 @@
 # AI Launcher
 
-[![Version](https://img.shields.io/badge/version-v1.0.9-blue.svg)](https://github.com/constLiakos/AI-Launcher/releases)
+[![Version](https://img.shields.io/badge/version-v1.1.2-blue.svg)](https://github.com/constLiakos/AI-Launcher/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](#)
 
