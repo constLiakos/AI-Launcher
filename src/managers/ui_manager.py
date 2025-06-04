@@ -712,3 +712,33 @@ class UIManager(QObject):
         # Ctrl+Q to quit completely
         quit_shortcut = QShortcut(QKeySequence("Ctrl+Q"), self.parent)
         quit_shortcut.activated.connect(self.parent.quit_application)
+
+
+    def handle_window_resize(self, window_size):
+        """Handle window resize to reposition elements and adjust constraints."""
+        # Reposition copy button
+        if hasattr(self, 'copy_button') and self.copy_button.isVisible():
+            self.position_copy_button()
+
+        # Dynamically adjust response area constraints based on window size
+        if hasattr(self, 'conversation_area'):
+            window_height = window_size.height()
+            # Reserve space for input area, margins, and some padding
+            available_height = window_height - ElementSize.RESPONSE_MARGIN_BOTTOM
+            available_height = max(
+                available_height, ElementSize.RESPONSE_AVAILABLE_HEIGHT_MINIMUM)
+
+            # Set dynamic min/max based on available space
+            min_response_height = min(
+                ElementSize.RESPONSE_MIN_HEIGHT, available_height * ElementSize.RESPONSE_MIN_HEIGHT_RATIO)
+            max_response_height = max(
+                available_height * ElementSize.RESPONSE_AVAILABLE_HEIGHT_MINIMUM, min_response_height)
+
+            # Ensure both values are positive
+            min_response_height = max(
+                int(min_response_height), ElementSize.RESPONSE_MIN_ABSOLUTE_HEIGHT)
+            max_response_height = max(
+                int(max_response_height), min_response_height)
+
+            self.conversation_area.setMinimumHeight(min_response_height)
+            self.conversation_area.setMaximumHeight(max_response_height)

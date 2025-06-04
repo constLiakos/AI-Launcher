@@ -284,36 +284,14 @@ class Launcher(QMainWindow):
         """Position copy button."""
         self.ui_manager.position_copy_button()
 
+
     def resizeEvent(self, event):
-        """Handle window resize to reposition copy button and adjust response area."""
+        """Handle window resize - delegate to UIManager."""
         super().resizeEvent(event)
-
-        # Reposition copy button
-        if hasattr(self.ui_manager, 'copy_button') and self.ui_manager.copy_button.isVisible():
-            self.ui_manager.position_copy_button()
-
-        # Dynamically adjust response area constraints based on window size
-        if hasattr(self, 'conversation_area'):
-            window_height = self.height()
-            # Reserve space for input area, margins, and some padding
-            available_height = window_height - ElementSize.RESPONSE_MARGIN_BOTTOM
-            available_height = max(
-                available_height, ElementSize.RESPONSE_AVAILABLE_HEIGHT_MINIMUM)
-
-            # Set dynamic min/max based on available space
-            min_response_height = min(
-                ElementSize.RESPONSE_MIN_HEIGHT, available_height * ElementSize.RESPONSE_MIN_HEIGHT_RATIO)
-            max_response_height = max(
-                available_height * ElementSize.RESPONSE_AVAILABLE_HEIGHT_MINIMUM, min_response_height)
-
-            # Ensure both values are positive
-            min_response_height = max(
-                int(min_response_height), ElementSize.RESPONSE_MIN_ABSOLUTE_HEIGHT)
-            max_response_height = max(
-                int(max_response_height), min_response_height)
-
-            self.ui_manager.conversation_area.setMinimumHeight(min_response_height)
-            self.ui_manager.conversation_area.setMaximumHeight(max_response_height)
+        
+        # Let UIManager handle all resize-related UI updates
+        if hasattr(self, 'ui_manager'):
+            self.ui_manager.handle_window_resize(self.size())
 
     def copy_response(self):
         """Copy accumulated response text to clipboard."""
