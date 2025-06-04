@@ -280,11 +280,6 @@ class Launcher(QMainWindow):
         """Called by UIManager when input type changes"""
         self._reconnect_input_signals()
 
-    def position_copy_button(self):
-        """Position copy button."""
-        self.ui_manager.position_copy_button()
-
-
     def resizeEvent(self, event):
         """Handle window resize - delegate to UIManager."""
         super().resizeEvent(event)

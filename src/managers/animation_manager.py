@@ -128,7 +128,3 @@ class AnimationManager(QObject):
         
         # Don't call setFixedSize - let the window remain resizable
         widget.update()
-        
-        # Reposition any floating elements like copy button
-        if hasattr(widget, 'position_copy_button'):
-            widget.position_copy_button()
