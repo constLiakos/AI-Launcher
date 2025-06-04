@@ -24,6 +24,12 @@ class StyleManager:
         else:
             self.logger.warning(f"Attempted to set invalid theme: {theme}")
 
+    def get_available_themes(self):
+        themes = []
+        for theme in self.themes.keys():
+            themes.append(theme)
+        return themes
+
     def get_theme_colors(self):
         """Get colors for current theme."""
         colors = self.themes[self.current_theme]
