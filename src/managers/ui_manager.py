@@ -27,6 +27,7 @@ class UIManager(QObject):
         self.copy_button = None
         self.input_type_is_multiline = False
         self.multiline_toggle_button = None
+        self.conversation_toggle_button = None
 
         self.original_input_height = None
         self.original_window_height = None
@@ -36,7 +37,7 @@ class UIManager(QObject):
 
         self.current_visual_state = "normal"
         self.is_expanded = False
-        self.response_visible = False
+        self.conversation_visible = False
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -76,6 +77,8 @@ class UIManager(QObject):
             self.animation_callbacks['stop_thinking'] = callbacks['stop_thinking_animation']
 
         self.multiline_toggle_button.clicked.connect(self._toggle_input_type)
+        self.conversation_toggle_button.clicked.connect(self.toggle_response_visibility)
+
 
     def connect_input_signals(self, callbacks):
         """Connect UI signals to callbacks."""
@@ -381,6 +384,13 @@ class UIManager(QObject):
         self._create_input_field()
         input_layout.addWidget(self.input_field)
 
+        # Conversation toggle button (arrow)
+        self.conversation_toggle_button = QPushButton()
+        self.conversation_toggle_button.setFixedSize(20, 20)
+        self.conversation_toggle_button.setFont(QFont("Segoe UI", 12))
+        self.update_conversation_toggle_button(self.conversation_visible)
+        input_layout.addWidget(self.conversation_toggle_button)
+
         # Multiline toggle button
         self.multiline_toggle_button = QPushButton()
         self.multiline_toggle_button.setFixedSize(
@@ -407,6 +417,21 @@ class UIManager(QObject):
         input_layout.addWidget(self.settings_button)
 
         container_layout.addLayout(input_layout)
+
+    def update_conversation_toggle_button(self, is_expanded):
+        """Update conversation toggle button appearance based on current state."""
+        if not is_expanded:
+            self.conversation_toggle_button.setText("▼")  # Down arrow when expanded
+            self.conversation_toggle_button.setToolTip("Hide conversation")
+            self.conversation_toggle_button.setObjectName("conversationToggleButtonExpanded")
+        else:
+            self.conversation_toggle_button.setText("▲")  # Up arrow when collapsed
+            self.conversation_toggle_button.setToolTip("Show conversation")
+            self.conversation_toggle_button.setObjectName("conversationToggleButton")
+
+        # Force style update
+        self.conversation_toggle_button.style().unpolish(self.conversation_toggle_button)
+        self.conversation_toggle_button.style().polish(self.conversation_toggle_button)
 
     def _disconnect_all_signals(self):
         """Disconnect all signals before reconnecting"""
@@ -440,6 +465,12 @@ class UIManager(QObject):
             if hasattr(self.multiline_toggle_button, 'clicked'):
                 try:
                     self.multiline_toggle_button.clicked.disconnect()
+                except TypeError:
+                    pass
+
+            if hasattr(self.conversation_toggle_button, 'clicked'):  # Add this block
+                try:
+                    self.conversation_toggle_button.clicked.disconnect()
                 except TypeError:
                     pass
         except Exception as e:
@@ -496,38 +527,41 @@ class UIManager(QObject):
 
     def show_conversation_area(self):
         """Show response area and copy button."""
-        if not self.response_visible:
+        if not self.conversation_visible:
+            if self.is_multiline_input():
+                self.handle_multiline_resize()
             self.conversation_area.setVisible(True)
-            self.response_visible = True
+            self.conversation_visible = True
             self.is_expanded = True
             self.expansion_changed.emit(True)
-            # self.copy_button.setVisible(True)
+            self.update_conversation_toggle_button(True)
             self.logger.debug("Response area shown")
             self.position_copy_button()
 
-    def hide_response(self):
+    def hide_conversation_area(self):
         """
         Hide response area and copy button.
         This is purely UI logic - hiding/showing widgets and managing layout.
         """
-        if self.response_visible:
+        if self.conversation_visible:
             if self.is_multiline_input():
                 self.handle_multiline_resize()
             self.copy_button.setVisible(False)
-            self.response_visible = False
+            self.conversation_visible = False
             self.is_expanded = False
             self.expansion_changed.emit(False)
-            # self.parent.animate_resize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT, fast=True)
+            self.update_conversation_toggle_button(False)
             QTimer.singleShot(50, lambda: self.conversation_area.setVisible(False))
             self.logger.debug("Response area hidden")
 
-    def is_response_visible(self):
-        return self.response_visible
+    def is_conversation_visible(self):
+        return self.conversation_visible
 
     def toggle_response_visibility(self):
         """Toggle response area visibility."""
-        if self.response_visible:
-            self.hide_response()
+        self.logger.debug(f"toggle_response_visibility, conversation is : {self.conversation_visible}")
+        if self.conversation_visible:
+            self.hide_conversation_area()
         else:
             self.show_conversation_area()
 

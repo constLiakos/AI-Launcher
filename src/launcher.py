@@ -178,13 +178,13 @@ class Launcher(QMainWindow):
                 
                 # Contract the UI if it's expanded
                 if self.ui_manager.is_currently_expanded():
-                    self.ui_manager.hide_response()
+                    self.ui_manager.hide_conversation_area()
                     logger.debug("UI contracted after clearing response")
                     
                 # Clear state manager's accumulated response
                 if hasattr(self, 'state_manager'):
                     # self.state_manager.clear_accumulated_response()
-                    self.ui_manager.hide_response()
+                    self.ui_manager.hide_conversation_area()
                     logger.debug("State manager response cleared")
                     
                 # Reset input field focus
@@ -436,7 +436,7 @@ class Launcher(QMainWindow):
             return
         try:
             self.state_manager.add_response_chunk(chunk)
-            if not self.ui_manager.is_response_visible():
+            if not self.ui_manager.is_conversation_visible():
                 self.ui_manager.expand_ui()
             self._update_response_display()
             self._auto_scroll_response()
@@ -481,7 +481,7 @@ class Launcher(QMainWindow):
         error_text = self.state_manager.get_accumulated_response()
 
         # Update UI - expand if not visible
-        if not self.ui_manager.is_response_visible():
+        if not self.ui_manager.is_conversation_visible():
             self.ui_manager.expand_ui()
 
         # Display error
@@ -730,7 +730,7 @@ class Launcher(QMainWindow):
         else:
             # Text does not exist
             self.ui_manager.set_visual_state("normal")
-            self.ui_manager.hide_response()
+            self.ui_manager.hide_conversation_area()
 
 
 
