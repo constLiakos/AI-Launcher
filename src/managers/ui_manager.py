@@ -376,7 +376,6 @@ class UIManager(QObject):
             ElementSize.CONTAINER_MARGIN_HORIZONTAL,
             ElementSize.CONTAINER_MARGIN_VERTICAL
         )
-
         input_layout = QHBoxLayout()
         input_layout.setSpacing(ElementSize.CONTAINER_SPACING)
 
@@ -384,19 +383,13 @@ class UIManager(QObject):
         self._create_input_field()
         input_layout.addWidget(self.input_field)
 
-        # Conversation toggle button (arrow)
-        self.conversation_toggle_button = QPushButton()
-        self.conversation_toggle_button.setFixedSize(20, 20)
-        self.conversation_toggle_button.setFont(QFont("Segoe UI", 12))
-        self.update_conversation_toggle_button(self.conversation_visible)
-        input_layout.addWidget(self.conversation_toggle_button)
 
         # Multiline toggle button
         self.multiline_toggle_button = QPushButton()
         self.multiline_toggle_button.setFixedSize(
             ElementSize.SETTINGS_BUTTON_SIZE, ElementSize.SETTINGS_BUTTON_SIZE)
         self.multiline_toggle_button.setFont(
-            QFont("Segoe UI Emoji", 14))  # Larger emoji font
+            QFont("Segoe UI Emoji", 14)) # Larger emoji font
         self.update_multiline_toggle_button(self.input_type_is_multiline)
         input_layout.addWidget(self.multiline_toggle_button)
 
@@ -417,18 +410,50 @@ class UIManager(QObject):
         input_layout.addWidget(self.settings_button)
 
         container_layout.addLayout(input_layout)
+        self._create_conversation_toggle_button()
+
+
+    def _create_conversation_toggle_button(self):
+        """Create the conversation toggle button as a floating element at bottom edge."""
+        self.conversation_toggle_button = QPushButton()
+        self.conversation_toggle_button.setParent(self.main_container)
+        self.conversation_toggle_button.setFixedSize(ElementSize.CONVERSATION_TOGGLE_BUTTON_WIDTH, ElementSize.CONVERSATION_TOGGLE_BUTTON_HEIGHT)
+        self.conversation_toggle_button.setFont(QFont("Segoe UI", 8))
+        self.update_conversation_toggle_button(self.conversation_visible)
+        self.position_conversation_toggle_button()
+        self.conversation_toggle_button.raise_()
+
+    def position_conversation_toggle_button(self):
+        """Position the conversation toggle button at the bottom edge of the window."""
+        if not self.conversation_toggle_button or not self.main_container:
+            return
+            
+        try:
+            # Get container dimensions
+            container_geometry = self.main_container.geometry()
+            button_width = self.conversation_toggle_button.width()
+            button_height = self.conversation_toggle_button.height()
+            
+            # Position at bottom center, slightly inset from the edge
+            x = (container_geometry.width() - button_width) // 2  # Center horizontally
+            y = container_geometry.height() - button_height - 2   # 2px from bottom edge
+            
+            self.conversation_toggle_button.move(x, y)
+            self.logger.debug(f"Conversation toggle button positioned at ({x}, {y})")
+            
+        except Exception as e:
+            self.logger.error(f"Error positioning conversation toggle button: {e}")
 
     def update_conversation_toggle_button(self, is_expanded):
         """Update conversation toggle button appearance based on current state."""
         if not is_expanded:
-            self.conversation_toggle_button.setText("▼")  # Down arrow when expanded
+            self.conversation_toggle_button.setText("▼")
             self.conversation_toggle_button.setToolTip("Hide conversation")
             self.conversation_toggle_button.setObjectName("conversationToggleButtonExpanded")
         else:
-            self.conversation_toggle_button.setText("▲")  # Up arrow when collapsed
+            self.conversation_toggle_button.setText("▲")
             self.conversation_toggle_button.setToolTip("Show conversation")
             self.conversation_toggle_button.setObjectName("conversationToggleButton")
-
         # Force style update
         self.conversation_toggle_button.style().unpolish(self.conversation_toggle_button)
         self.conversation_toggle_button.style().polish(self.conversation_toggle_button)
@@ -535,6 +560,10 @@ class UIManager(QObject):
             self.is_expanded = True
             self.expansion_changed.emit(True)
             self.update_conversation_toggle_button(True)
+            
+            # Reposition the toggle button after expansion
+            QTimer.singleShot(10, self.position_conversation_toggle_button)
+            
             self.logger.debug("Response area shown")
             self.position_copy_button()
 
@@ -551,6 +580,8 @@ class UIManager(QObject):
             self.is_expanded = False
             self.expansion_changed.emit(False)
             self.update_conversation_toggle_button(False)
+            
+            QTimer.singleShot(10, self.position_conversation_toggle_button)
             QTimer.singleShot(50, lambda: self.conversation_area.setVisible(False))
             self.logger.debug("Response area hidden")
 
@@ -719,6 +750,8 @@ class UIManager(QObject):
         # Reposition copy button
         if hasattr(self, 'copy_button') and self.copy_button.isVisible():
             self.position_copy_button()
+        if hasattr(self, 'conversation_toggle_button'):
+            self.position_conversation_toggle_button()
 
         # Dynamically adjust response area constraints based on window size
         if hasattr(self, 'conversation_area'):
