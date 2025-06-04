@@ -225,7 +225,7 @@ class SettingsDialog(QDialog):
         combo.setPlaceholderText(Text.SETTINGS_DIALOGUE_LLM_MODEL_PLACEHOLDER)
         self.logger.debug(f"Model field loaded: {current_model}")
         return combo
-    
+        
     def get_available_models(self):
         """
         Get list of available models from the API using current form settings.
@@ -242,22 +242,31 @@ class SettingsDialog(QDialog):
             
             if LLM.DEFAULT_LLM_MODEL not in model_ids:
                 model_ids.append(LLM.DEFAULT_LLM_MODEL)
-                
+            
+            # Sort alphabetically, case-insensitive
+            model_ids.sort(key=str.lower)
             return model_ids
             
         except Exception as e:
             self.logger.warning(f"Failed to load models from API: {e}")
             return [LLM.DEFAULT_LLM_MODEL]
-    
+
     def _get_models_from_saved_config(self):
         """Get models using the saved config when UI isn't ready yet."""
         try:
             temp_api_client = ApiClient(config=self.config, logger=self.logger)
-            return temp_api_client.get_available_models()
+            model_ids = temp_api_client.get_available_models()
+            
+            if LLM.DEFAULT_LLM_MODEL not in model_ids:
+                model_ids.append(LLM.DEFAULT_LLM_MODEL)
+            
+            # Sort alphabetically, case-insensitive
+            model_ids.sort(key=str.lower)
+            return model_ids
         except Exception as e:
             self.logger.warning(f"Failed to load models from saved config: {e}")
             return [LLM.DEFAULT_LLM_MODEL]
-        
+            
     def _get_current_api_config(self):
         """
         Create a config object with current form values for API testing.
