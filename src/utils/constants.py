@@ -24,6 +24,7 @@ class Directories:
     # These use user's home directory - will work fine with PyInstaller
     DEFAULT_TMP = Path.home() / '.tmp' / 'ai_launcher'
     CONFIG = Path.home() / '.config' / 'ai_launcher' / 'config.json'
+    CONVERSATIONS_DATABASE_DIR = Path.home() / '.config' / 'ai_launcher'
 
 class Files:
     RECORDING_FILE_NAME = "recorded_audio.wav"
@@ -33,7 +34,11 @@ class Files:
     SETTINGS_GEAR_ICON_PATH = _base_path / "assets" / "settings.png"
     MIC_IDLE_ICON_PATH = _base_path / "assets" / "mic_white_idle.png"
     MIC_RECORDING_ICON_PATH = _base_path / "assets" / "mic_white_recording.png"
+    CONVERSATIONS_DATABASE_PATH = Directories.CONVERSATIONS_DATABASE_DIR / 'ai_conversations.db'
 
+    
+class Database:
+    CONVERSATIONS_DATABASE_CONNECTION_STRING = 'sqlite://' + str(Files.CONVERSATIONS_DATABASE_PATH)
 # =============================================================================
 # LLM Config
 # =============================================================================
