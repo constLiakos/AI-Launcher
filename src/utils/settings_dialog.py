@@ -72,8 +72,9 @@ class SettingsDialog(QDialog):
         return title_label
 
     def _create_scroll_area(self):
-        """Create scroll area with form layout."""
+        """Create scroll area with vertical layout instead of form layout."""
         scroll_area = QScrollArea()
+        scroll_area.setObjectName("settingsDialogScrollArea")
         scroll_area.setWidgetResizable(True)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
@@ -82,20 +83,18 @@ class SettingsDialog(QDialog):
         
         self.form_widget = QWidget()
         self.form_widget.setObjectName("formWidget")
-        form_layout = self._create_form_layout(self.form_widget)
-        # form_layout.setContentsMargins(0, 0, 30, 0)  # Add right padding to form layout
-        scroll_area.setWidget(self.form_widget) # MODIFIED: Use self.form_widget
-        return scroll_area
-
-    def _create_form_layout(self, parent_widget):
-        """Create and populate form layout with all settings fields."""
-        form_layout:QFormLayout = QFormLayout(parent_widget)
-        form_layout.setSpacing(SettingsDialogSize.FORM_LAYOUT_SPACING)
-        form_layout.setVerticalSpacing(15)
-        form_layout.setLabelAlignment(Qt.AlignLeft)
-        form_layout.setRowWrapPolicy(QFormLayout.DontWrapRows)
         
-        # Define field configurations
+        # Use QVBoxLayout instead of QFormLayout
+        main_layout = QVBoxLayout(self.form_widget)
+        main_layout.setContentsMargins(20, 20, 20, 20)  # left, top, right, bottom
+        main_layout.setSpacing(15)
+        
+        self._add_form_fields(main_layout)
+        scroll_area.setWidget(self.form_widget)
+        return scroll_area
+    
+    def _add_form_fields(self, layout):
+        """Add all form fields to the layout."""
         field_configs = [
             {
                 'widget': self._create_api_key_field(),
@@ -148,17 +147,24 @@ class SettingsDialog(QDialog):
                 'attr_name': 'theme_combo'
             }
         ]
-        
-        # Add all fields to form
         for config in field_configs:
+            # Create a container for each field
+            field_container = QWidget()
+            field_layout = QVBoxLayout(field_container)
+            field_layout.setContentsMargins(0, 0, 0, 0)
+            field_layout.setSpacing(5)
+            
+            # Add label
             label = QLabel(config['label'])
             label.setObjectName("fieldLabel")
-            widget_it:QWidget = config['widget']
-            widget_it.setContentsMargins(0, 0, 40, 0)
-            setattr(self, config['attr_name'], widget_it)
-            form_layout.addRow(label, widget_it)
-        
-        return form_layout
+            field_layout.addWidget(label)
+            
+            # Add widget
+            widget = config['widget']
+            setattr(self, config['attr_name'], widget)
+            field_layout.addWidget(widget)
+            
+            layout.addWidget(field_container)
 
     def _create_input_field(self, config_key, default_value, placeholder, object_name="settingsInputField"):
         """Create a standard input field with common properties."""
