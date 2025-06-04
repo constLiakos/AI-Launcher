@@ -173,7 +173,7 @@ class Launcher(QMainWindow):
         try:
             # Clear the response area
             if hasattr(self, 'ui_manager') and self.ui_manager:
-                self.ui_manager.response_area.clear()
+                self.ui_manager.conversation_area.clear()
                 logger.debug("Response area cleared")
                 
                 # Contract the UI if it's expanded
@@ -293,7 +293,7 @@ class Launcher(QMainWindow):
             self.ui_manager.position_copy_button()
 
         # Dynamically adjust response area constraints based on window size
-        if hasattr(self, 'response_area'):
+        if hasattr(self, 'conversation_area'):
             window_height = self.height()
             # Reserve space for input area, margins, and some padding
             available_height = window_height - ElementSize.RESPONSE_MARGIN_BOTTOM
@@ -312,13 +312,13 @@ class Launcher(QMainWindow):
             max_response_height = max(
                 int(max_response_height), min_response_height)
 
-            self.ui_manager.response_area.setMinimumHeight(min_response_height)
-            self.ui_manager.response_area.setMaximumHeight(max_response_height)
+            self.ui_manager.conversation_area.setMinimumHeight(min_response_height)
+            self.ui_manager.conversation_area.setMaximumHeight(max_response_height)
 
     def copy_response(self):
         """Copy accumulated response text to clipboard."""
         try:
-            response_text = self.state_manager.accumulated_response or self.ui_manager.response_area.toPlainText()
+            response_text = self.state_manager.accumulated_response or self.ui_manager.conversation_area.toPlainText()
             if response_text.strip():
                 clipboard = QApplication.clipboard()
                 clipboard.setText(response_text)
@@ -421,7 +421,7 @@ class Launcher(QMainWindow):
         html_content = self.markdown_render.to_html(
             response_text)
         logger.debug(f"accumulated response in html format: \n{html_content}")
-        self.ui_manager.response_area.setHtml(html_content)
+        self.ui_manager.conversation_area.setHtml(html_content)
 
     def _handle_request_lifecycle(self, request_id, action):
         """Centralized request lifecycle management."""
@@ -447,9 +447,9 @@ class Launcher(QMainWindow):
 
     def _auto_scroll_response(self):
         """Separate auto-scroll logic."""
-        cursor = self.ui_manager.response_area.textCursor()
+        cursor = self.ui_manager.conversation_area.textCursor()
         cursor.movePosition(cursor.End)
-        self.ui_manager.response_area.setTextCursor(cursor)
+        self.ui_manager.conversation_area.setTextCursor(cursor)
 
     def _handle_completion(self, request_id):
         """Handle request completion with conversation storage."""
@@ -485,7 +485,7 @@ class Launcher(QMainWindow):
             self.ui_manager.expand_ui()
 
         # Display error
-        self.ui_manager.response_area.setHtml(error_text)
+        self.ui_manager.conversation_area.setHtml(error_text)
 
         # Return UI to normal state
         self.ui_manager.set_visual_state("normal")
@@ -555,12 +555,12 @@ class Launcher(QMainWindow):
                 expanded_height = WindowSize.EXPANDED_SINGLELINE_INPUT_HEIGHT
 
             self.animate_resize(expanded_width, expanded_height)
-            self.ui_manager.show_response_area()
+            self.ui_manager.show_conversation_area()
         else:
             self.animate_resize(WindowSize.COMPACT_WIDTH,
                                 WindowSize.COMPACT_HEIGHT)
             QTimer.singleShot(10, lambda: (
-                self.ui_manager.response_area.setVisible(False)
+                self.ui_manager.conversation_area.setVisible(False)
             ))
             QTimer.singleShot(30, lambda: (
                 self.ui_manager.copy_button.setVisible(False)
@@ -696,9 +696,6 @@ class Launcher(QMainWindow):
         if new_state == "normal" and not self.state_manager.get_current_prompt():
             logger.debug(
                 "State is normal with no prompt - checking if response should be hidden")
-            # if self.ui_manager.response_area.isVisible():
-            #     logger.debug("Hiding response area")
-            #     self.ui_manager.hide_response()
 
     def on_processing_changed(self, is_processing):
         """Handle processing state changes from StateManager."""
@@ -709,7 +706,7 @@ class Launcher(QMainWindow):
     def on_response_ready(self, response):
         """Handle when response is ready to display."""
         logger.debug(f"Response ready, length: {len(response)} characters")
-        self.ui_manager.response_area.setHtml(response)
+        self.ui_manager.conversation_area.setHtml(response)
 
     def on_request_cancelled(self):
         """Handle request cancellation from StateManager."""

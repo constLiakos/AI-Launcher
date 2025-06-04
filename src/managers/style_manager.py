@@ -532,7 +532,7 @@ class StyleManager:
         }}
         """
 
-    def get_response_area_style(self):
+    def get_conversation_area_style(self):
         """Get response area styles."""
         colors = self.get_theme_colors()
         self.logger.debug("Generated response area styles")
@@ -544,7 +544,7 @@ class StyleManager:
         font_families = getattr(self, '_font_families', "'Ubuntu', 'Noto Color Emoji'")
         
         return f"""
-        #responseArea {{
+        #conversationArea {{
             background: {colors['response_bg']};
             border: 1px solid rgba(79, 156, 249, 0.2);
             border-radius: 15px;
@@ -555,40 +555,40 @@ class StyleManager:
             font-family: {font_families};
         }}
         /* Modern thin scrollbar styles */
-        #responseArea QScrollBar:vertical {{
+        #conversationArea QScrollBar:vertical {{
             background: transparent;
             width: 8px;
             border-radius: 4px;
             margin: 0px;
         }}
 
-        #responseArea QScrollBar::handle:vertical {{
+        #conversationArea QScrollBar::handle:vertical {{
             background: rgba(79, 156, 249, 0.3);
             border-radius: 4px;
             min-height: 20px;
             margin: 2px;
         }}
 
-        #responseArea QScrollBar::handle:vertical:hover {{
+        #conversationArea QScrollBar::handle:vertical:hover {{
             background: rgba(79, 156, 249, 0.5);
         }}
 
-        #responseArea QScrollBar::handle:vertical:pressed {{
+        #conversationArea QScrollBar::handle:vertical:pressed {{
             background: rgba(79, 156, 249, 0.7);
         }}
 
-        #responseArea QScrollBar::add-line:vertical,
-        #responseArea QScrollBar::sub-line:vertical {{
+        #conversationArea QScrollBar::add-line:vertical,
+        #conversationArea QScrollBar::sub-line:vertical {{
             height: 0px;
             background: transparent;
         }}
 
-        #responseArea QScrollBar::add-page:vertical,
-        #responseArea QScrollBar::sub-page:vertical {{
+        #conversationArea QScrollBar::add-page:vertical,
+        #conversationArea QScrollBar::sub-page:vertical {{
             background: transparent;
         }}
 
-        #responseArea QScrollBar:horizontal {{
+        #conversationArea QScrollBar:horizontal {{
             height: 0px;
         }}
         """
@@ -604,7 +604,7 @@ class StyleManager:
                 self._get_input_field_style()['normal'] +
                 self._get_input_field_style()['typing'] +
                 self.get_button_styles() +
-                self.get_response_area_style()
+                self.get_conversation_area_style()
             )
             self.current_theme = old_theme
             self.logger.debug(f"Reverted to original theme: {old_theme}")
@@ -616,7 +616,7 @@ class StyleManager:
             self._get_input_field_style()['normal'] +
             self._get_input_field_style()['typing'] +
             self.get_button_styles() +
-            self.get_response_area_style()
+            self.get_conversation_area_style()
         )
 
     class ButtonStyles:

@@ -21,7 +21,7 @@ class UIManager(QObject):
 
         self.main_container = None
         self.input_field = None
-        self.response_area = None
+        self.conversation_area = None
         self.stt_button = None
         self.settings_button = None
         self.copy_button = None
@@ -100,8 +100,8 @@ class UIManager(QObject):
 #   ##########################################################################################
 
     def expand_ui(self):
-        """Expand UI to show response area - alias for show_response_area."""
-        self.show_response_area()
+        """Expand UI to show conversation area - alias for show_conversation_area."""
+        self.show_conversation_area()
 
     def _apply_visual_state(self, state):
         """Apply visual changes based on state."""
@@ -267,7 +267,7 @@ class UIManager(QObject):
                 self.logger.debug("Window is expanded, skipping window resize")
 
             # Handle copy button positioning if response area is visible
-            if self.response_area.isVisible():
+            if self.conversation_area.isVisible():
                 self.logger.debug("Scheduling copy button positioning")
                 QTimer.singleShot(10, self.position_copy_button)
 
@@ -494,10 +494,10 @@ class UIManager(QObject):
 #       Response Area Functions
 #   ##########################################################################################
 
-    def show_response_area(self):
+    def show_conversation_area(self):
         """Show response area and copy button."""
         if not self.response_visible:
-            self.response_area.setVisible(True)
+            self.conversation_area.setVisible(True)
             self.response_visible = True
             self.is_expanded = True
             self.expansion_changed.emit(True)
@@ -511,7 +511,6 @@ class UIManager(QObject):
         This is purely UI logic - hiding/showing widgets and managing layout.
         """
         if self.response_visible:
-            # self.response_area.setVisible(False)
             if self.is_multiline_input():
                 self.handle_multiline_resize()
             self.copy_button.setVisible(False)
@@ -519,7 +518,7 @@ class UIManager(QObject):
             self.is_expanded = False
             self.expansion_changed.emit(False)
             # self.parent.animate_resize(WindowSize.COMPACT_WIDTH, WindowSize.COMPACT_HEIGHT, fast=True)
-            QTimer.singleShot(50, lambda: self.response_area.setVisible(False))
+            QTimer.singleShot(50, lambda: self.conversation_area.setVisible(False))
             self.logger.debug("Response area hidden")
 
     def is_response_visible(self):
@@ -530,26 +529,26 @@ class UIManager(QObject):
         if self.response_visible:
             self.hide_response()
         else:
-            self.show_response_area()
+            self.show_conversation_area()
 
     def _create_response_section(self):
         """Create response area."""
         container_layout = self.main_container.layout()
 
-        self.response_area = QTextBrowser()
-        self.response_area.setObjectName("responseArea")
-        self.response_area.setAcceptRichText(True)
-        self.response_area.setOpenExternalLinks(True)
-        self.response_area.setVisible(False)
-        self.response_area.setSizePolicy(
+        self.conversation_area = QTextBrowser()
+        self.conversation_area.setObjectName("conversationArea")
+        self.conversation_area.setAcceptRichText(True)
+        self.conversation_area.setOpenExternalLinks(True)
+        self.conversation_area.setVisible(False)
+        self.conversation_area.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        self._setup_emoji_font(self.response_area)
-        container_layout.addWidget(self.response_area)
+        self._setup_emoji_font(self.conversation_area)
+        container_layout.addWidget(self.conversation_area)
         container_layout.setStretchFactor(
             container_layout.itemAt(0).layout(), 0)  # Input section
         # Response area takes remaining space
-        container_layout.setStretchFactor(self.response_area, 1)
+        container_layout.setStretchFactor(self.conversation_area, 1)
         container_layout.addStretch()
 
 #   ##########################################################################################
@@ -558,9 +557,9 @@ class UIManager(QObject):
 
     def position_copy_button(self):
         """Position copy button in response area."""
-        if self.response_area.isVisible():
-            response_pos = self.response_area.pos()
-            response_geometry = self.response_area.geometry()
+        if self.conversation_area.isVisible():
+            response_pos = self.conversation_area.pos()
+            response_geometry = self.conversation_area.geometry()
 
             self.logger.debug(
                 f"Response area position: {response_pos}, geometry: {response_geometry}")
