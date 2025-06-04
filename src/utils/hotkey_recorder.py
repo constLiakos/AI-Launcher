@@ -4,7 +4,7 @@ from PyQt5.QtGui import QFont, QKeySequence
 import logging
 
 from managers.style_manager import StyleManager
-from utils.constants import Text
+from utils.constants import Text, Theme
 
 
 class HotkeyRecorderDialog(QDialog):
@@ -84,26 +84,13 @@ class HotkeyRecorderDialog(QDialog):
         self.setFocusPolicy(Qt.StrongFocus)
 
     def apply_styles(self):
-        # self.layout.setStyleSheet(self.style_manager.get_hotkey_recorder_style())
-
         self.logger.debug("Applying styles to hotkey recorder")
-        # current_theme = self.config.get('theme', 'Dark')
         if self.config:
-            current_theme = self.config.get('theme', 'Dark')
+            current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
             self.style_manager.set_theme(current_theme)
         
         dialog_styles = self.style_manager.get_hotkey_recorder_style()
         self.setStyleSheet(dialog_styles)
-
-        # input_style = self.style_manager.get_settings_input_field_style()
-        # for field in [self.stt_api_key_input, self.stt_api_base_input,
-        #               self.stt_model_input, self.stt_hotkey_input]:
-        #     field.setStyleSheet(input_style)
-
-        # # Apply style to the form widget background if needed
-        # form_widget_style = self.style_manager.get_widget_style()
-        # self.form_widget.setStyleSheet(form_widget_style)
-        # self.
         
     def keyPressEvent(self, event):
         """Handle key press events to record hotkey combination."""

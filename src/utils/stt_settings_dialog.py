@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from pynput.keyboard import HotKey
 
 from managers.style_manager import StyleManager
-from utils.constants import STTDialogSize, STT, Text
+from utils.constants import STTDialogSize, STT, Text, Theme
 
 
 class STTSettingsDialog(QDialog):
@@ -355,7 +355,7 @@ class STTSettingsDialog(QDialog):
 
     def apply_styles(self):
         self.logger.debug("Applying styles to STTSettingsDialog")
-        current_theme = self.config.get('theme', 'Dark')
+        current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
         self.style_manager.set_theme(current_theme)
 
         dialog_styles = self.style_manager.get_settings_dialog_styles()
