@@ -485,8 +485,26 @@ class StyleManager:
             font-size: 18px;
             font-weight: bold;
         }}
-
-
+        #conversationToggleButton {{
+            background: {colors['transparent_white']};
+            border: 1px solid rgba(79, 156, 249, 0.3);
+            border-radius: 2px;
+            color: {colors['primary']};
+        }}
+        #conversationToggleButton:hover {{
+            background: rgba(79, 156, 249, 0.1);
+            border: 1px solid rgba(79, 156, 249, 0.5);
+        }}
+        #conversationToggleButtonExpanded {{
+            background: {colors['transparent_white']};
+            border: 1px solid rgba(79, 156, 249, 0.3);
+            border-radius: 2px;
+            color: {colors['primary']};
+        }}
+        #conversationToggleButtonExpanded:hover {{
+            background: rgba(79, 156, 249, 0.1);
+            border: 1px solid rgba(79, 156, 249, 0.5);
+        }}
         """
     
     def _get_thin_scrollbar_style(self):
