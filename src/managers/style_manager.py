@@ -483,7 +483,49 @@ class StyleManager:
 
         """
     
-    
+    def _get_thin_scrollbar_style(self):
+        """Return modern thin scrollbar stylesheet."""
+        colors = self.get_theme_colors()
+        return f"""
+        /* Modern thin scrollbar styles */
+        QScrollBar:vertical {{
+            background: transparent;
+            width: 8px;
+            border-radius: 4px;
+            margin: 0px;
+        }}
+
+        QScrollBar::handle:vertical {{
+            background: {colors['field_bg_focus']};
+            border-radius: 4px;
+            min-height: 20px;
+            margin: 2px;
+        }}
+
+        QScrollBar::handle:vertical:hover {{
+            background: {colors['field_bg_focus']};
+        }}
+
+        QScrollBar::handle:vertical:pressed {{
+            background: {colors['field_bg_focus']};
+        }}
+
+        QScrollBar::add-line:vertical,
+        QScrollBar::sub-line:vertical {{
+            height: 0px;
+            background: transparent;
+        }}
+
+        QScrollBar::add-page:vertical,
+        QScrollBar::sub-page:vertical {{
+            background: transparent;
+        }}
+
+        QScrollBar:horizontal {{
+            height: 0px;
+        }}
+        """
+
     def get_response_area_style(self):
         """Get response area styles."""
         colors = self.get_theme_colors()
