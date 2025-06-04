@@ -52,6 +52,7 @@ class LLM:
     DEFAULT_LLM_MODEL = 'gpt-4.1-mini'
     DEFAULT_SYSTEM_PROMPT = "You’re a friendly assistant delivering clear, concise answers for everyday learning and fun facts. Keep replies brief, use tables for clarity, and make learning quick and enjoyable."
     DEFAULT_REQUEST_TIMEOUT = 60
+    DEFAULT_REQUEST_TIMEOUT_GET_AVAILABLE_MODELS = 7
     MAX_TOKENS = 2000
     TEMPERATURE = 0.7
 

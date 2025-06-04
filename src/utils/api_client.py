@@ -163,7 +163,7 @@ class ApiClient:
             response = requests.get(
                 f"{api_base}/models",
                 headers=headers,
-                timeout=LLM.DEFAULT_REQUEST_TIMEOUT
+                timeout=LLM.DEFAULT_REQUEST_TIMEOUT_GET_AVAILABLE_MODELS
             )
 
             self.logger.debug(f"Models API response status: {response.status_code}")
