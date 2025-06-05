@@ -1,5 +1,4 @@
 Markdown~=3.3.7
-numpy~=1.21.5
 pydantic~=2.11.5
 pynput~=1.8.1
 PyQt5~=5.15.11
@@ -7,4 +6,3 @@ PyQt5_sip~=12.17.0
 Requests~=2.32.3
 sounddevice~=0.5.2
 SQLAlchemy~=1.4.54
-wavio~=0.0.9
