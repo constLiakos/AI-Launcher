@@ -145,7 +145,7 @@ class Launcher(QMainWindow):
         clear_history_on_minimize = self.config.get('clear_history_on_minimize', False)
         if clear_history_on_minimize:
             logger.debug("Clearing conversation history (config enabled)")
-            self.conversation_manager.clear_history()
+            self.conversation_manager.clear_current_conversation()
 
         # Check if we should clear response on minimize
         clear_on_minimize = self.config.get('clear_on_minimize', False)
