@@ -38,7 +38,7 @@ class Files:
 
     
 class Database:
-    CONVERSATIONS_DATABASE_CONNECTION_STRING = 'sqlite://' + str(Files.CONVERSATIONS_DATABASE_PATH)
+    CONVERSATIONS_DATABASE_CONNECTION_STRING = 'sqlite:///' + str(Files.CONVERSATIONS_DATABASE_PATH)
 # =============================================================================
 # LLM Config
 # =============================================================================
