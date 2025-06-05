@@ -615,7 +615,7 @@ class UIManager(QObject):
             self._show_conversation_history()
             self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_RESPONSE_PATH)))
         else:
-            self._show_current_response()
+            self.set_response_text(self.get_current_response_text())
             self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
 
     def _show_conversation_history(self):
@@ -644,11 +644,6 @@ class UIManager(QObject):
             self.conversation_area.setHtml("<p><i>Error loading conversation history.</i></p>")
             self._setup_emoji_font(self.conversation_area)
 
-    def _show_current_response(self):
-        """Show only the current response (restore previous behavior)."""
-        # This will be called by the parent to restore the current response
-        self.set_response_text(self.get_current_response_text())
-
     def _format_conversation_history(self, history):
         """Format conversation history as HTML for display with text message bubble style."""
         html_parts = self._build_html_header()
@@ -662,15 +657,9 @@ class UIManager(QObject):
     def _build_html_header(self):
         """Build the HTML header with styles."""
         return [f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-        <style>
-            {self.style_manager.get_history_conversation_style()}
-        </style>
-        </head>
-        <body>
-        """]
+                <!DOCTYPE html><html><head><style>
+                {self.style_manager.get_history_conversation_style()}
+                </style></head><body>"""]
 
     def _format_single_message(self, message):
         """Format a single message into HTML."""
