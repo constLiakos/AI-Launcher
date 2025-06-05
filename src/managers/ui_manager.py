@@ -7,6 +7,7 @@ from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
 from managers.conversation_manager import ConversationManager
 from utils.constants import (
     ElementSize, Files, InputSettings, Text, WindowSize)
+from utils.markdown_render import MarkdownRenderer
 
 
 class UIManager(QObject):
@@ -43,6 +44,8 @@ class UIManager(QObject):
 
         self.show_history_mode = False
         self.conversation_manager:ConversationManager = None
+        self.markdown_render = MarkdownRenderer(logger)
+
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -645,7 +648,7 @@ class UIManager(QObject):
         self.set_response_text(self.get_current_response_text())
 
     def _format_conversation_history(self, history):
-        """Format conversation history as HTML for display."""
+        """Format conversation history as HTML for display with markdown support."""
         html_parts = ["<div style='font-family: Segoe UI, Arial, sans-serif; line-height: 1.4;'>"]
         
         for i, message in enumerate(history):
@@ -666,6 +669,9 @@ class UIManager(QObject):
                 except Exception:
                     time_str = f"<small style='color: #666;'>{timestamp}</small>"
             
+            # Convert content to HTML using markdown renderer
+            formatted_content = self.markdown_render.to_html(content) if content else ""
+            
             if role == 'user':
                 # Use user icon instead of emoji
                 user_icon = f"<img src='{str(Files.USER_ICON_PATH)}' width='18' height='18' style='vertical-align: middle; margin-right: 5px;'>" if hasattr(Files, 'USER_ICON_PATH') else "👤"
@@ -674,7 +680,7 @@ class UIManager(QObject):
                     <div style='font-weight: bold; color: #1976d2; margin-bottom: 5px;'>
                         {user_icon} You {time_str}
                     </div>
-                    <div>{self._escape_html(content)}</div>
+                    <div>{formatted_content}</div>
                 </div>
                 """)
             elif role == 'assistant':
@@ -685,7 +691,7 @@ class UIManager(QObject):
                     <div style='font-weight: bold; color: #7b1fa2; margin-bottom: 5px;'>
                         {bot_icon} Assistant {time_str}
                     </div>
-                    <div>{self._escape_html(content)}</div>
+                    <div>{formatted_content}</div>
                 </div>
                 """)
             elif role == 'system':
@@ -696,7 +702,7 @@ class UIManager(QObject):
                     <div style='font-weight: bold; color: #f57c00; font-size: 0.9em; margin-bottom: 3px;'>
                         {system_icon} System {time_str}
                     </div>
-                    <div style='font-size: 0.9em; font-style: italic;'>{self._escape_html(content)}</div>
+                    <div style='font-size: 0.9em; font-style: italic;'>{formatted_content}</div>
                 </div>
                 """)
             
@@ -710,15 +716,9 @@ class UIManager(QObject):
     def set_response_text(self, text):
         """Set response text - now aware of history mode."""
         self.show_history_mode = False
-        
-        if self.show_history_mode:
-            # If we're in history mode, don't update the display
-            # Store the current response for when user switches back
-            self._current_response = text
-        else:
-            # Normal mode - show the current response
-            self.conversation_area.setHtml(text)
-            self._current_response = text
+        self._current_response = text
+        html_content = self.markdown_render.to_html(text)
+        self.conversation_area.setHtml(html_content)
 
     def is_showing_history(self):
         """Check if currently showing conversation history."""
@@ -730,7 +730,7 @@ class UIManager(QObject):
         if not self.show_history_mode:
             current = self.conversation_area.toHtml()
             self.conversation_area.setHtml(current + text)
-            self._current_response = self.conversation_area.toHtml()
+            # self._current_response = self.conversation_area.toHtml()
 
     def get_current_response_text(self):
         """Get the current response text."""

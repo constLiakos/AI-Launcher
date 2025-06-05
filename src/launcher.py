@@ -18,7 +18,6 @@ from managers.animation_manager import AnimationManager
 from managers.style_manager import StyleManager
 from managers.hotkey_manager import HotkeyManager
 from utils.constants import STT, Conversation, ElementSize, Files, InputSettings, Theme, WindowSize, Text, Timing
-from utils.markdown_render import MarkdownRenderer
 from managers.state_manager import StateManager
 from utils.stt_api_client import SttApiClient
 
@@ -93,7 +92,6 @@ class Launcher(QMainWindow):
         self.animation_manager = AnimationManager(
             self, logger, self.style_manager)
         self.state_manager = StateManager(self.config, logger)
-        self.markdown_render = MarkdownRenderer(logger)
         self.hotkey_manager = HotkeyManager(logger, self.config)
         self.recording_manager = Recording_Manager(
             logger, state_manager=self.state_manager, config=self.config)
@@ -401,15 +399,18 @@ class Launcher(QMainWindow):
         """Update response display with basic markdown formatting."""
         response_text = self.state_manager.get_accumulated_response()
         logger.debug(f"accumulated response unformatted: \n{response_text}")
-        # Convert basic markdown to HTML
-        html_content = self.markdown_render.to_html(
-            response_text)
-        logger.debug(f"accumulated response in html format: \n{html_content}")
-        self.ui_manager.conversation_area.setHtml(html_content)
+        # # Convert basic markdown to HTML
+        # html_content = self.markdown_render.to_html(
+        #     response_text)
+        # logger.debug(f"accumulated response in html format: \n{html_content}")
+        # self.ui_manager.conversation_area.setHtml(html_content)
+        
 
-        self.ui_manager.set_response_text(response_text)
         if not self.ui_manager.is_conversation_visible():
             self.ui_manager.show_conversation_area()
+        else:
+            self.ui_manager.set_response_text(response_text)
+        
 
     def _handle_request_lifecycle(self, request_id, action):
         """Centralized request lifecycle management."""
