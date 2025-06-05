@@ -66,7 +66,9 @@ class StyleManager:
             'button_stt_idle_bg': "#5CA1F7",
             'button_stt_recording_bg': "#f8baba",
             'button_stt_recording_hover_bg': "#eea2a2",
-            'button_stt_hover_bg': "#4A8AE8"
+            'button_stt_hover_bg': "#4A8AE8",
+            'history_assistant_label_bg': "#5CA1F7",
+            'history_user_label_bg': "#5CA1F7",
         }
     
     def _get_dark_theme(self):
@@ -99,7 +101,9 @@ class StyleManager:
             'button_stt_idle_bg': "#5CA1F7",
             'button_stt_recording_bg': "#f8baba",
             'button_stt_recording_hover_bg': "#eea2a2",
-            'button_stt_hover_bg': "#4A8AE8"
+            'button_stt_hover_bg': "#4A8AE8",
+            'history_assistant_label_bg': "#5CA1F7",
+            'history_user_label_bg': "#5CA1F7",
         }
 
     # === SETTINGS DIALOG STYLES ===
@@ -884,7 +888,116 @@ class StyleManager:
             padding: 5px 5px;
             font-size: 12px;
             font-weight: 400;
-        }}
-
-             
+        }}  
         """
+    
+    def get_history_conversation_style(self):
+        colors = self.get_theme_colors()
+        return f"""
+            body {{
+                font-family: 'Segoe UI', Arial, sans-serif;
+                margin: 0;
+                padding: 10px;
+                background-color: {colors['field_bg']};
+                line-height: 1.4;
+            }}
+            .message-container {{ 
+                margin: 12px 0; 
+                width: 100%;
+                overflow: hidden;
+            }}
+            .user-message-wrapper {{
+                text-align: right;
+                margin-left: 25%;
+            }}
+            .assistant-message-wrapper {{
+                text-align: left;
+                margin-right: 25%;
+            }}
+            .user-message {{ 
+                display: inline-block;
+                max-width: 100%;
+                background-color: {colors['field_bg']};
+                color: {colors['text_color']};
+                padding: 12px 16px;
+                border-radius: 18px 18px 4px 18px;
+                box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+                word-wrap: break-word;
+                text-align: right;
+            }}
+            .assistant-message {{ 
+                display: inline-block;
+                max-width: 100%;
+                background-color: {colors['field_bg']};
+                color: {colors['text_color']};
+                padding: 12px 16px;
+                border-radius: 18px 18px 18px 4px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                border: 1px solid #e0e0e0;
+                word-wrap: break-word;
+                text-align: left;
+            }}
+            .system-message {{
+                text-align: center;
+                background-color: {colors['field_bg']};
+                color: {colors['text_color']};
+                padding: 8px 12px;
+                border-radius: 12px;
+                margin: 15px auto;
+                max-width: 60%;
+                font-size: 14px;
+                font-style: italic;
+                border: 1px solid #ffcc80;
+            }}
+            .message-header-user {{
+                font-size: 11px;
+                color:{colors['history_user_label_bg']};
+                margin-bottom: 6px;
+                font-weight: bold;
+                text-align: right;
+            }}
+            .message-header-assistant {{
+                font-size: 11px;
+                color: {colors['history_assistant_label_bg']};
+                margin-bottom: 6px;
+                font-weight: bold;
+                text-align: left;
+            }}
+            .message-content {{
+                font-size: 14px;
+                line-height: 1.3;
+            }}
+            .user-message .message-content {{
+                color: {colors['text_color']};
+            }}
+            .assistant-message .message-content {{
+                color: {colors['text_color']};
+            }}
+            .message-content p {{ 
+                margin: 6px 0; 
+            }}
+            .message-content p:first-child {{ 
+                margin-top: 0; 
+            }}
+            .message-content p:last-child {{ 
+                margin-bottom: 0; 
+            }}
+            .message-content ul, .message-content ol {{ 
+                margin: 6px 0; 
+                padding-left: 20px; 
+            }}
+            .message-content code {{ 
+                padding: 2px 4px; 
+                border-radius: 3px; 
+                font-family: 'Consolas', 'Monaco', monospace;
+                font-size: 13px;
+            }}
+            .user-message .message-content code {{
+                background-color: {colors['history_user_label_bg']};
+                color: {colors['text_color']};
+            }}
+            .assistant-message .message-content code {{
+                background-color: {colors['history_assistant_label_bg']};
+                color: {colors['text_color']};
+            }}
+    """

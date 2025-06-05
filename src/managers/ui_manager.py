@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QText
 from PyQt5.QtCore import Qt, pyqtSlot, QTimer, pyqtSignal, QObject
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
 from managers.conversation_manager import ConversationManager
+from managers.style_manager import StyleManager
 from utils.constants import (
     ElementSize, Files, InputSettings, Text, WindowSize)
 from utils.markdown_render import MarkdownRenderer
@@ -45,6 +46,7 @@ class UIManager(QObject):
         self.show_history_mode = False
         self.conversation_manager:ConversationManager = None
         self.markdown_render = MarkdownRenderer(logger)
+        self.style_manager = StyleManager(logger)
 
 
     def setup_ui(self, multiline_input=False):
@@ -648,14 +650,27 @@ class UIManager(QObject):
         self.set_response_text(self.get_current_response_text())
 
     def _format_conversation_history(self, history):
-        """Format conversation history as HTML for display with markdown support."""
-        html_parts = ["<div style='font-family: Segoe UI, Arial, sans-serif; line-height: 1.4;'>"]
+        """Format conversation history as HTML for display with text message bubble style."""
+        html_parts = [f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <style>
+            {self.style_manager.get_history_conversation_style()}
+        </style>
+        </head>
+        <body>
+        """]
         
-        for i, message in enumerate(history):
+        for message in history:
             role = message.get('role', 'unknown')
             content = message.get('content', '')
             timestamp = message.get('timestamp', '')
             
+            # Skip empty messages
+            if not content.strip():
+                continue
+                
             # Format timestamp if available
             time_str = ""
             if timestamp:
@@ -665,52 +680,58 @@ class UIManager(QObject):
                         dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
                     else:
                         dt = timestamp
-                    time_str = f"<small style='color: #666;'>{dt.strftime('%Y-%m-%d %H:%M:%S')}</small>"
+                    time_str = dt.strftime('%H:%M')
                 except Exception:
-                    time_str = f"<small style='color: #666;'>{timestamp}</small>"
+                    time_str = str(timestamp)[:5] if timestamp else ""
             
             # Convert content to HTML using markdown renderer
             formatted_content = self.markdown_render.to_html(content) if content else ""
             
             if role == 'user':
-                # Use user icon instead of emoji
-                user_icon = f"<img src='{str(Files.USER_ICON_PATH)}' width='18' height='18' style='vertical-align: middle; margin-right: 5px;'>" if hasattr(Files, 'USER_ICON_PATH') else "👤"
+                # User messages on the right (blue bubbles)
+                user_icon = f"<img src='{str(Files.USER_ICON_PATH)}' width='18' height='18' style='vertical-align: middle;'>" if hasattr(Files, 'USER_ICON_PATH') else "👤"
                 html_parts.append(f"""
-                <div style='margin: 10px 0; padding: 10px; background-color: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;'>
-                    <div style='font-weight: bold; color: #1976d2; margin-bottom: 5px;'>
-                        {user_icon} You {time_str}
+                <div class='message-container'>
+                    <div class='user-message-wrapper'>
+                        <div class='user-message'>
+                            <div class='message-header-user'>
+                                You {time_str} {user_icon}
+                            </div>
+                            <div class='message-content'>{formatted_content}</div>
+                        </div>
                     </div>
-                    <div>{formatted_content}</div>
                 </div>
                 """)
+                
             elif role == 'assistant':
-                # Use assistant/bot icon instead of emoji
-                bot_icon = f"<img src='{str(Files.ASSISTANT_ICON_PATH)}' width='18' height='18' style='vertical-align: middle; margin-right: 5px;'>" if hasattr(Files, 'ASSISTANT_ICON_PATH') else "🤖"
+                # Assistant messages on the left (white bubbles)
+                bot_icon = f"<img src='{str(Files.ASSISTANT_ICON_PATH)}' width='18' height='18' style='vertical-align: middle;'>" if hasattr(Files, 'ASSISTANT_ICON_PATH') else "🤖"
                 html_parts.append(f"""
-                <div style='margin: 10px 0; padding: 10px; background-color: #f3e5f5; border-radius: 8px; border-left: 4px solid #9c27b0;'>
-                    <div style='font-weight: bold; color: #7b1fa2; margin-bottom: 5px;'>
-                        {bot_icon} Assistant {time_str}
+                <div class='message-container'>
+                    <div class='assistant-message-wrapper'>
+                        <div class='assistant-message'>
+                            <div class='message-header-assistant'>
+                                {bot_icon} Assistant {time_str}
+                            </div>
+                            <div class='message-content'>{formatted_content}</div>
+                        </div>
                     </div>
-                    <div>{formatted_content}</div>
                 </div>
                 """)
+                
             elif role == 'system':
-                # Use system/settings icon instead of emoji
-                system_icon = f"<img src='{str(Files.SETTINGS_GEAR_ICON_PATH)}' width='18' height='18' style='vertical-align: middle; margin-right: 5px;'>" if hasattr(Files, 'SETTINGS_GEAR_ICON_PATH') else "⚙️"
+                # System messages in the center
+                system_icon = f"<img src='{str(Files.SETTINGS_GEAR_ICON_PATH)}' width='18' height='18' style='vertical-align: middle; margin-right: 4px;'>" if hasattr(Files, 'SETTINGS_GEAR_ICON_PATH') else "⚙️"
                 html_parts.append(f"""
-                <div style='margin: 10px 0; padding: 8px; background-color: #fff3e0; border-radius: 6px; border-left: 3px solid #ff9800;'>
-                    <div style='font-weight: bold; color: #f57c00; font-size: 0.9em; margin-bottom: 3px;'>
-                        {system_icon} System {time_str}
+                <div class='message-container'>
+                    <div class='system-message'>
+                        {system_icon}System: {formatted_content}
+                        {f"<br><small>{time_str}</small>" if time_str else ""}
                     </div>
-                    <div style='font-size: 0.9em; font-style: italic;'>{formatted_content}</div>
                 </div>
                 """)
-            
-            # Add separator between messages except for the last one
-            if i < len(history) - 1:
-                html_parts.append("<hr style='border: none; border-top: 1px solid #eee; margin: 15px 0;'>")
         
-        html_parts.append("</div>")
+        html_parts.append("</body></html>")
         return "".join(html_parts)
 
     def set_response_text(self, text):
