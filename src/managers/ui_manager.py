@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QText
                              QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSlot, QTimer, pyqtSignal, QObject
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
+from managers.conversation_manager import ConversationManager
 from utils.constants import (
     ElementSize, Files, InputSettings, Text, WindowSize)
 
@@ -25,6 +26,7 @@ class UIManager(QObject):
         self.stt_button = None
         self.settings_button = None
         self.copy_button = None
+        self.history_button = None  # New button for conversation history
         self.input_type_is_multiline = False
         self.multiline_toggle_button = None
         self.conversation_toggle_button = None
@@ -38,6 +40,9 @@ class UIManager(QObject):
         self.current_visual_state = "normal"
         self.is_expanded = False
         self.conversation_visible = False
+
+        self.show_history_mode = False
+        self.conversation_manager:ConversationManager = None
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
@@ -78,6 +83,7 @@ class UIManager(QObject):
 
         self.multiline_toggle_button.clicked.connect(self._toggle_input_type)
         self.conversation_toggle_button.clicked.connect(self.toggle_response_visibility)
+        self.history_button.clicked.connect(self._toggle_history_view)
 
 
     def connect_input_signals(self, callbacks):
@@ -498,6 +504,13 @@ class UIManager(QObject):
                     self.conversation_toggle_button.clicked.disconnect()
                 except TypeError:
                     pass
+
+            if hasattr(self.history_button, 'clicked'):
+                try:
+                    self.history_button.clicked.disconnect()
+                except TypeError:
+                    pass
+
         except Exception as e:
             self.logger.error(f"Error disconnecting signals: {e}")
 
@@ -555,6 +568,8 @@ class UIManager(QObject):
         if not self.conversation_visible:
             if self.is_multiline_input():
                 self.handle_multiline_resize()
+            
+            self.response_container.setVisible(True)
             self.conversation_area.setVisible(True)
             self.conversation_visible = True
             self.is_expanded = True
@@ -568,10 +583,7 @@ class UIManager(QObject):
             self.position_copy_button()
 
     def hide_conversation_area(self):
-        """
-        Hide response area and copy button.
-        This is purely UI logic - hiding/showing widgets and managing layout.
-        """
+        """Hide response area and copy button."""
         if self.conversation_visible:
             if self.is_multiline_input():
                 self.handle_multiline_resize()
@@ -582,8 +594,144 @@ class UIManager(QObject):
             self.update_conversation_toggle_button(False)
             
             QTimer.singleShot(10, self.position_conversation_toggle_button)
-            QTimer.singleShot(50, lambda: self.conversation_area.setVisible(False))
+            QTimer.singleShot(50, lambda: self.response_container.setVisible(False))
             self.logger.debug("Response area hidden")
+
+    def set_conversation_manager(self, conversation_manager):
+        """Set the conversation manager reference."""
+        self.conversation_manager = conversation_manager
+
+    def _toggle_history_view(self):
+        """Toggle between showing last response only and full conversation history."""
+        self.logger.debug("toggle history view button triggered")
+        self.show_history_mode = not self.show_history_mode
+        
+        if self.show_history_mode:
+            self._show_conversation_history()
+            self.history_button.setText("📄 Show Current Response")
+        else:
+            self._show_current_response()
+            self.history_button.setText("📜 Show Conversation History")
+
+    def _show_conversation_history(self):
+        """Display the full conversation history."""
+        self.get_current_response_text()
+        if not self.conversation_manager:
+            self.logger.warning("No conversation manager available")
+            return
+        
+        try:
+            history = self.conversation_manager.get_conversation_history()
+            if not history:
+                self.conversation_area.setHtml("<p><i>No conversation history available.</i></p>")
+                return
+            
+            html_content = self._format_conversation_history(history)
+            self.conversation_area.setHtml(html_content)
+            
+            # Scroll to the bottom to show most recent messages
+            scrollbar = self.conversation_area.verticalScrollBar()
+            scrollbar.setValue(scrollbar.maximum())
+            
+        except Exception as e:
+            self.logger.error(f"Error loading conversation history: {e}")
+            self.conversation_area.setHtml("<p><i>Error loading conversation history.</i></p>")
+
+    def _show_current_response(self):
+        """Show only the current response (restore previous behavior)."""
+        # This will be called by the parent to restore the current response
+        self.set_response_text(self.get_current_response_text())
+
+    def _format_conversation_history(self, history):
+        """Format conversation history as HTML for display."""
+        html_parts = ["<div style='font-family: Segoe UI, Arial, sans-serif; line-height: 1.4;'>"]
+        
+        for i, message in enumerate(history):
+            role = message.get('role', 'unknown')
+            content = message.get('content', '')
+            timestamp = message.get('timestamp', '')
+            
+            # Format timestamp if available
+            time_str = ""
+            if timestamp:
+                try:
+                    from datetime import datetime
+                    if isinstance(timestamp, str):
+                        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    else:
+                        dt = timestamp
+                    time_str = f"<small style='color: #666;'>{dt.strftime('%Y-%m-%d %H:%M:%S')}</small>"
+                except Exception:
+                    time_str = f"<small style='color: #666;'>{timestamp}</small>"
+            
+            if role == 'user':
+                html_parts.append(f"""
+                <div style='margin: 10px 0; padding: 10px; background-color: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;'>
+                    <div style='font-weight: bold; color: #1976d2; margin-bottom: 5px;'>
+                        👤 You {time_str}
+                    </div>
+                    <div>{self._escape_html(content)}</div>
+                </div>
+                """)
+            elif role == 'assistant':
+                html_parts.append(f"""
+                <div style='margin: 10px 0; padding: 10px; background-color: #f3e5f5; border-radius: 8px; border-left: 4px solid #9c27b0;'>
+                    <div style='font-weight: bold; color: #7b1fa2; margin-bottom: 5px;'>
+                        🤖 Assistant {time_str}
+                    </div>
+                    <div>{self._escape_html(content)}</div>
+                </div>
+                """)
+            elif role == 'system':
+                html_parts.append(f"""
+                <div style='margin: 10px 0; padding: 8px; background-color: #fff3e0; border-radius: 6px; border-left: 3px solid #ff9800;'>
+                    <div style='font-weight: bold; color: #f57c00; font-size: 0.9em; margin-bottom: 3px;'>
+                        ⚙️ System {time_str}
+                    </div>
+                    <div style='font-size: 0.9em; font-style: italic;'>{self._escape_html(content)}</div>
+                </div>
+                """)
+            
+            # Add separator between messages except for the last one
+            if i < len(history) - 1:
+                html_parts.append("<hr style='border: none; border-top: 1px solid #eee; margin: 15px 0;'>")
+        
+        html_parts.append("</div>")
+        return "".join(html_parts)
+
+    def set_response_text(self, text):
+        """Set response text - now aware of history mode."""
+        self.show_history_mode = False
+        
+        if self.show_history_mode:
+            # If we're in history mode, don't update the display
+            # Store the current response for when user switches back
+            self._current_response = text
+        else:
+            # Normal mode - show the current response
+            self.conversation_area.setHtml(text)
+            self._current_response = text
+
+    def is_showing_history(self):
+        """Check if currently showing conversation history."""
+        return self.show_history_mode
+
+
+    def append_response_text(self, text):
+        """Append text to response - only works in current response mode."""
+        if not self.show_history_mode:
+            current = self.conversation_area.toHtml()
+            self.conversation_area.setHtml(current + text)
+            self._current_response = self.conversation_area.toHtml()
+
+    def get_current_response_text(self):
+        """Get the current response text."""
+        return getattr(self, '_current_response', '')
+
+    def _escape_html(self, text):
+        """Escape HTML characters in text content."""
+        import html
+        return html.escape(str(text)).replace('\n', '<br>')
 
     def is_conversation_visible(self):
         return self.conversation_visible
@@ -597,23 +745,45 @@ class UIManager(QObject):
             self.show_conversation_area()
 
     def _create_response_section(self):
-        """Create response area."""
+        """Create response area with history button."""
         container_layout = self.main_container.layout()
 
+        # Create a container for the response section
+        response_container = QWidget()
+        response_layout = QVBoxLayout(response_container)
+        response_layout.setContentsMargins(0, 0, 0, 0)
+        response_layout.setSpacing(5)
+
+        # Create history button
+        history_button_layout = QHBoxLayout()
+        history_button_layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.history_button = QPushButton("📜 Show Conversation History")
+        self.history_button.setObjectName("historyButton")
+        self.history_button.setFixedHeight(30)
+        history_button_layout.addWidget(self.history_button)
+        history_button_layout.addStretch()
+        
+        response_layout.addLayout(history_button_layout)
+
+        # Create conversation area
         self.conversation_area = QTextBrowser()
         self.conversation_area.setObjectName("conversationArea")
         self.conversation_area.setAcceptRichText(True)
         self.conversation_area.setOpenExternalLinks(True)
         self.conversation_area.setVisible(False)
-        self.conversation_area.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.conversation_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self._setup_emoji_font(self.conversation_area)
-        container_layout.addWidget(self.conversation_area)
-        container_layout.setStretchFactor(
-            container_layout.itemAt(0).layout(), 0)  # Input section
-        # Response area takes remaining space
-        container_layout.setStretchFactor(self.conversation_area, 1)
+        response_layout.addWidget(self.conversation_area)
+
+        # Hide the response container initially
+        response_container.setVisible(False)
+        self.response_container = response_container  # Store reference
+        
+        container_layout.addWidget(response_container)
+        container_layout.setStretchFactor(container_layout.itemAt(0).layout(), 0)  # Input section
+        container_layout.setStretchFactor(response_container, 1)  # Response area takes remaining space
         container_layout.addStretch()
 
 #   ##########################################################################################

@@ -101,6 +101,7 @@ class Launcher(QMainWindow):
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
         self.ui_manager = UIManager(
             self, logger, self.config)
+        self.ui_manager.set_conversation_manager(self.conversation_manager)
         
         # Set up WindowManager after window exists
         self.window_manager.set_window(self)
@@ -219,6 +220,7 @@ class Launcher(QMainWindow):
             'stt_clicked': self.recording_manager.toggle_recording,
             'settings_clicked': self.open_settings,
             'copy_clicked': self.copy_response,
+            # 'history_clicked': self.on_history_clicked,
             'start_thinking_animation': self.animation_manager.start_thinking_animation,
             'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
         }
@@ -275,6 +277,15 @@ class Launcher(QMainWindow):
             self.animation_manager.start_thinking_animation(self.ui_manager.input_field)
         else:
             self.animation_manager.stop_thinking_animation()
+
+    # def on_history_clicked(self):
+    #     """Handle history button click."""
+    #     logger.debug("History Toggle Button Clicked")
+    #     if self.ui_manager.is_showing_history():
+    #         # User switched back to current response - restore it
+    #         current_response = self.ui_manager.get_current_response_text()
+    #         if current_response:
+    #             self.ui_manager.set_response_text(current_response)
 
     def on_input_type_changed(self):
         """Called by UIManager when input type changes"""
@@ -395,6 +406,10 @@ class Launcher(QMainWindow):
             response_text)
         logger.debug(f"accumulated response in html format: \n{html_content}")
         self.ui_manager.conversation_area.setHtml(html_content)
+
+        self.ui_manager.set_response_text(response_text)
+        if not self.ui_manager.is_conversation_visible():
+            self.ui_manager.show_conversation_area()
 
     def _handle_request_lifecycle(self, request_id, action):
         """Centralized request lifecycle management."""
