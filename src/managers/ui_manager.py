@@ -651,7 +651,17 @@ class UIManager(QObject):
 
     def _format_conversation_history(self, history):
         """Format conversation history as HTML for display with text message bubble style."""
-        html_parts = [f"""
+        html_parts = self._build_html_header()
+        
+        for message in history:
+            if formatted_message := self._format_single_message(message):
+                html_parts.append(formatted_message)
+        html_parts.append("</body></html>")
+        return "".join(html_parts)
+
+    def _build_html_header(self):
+        """Build the HTML header with styles."""
+        return [f"""
         <!DOCTYPE html>
         <html>
         <head>
@@ -661,78 +671,102 @@ class UIManager(QObject):
         </head>
         <body>
         """]
+
+    def _format_single_message(self, message):
+        """Format a single message into HTML."""
+        role = message.get('role', 'unknown')
+        content = message.get('content', '')
+        timestamp = message.get('timestamp', '')
         
-        for message in history:
-            role = message.get('role', 'unknown')
-            content = message.get('content', '')
-            timestamp = message.get('timestamp', '')
-            
-            # Skip empty messages
-            if not content.strip():
-                continue
-                
-            # Format timestamp if available
-            time_str = ""
-            if timestamp:
-                try:
-                    from datetime import datetime
-                    if isinstance(timestamp, str):
-                        dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                    else:
-                        dt = timestamp
-                    time_str = dt.strftime('%H:%M')
-                except Exception:
-                    time_str = str(timestamp)[:5] if timestamp else ""
-            
-            # Convert content to HTML using markdown renderer
-            formatted_content = self.markdown_render.to_html(content) if content else ""
-            
-            if role == 'user':
-                # User messages on the right (blue bubbles)
-                user_icon = f"<img src='{str(Files.USER_ICON_PATH)}' width='18' height='18' style='vertical-align: middle;'>" if hasattr(Files, 'USER_ICON_PATH') else "👤"
-                html_parts.append(f"""
-                <div class='message-container'>
-                    <div class='user-message-wrapper'>
-                        <div class='user-message'>
-                            <div class='message-header-user'>
-                                You {time_str} {user_icon}
-                            </div>
-                            <div class='message-content'>{formatted_content}</div>
-                        </div>
-                    </div>
-                </div>
-                """)
-                
-            elif role == 'assistant':
-                # Assistant messages on the left (white bubbles)
-                bot_icon = f"<img src='{str(Files.ASSISTANT_ICON_PATH)}' width='18' height='18' style='vertical-align: middle;'>" if hasattr(Files, 'ASSISTANT_ICON_PATH') else "🤖"
-                html_parts.append(f"""
-                <div class='message-container'>
-                    <div class='assistant-message-wrapper'>
-                        <div class='assistant-message'>
-                            <div class='message-header-assistant'>
-                                {bot_icon} Assistant {time_str}
-                            </div>
-                            <div class='message-content'>{formatted_content}</div>
-                        </div>
-                    </div>
-                </div>
-                """)
-                
-            elif role == 'system':
-                # System messages in the center
-                system_icon = f"<img src='{str(Files.SETTINGS_GEAR_ICON_PATH)}' width='18' height='18' style='vertical-align: middle; margin-right: 4px;'>" if hasattr(Files, 'SETTINGS_GEAR_ICON_PATH') else "⚙️"
-                html_parts.append(f"""
-                <div class='message-container'>
-                    <div class='system-message'>
-                        {system_icon}System: {formatted_content}
-                        {f"<br><small>{time_str}</small>" if time_str else ""}
-                    </div>
-                </div>
-                """)
+        # Skip empty messages
+        if not content.strip():
+            return None
         
-        html_parts.append("</body></html>")
-        return "".join(html_parts)
+        time_str = self._format_timestamp(timestamp)
+        formatted_content = self.markdown_render.to_html(content) if content else ""
+        
+        # Message formatters mapping
+        formatters = {
+            'user': self._format_user_message,
+            'assistant': self._format_assistant_message,
+            'system': self._format_system_message
+        }
+        
+        formatter = formatters.get(role)
+        if formatter:
+            return formatter(formatted_content, time_str)
+        
+        return None
+
+    def _format_timestamp(self, timestamp):
+        """Format timestamp string for display."""
+        if not timestamp:
+            return ""
+        
+        try:
+            from datetime import datetime
+            if isinstance(timestamp, str):
+                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+            else:
+                dt = timestamp
+            return dt.strftime('%H:%M')
+        except Exception:
+            return str(timestamp)[:5] if timestamp else ""
+
+    def _get_icon(self, icon_attr, fallback_emoji):
+        """Get icon HTML or fallback emoji."""
+        if hasattr(Files, icon_attr):
+            icon_path = getattr(Files, icon_attr)
+            return f"<img src='{str(icon_path)}' width='18' height='18' style='vertical-align: middle;'>"
+        return fallback_emoji
+
+    def _format_user_message(self, content, time_str):
+        """Format user message HTML."""
+        user_icon = self._get_icon('USER_ICON_PATH', "👤")
+        return f"""
+        <div class='message-container'>
+            <div class='user-message-wrapper'>
+                <div class='user-message'>
+                    <div class='message-header-user'>
+                        You {time_str} {user_icon}
+                    </div>
+                    <div class='message-content'>{content}</div>
+                </div>
+            </div>
+        </div>
+        """
+
+    def _format_assistant_message(self, content, time_str):
+        """Format assistant message HTML."""
+        bot_icon = self._get_icon('ASSISTANT_ICON_PATH', "🤖")
+        return f"""
+        <div class='message-container'>
+            <div class='assistant-message-wrapper'>
+                <div class='assistant-message'>
+                    <div class='message-header-assistant'>
+                        {bot_icon} Assistant {time_str}
+                    </div>
+                    <div class='message-content'>{content}</div>
+                </div>
+            </div>
+        </div>
+        """
+
+    def _format_system_message(self, content, time_str):
+        """Format system message HTML."""
+        system_icon = self._get_icon('SETTINGS_GEAR_ICON_PATH', "⚙️")
+        if hasattr(Files, 'SETTINGS_GEAR_ICON_PATH'):
+            system_icon = system_icon.replace('vertical-align: middle;', 'vertical-align: middle; margin-right: 4px;')
+        
+        time_html = f"<br><small>{time_str}</small>" if time_str else ""
+        return f"""
+        <div class='message-container'>
+            <div class='system-message'>
+                {system_icon}System: {content}
+                {time_html}
+            </div>
+        </div>
+        """
 
     def set_response_text(self, text):
         """Set response text - now aware of history mode."""

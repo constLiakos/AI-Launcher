@@ -69,6 +69,7 @@ class StyleManager:
             'button_stt_hover_bg': "#4A8AE8",
             'history_assistant_label_bg': "#5CA1F7",
             'history_user_label_bg': "#5CA1F7",
+            'history_message_bg': "#ebf0f5",
         }
     
     def _get_dark_theme(self):
@@ -104,6 +105,7 @@ class StyleManager:
             'button_stt_hover_bg': "#4A8AE8",
             'history_assistant_label_bg': "#5CA1F7",
             'history_user_label_bg': "#5CA1F7",
+            'history_message_bg': "#ebf0f5",
         }
 
     # === SETTINGS DIALOG STYLES ===
@@ -903,23 +905,25 @@ class StyleManager:
             }}
             .message-container {{ 
                 margin: 12px 0; 
-                width: 100%;
+                width: 60%;
                 overflow: hidden;
             }}
             .user-message-wrapper {{
                 text-align: right;
-                margin-left: 25%;
+                margin-left: 100px;
+                border: 2px solid black;
+                border-radius: 15px;
             }}
             .assistant-message-wrapper {{
                 text-align: left;
-                margin-right: 25%;
+                margin-right: 100px;
             }}
             .user-message {{ 
                 display: inline-block;
-                max-width: 100%;
                 background-color: {colors['field_bg']};
                 color: {colors['text_color']};
                 padding: 12px 16px;
+                border: 2px solid #007bff;
                 border-radius: 18px 18px 4px 18px;
                 box-shadow: 0 2px 8px rgba(0,123,255,0.3);
                 word-wrap: break-word;
@@ -927,13 +931,11 @@ class StyleManager:
             }}
             .assistant-message {{ 
                 display: inline-block;
-                max-width: 100%;
                 background-color: {colors['field_bg']};
                 color: {colors['text_color']};
-                padding: 12px 16px;
                 border-radius: 18px 18px 18px 4px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                border: 1px solid #e0e0e0;
+                border: 2px solid #333333;
+                padding: 12px 16px;
                 word-wrap: break-word;
                 text-align: left;
             }}
@@ -942,12 +944,11 @@ class StyleManager:
                 background-color: {colors['field_bg']};
                 color: {colors['text_color']};
                 padding: 8px 12px;
+                border: 1px solid #ffcc80;
                 border-radius: 12px;
                 margin: 15px auto;
-                max-width: 60%;
                 font-size: 14px;
                 font-style: italic;
-                border: 1px solid #ffcc80;
             }}
             .message-header-user {{
                 font-size: 11px;
@@ -966,6 +967,9 @@ class StyleManager:
             .message-content {{
                 font-size: 14px;
                 line-height: 1.3;
+                background-color: {colors['history_message_bg']};
+                border-radius: 5px;
+                padding: 10px 10px;
             }}
             .user-message .message-content {{
                 color: {colors['text_color']};
