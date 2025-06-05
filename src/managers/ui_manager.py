@@ -48,7 +48,6 @@ class UIManager(QObject):
         self.markdown_render = MarkdownRenderer(logger)
         self.style_manager = style_manager
 
-
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""
         self.input_type_is_multiline = multiline_input
@@ -812,8 +811,8 @@ class UIManager(QObject):
     def position_conversation_toggle_button(self):
         """Position the conversation toggle button at the bottom edge of the window."""
         if not self.conversation_toggle_button or not self.main_container:
+            self.logger.debug("Conversation Toggle Button not positioned")
             return
-            
         try:
             # Get container dimensions
             container_geometry = self.main_container.geometry()
@@ -825,6 +824,7 @@ class UIManager(QObject):
             y = container_geometry.height() - button_height - 2   # 2px from bottom edge
             
             self.conversation_toggle_button.move(x, y)
+            self.logger.debug(f"Main container geometry: x:{container_geometry.width()}, y:{container_geometry.height()}")
             self.logger.debug(f"Conversation toggle button positioned at ({x}, {y})")
             
         except Exception as e:
@@ -877,10 +877,10 @@ class UIManager(QObject):
         self.conversation_toggle_button = QPushButton()
         self.conversation_toggle_button.setParent(self.main_container)
         self.conversation_toggle_button.setFixedSize(ElementSize.CONVERSATION_TOGGLE_BUTTON_WIDTH, ElementSize.CONVERSATION_TOGGLE_BUTTON_HEIGHT)
-        self.conversation_toggle_button.setFont(QFont("Segoe UI", 8))
+        self.conversation_toggle_button.setFont(QFont("Segoe UI", 5))
         self.update_conversation_toggle_button(self.conversation_visible)
-        self.position_conversation_toggle_button()
         self.conversation_toggle_button.raise_()
+        QTimer.singleShot(50, self.position_conversation_toggle_button)
 
     def _create_history_toggle_button(self):
         # Create history button container
