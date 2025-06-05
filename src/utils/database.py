@@ -123,7 +123,15 @@ class AIConversationManager:
                 self.logger.info(f"Directory exists before creation: {db_dir.exists()}")
                 self.logger.info(f"Directory is absolute: {db_dir.is_absolute()}")
                 self.logger.info(f"Current working directory: {os.getcwd()}")
-                self.logger.info(f"Current user: {os.getuid()}")
+                
+                # Cross-platform user info
+                try:
+                    if hasattr(os, 'getuid'):
+                        self.logger.info(f"Current user ID: {os.getuid()}")
+                    else:
+                        self.logger.info(f"Current user: {os.getenv('USERNAME', 'unknown')}")
+                except Exception as e:
+                    self.logger.info(f"Could not get user info: {e}")
                 
                 # Create directory if it doesn't exist with proper error handling
                 try:
