@@ -709,15 +709,7 @@ class Launcher(QMainWindow):
         logger.debug(f"Input changed, length: {len(text)} characters")
         self.state_manager.set_prompt(text, self.ui_manager.is_multiline_input())
 
-        if  self.ui_manager.is_multiline_input():
-            self.ui_manager.handle_multiline_resize()
-        if text.strip():
-            self.ui_manager.set_visual_state("typing")
-        else:
-            # Text does not exist
-            self.ui_manager.set_visual_state("normal")
-            self.ui_manager.hide_conversation_area()
-
+        self.ui_manager.on_input_changed(text)
 
 
 

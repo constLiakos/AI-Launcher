@@ -917,6 +917,16 @@ class UIManager(QObject):
     def is_currently_expanded(self):
         """Check if UI is currently expanded."""
         return self.is_expanded
+    
+    def on_input_changed(self, text):
+        if  self.is_multiline_input():
+            self.handle_multiline_resize()
+        if text.strip():
+            self.set_visual_state("typing")
+        else:
+            # Text does not exist
+            self.set_visual_state("normal")
+            self.hide_conversation_area()
 
 #   ##########################################################################################
 #       Help Functions
