@@ -628,6 +628,7 @@ class UIManager(QObject):
             
             html_content = self._format_conversation_history(history)
             self.conversation_area.setHtml(html_content)
+            self._setup_emoji_font(self.conversation_area)
             
             # Scroll to the bottom to show most recent messages
             scrollbar = self.conversation_area.verticalScrollBar()
@@ -636,6 +637,7 @@ class UIManager(QObject):
         except Exception as e:
             self.logger.error(f"Error loading conversation history: {e}")
             self.conversation_area.setHtml("<p><i>Error loading conversation history.</i></p>")
+            self._setup_emoji_font(self.conversation_area)
 
     def _show_current_response(self):
         """Show only the current response (restore previous behavior)."""
@@ -665,28 +667,34 @@ class UIManager(QObject):
                     time_str = f"<small style='color: #666;'>{timestamp}</small>"
             
             if role == 'user':
+                # Use user icon instead of emoji
+                user_icon = f"<img src='{str(Files.USER_ICON_PATH)}' width='18' height='18' style='vertical-align: middle; margin-right: 5px;'>" if hasattr(Files, 'USER_ICON_PATH') else "👤"
                 html_parts.append(f"""
                 <div style='margin: 10px 0; padding: 10px; background-color: #e3f2fd; border-radius: 8px; border-left: 4px solid #2196f3;'>
                     <div style='font-weight: bold; color: #1976d2; margin-bottom: 5px;'>
-                        👤 You {time_str}
+                        {user_icon} You {time_str}
                     </div>
                     <div>{self._escape_html(content)}</div>
                 </div>
                 """)
             elif role == 'assistant':
+                # Use assistant/bot icon instead of emoji
+                bot_icon = f"<img src='{str(Files.ASSISTANT_ICON_PATH)}' width='18' height='18' style='vertical-align: middle; margin-right: 5px;'>" if hasattr(Files, 'ASSISTANT_ICON_PATH') else "🤖"
                 html_parts.append(f"""
                 <div style='margin: 10px 0; padding: 10px; background-color: #f3e5f5; border-radius: 8px; border-left: 4px solid #9c27b0;'>
                     <div style='font-weight: bold; color: #7b1fa2; margin-bottom: 5px;'>
-                        🤖 Assistant {time_str}
+                        {bot_icon} Assistant {time_str}
                     </div>
                     <div>{self._escape_html(content)}</div>
                 </div>
                 """)
             elif role == 'system':
+                # Use system/settings icon instead of emoji
+                system_icon = f"<img src='{str(Files.SETTINGS_GEAR_ICON_PATH)}' width='18' height='18' style='vertical-align: middle; margin-right: 5px;'>" if hasattr(Files, 'SETTINGS_GEAR_ICON_PATH') else "⚙️"
                 html_parts.append(f"""
                 <div style='margin: 10px 0; padding: 8px; background-color: #fff3e0; border-radius: 6px; border-left: 3px solid #ff9800;'>
                     <div style='font-weight: bold; color: #f57c00; font-size: 0.9em; margin-bottom: 3px;'>
-                        ⚙️ System {time_str}
+                        {system_icon} System {time_str}
                     </div>
                     <div style='font-size: 0.9em; font-style: italic;'>{self._escape_html(content)}</div>
                 </div>
