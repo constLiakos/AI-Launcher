@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QIcon, QKeySequence
 
-from managers.recording_manager import Recording_Manager
+from managers.recording_manager import RecordingManager
 from managers.tray_manager import TrayManager
 from managers.ui_manager import UIManager
 from managers.window_manager import WindowManager
@@ -93,7 +93,7 @@ class Launcher(QMainWindow):
             self, logger, self.style_manager)
         self.state_manager = StateManager(self.config, logger)
         self.hotkey_manager = HotkeyManager(logger, self.config)
-        self.recording_manager = Recording_Manager(
+        self.recording_manager = RecordingManager(
             logger, state_manager=self.state_manager, config=self.config)
         self.tray_manager = TrayManager(
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)

@@ -1,23 +1,30 @@
 import logging
 import sounddevice as sd
 import threading
-import numpy as np
-import wavio
+import wave
 import os
-
+import numpy as np
+from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+from PyQt5.QtWidgets import QApplication
 from managers.state_manager import StateManager
 from utils.constants import Directories, Files
 
-
-class Recording_Manager:
-    def __init__(self, logger: logging.Logger, state_manager, config):
-        self.logger = logger.getChild('recording_manager')  # Fixed logger name
+class RecordingManager(QObject):  # Inherit from QObject for signals
+    # Qt signals for thread-safe communication
+    recording_started = pyqtSignal()
+    recording_stopped = pyqtSignal()
+    recording_failed = pyqtSignal(str)  # Error message
+    audio_saved = pyqtSignal(str)  # File path
+    recording_progress = pyqtSignal(float)  # Recording duration or level
+    
+    def __init__(self, logger: logging.Logger, state_manager, config, parent=None):
+        super().__init__(parent)
+        
+        self.logger = logger.getChild('recording_manager')
         self.state_manager: StateManager = state_manager
         self.config = config
-
         self.tmp_dir = self.config.get('tmp_dir', Directories.DEFAULT_TMP)
         os.makedirs(self.tmp_dir, exist_ok=True)
-
         self.audio_file_path = str(Files.RECORDING_FILE_PATH)
         
         # Initialize audio recording attributes
@@ -25,12 +32,24 @@ class Recording_Manager:
         self.recording = False
         self.record_thread = None
         self.fs = 16000  # Sample rate
+        self._frames_lock = threading.Lock()
+        
+        # Qt-specific attributes
+        self._progress_timer = QTimer()
+        self._progress_timer.timeout.connect(self._update_progress)
+        self._recording_start_time = None
+        
+        # Connect signals to slots if needed
+        self.recording_failed.connect(self._handle_recording_error)
 
-    # Recording
     def toggle_recording(self):
-        """Toggle speech-to-text recording."""
+        """Toggle speech-to-text recording - safe to call from GUI thread."""
+        # This method is called from the main Qt thread
+        QApplication.processEvents()  # Process any pending Qt events
+        
         current_state = self.state_manager.get_stt_state()
         self.logger.debug(f"Current State is: {current_state}")
+        
         if current_state == "idle":
             self.start_recording()
         elif current_state == "recording":
@@ -44,13 +63,24 @@ class Recording_Manager:
         
         self.logger.debug("Starting audio recording")
         self.recording = True
-        self.frames = []
+        self._recording_start_time = QTimer()
+        self._recording_start_time.start()
+        
+        with self._frames_lock:
+            self.frames = []
+            
+        # Start progress timer
+        self._progress_timer.start(100)  # Update every 100ms
+        
         self.record_thread = threading.Thread(target=self.record_audio, daemon=True)
         self.record_thread.start()
+        
+        # Emit signal in a thread-safe way
+        self.recording_started.emit()
         self.logger.debug("Recording started")
 
     def record_audio(self):
-        """Record audio data."""
+        """Record audio data - runs in separate thread."""
         try:
             self.logger.debug("Starting Recording input stream")
             
@@ -60,58 +90,154 @@ class Recording_Manager:
             if not input_devices:
                 raise RuntimeError("No audio input devices available")
                 
-            with sd.InputStream(samplerate=self.fs, channels=1, dtype='int16', callback=self.audio_callback):
+            with sd.InputStream(
+                samplerate=self.fs, 
+                channels=1, 
+                dtype='int16', 
+                callback=self.audio_callback,
+                blocksize=1024  # Add blocksize for better performance
+            ):
                 while self.recording:
                     sd.sleep(100)
-
+                    # Allow Qt to process events periodically
+                    if QApplication.instance():
+                        QApplication.processEvents()
+                    
             self.logger.debug("Recording completed")
             self.state_manager.recording_completed()
-
+            
             # Save audio after recording stops
-            if len(self.frames) > 0:
+            with self._frames_lock:
+                frames_count = len(self.frames)
+                
+            if frames_count > 0:
                 self.save_audio()
             else:
                 self.logger.warning("No audio data recorded")
+                self.recording_failed.emit("No audio data recorded")
                 
         except (sd.PortAudioError, RuntimeError) as e:
-            self.logger.error(f"Audio device error: {e}")
-            self.state_manager.stt_recording_failed()  # Add this method to reset state
+            error_msg = f"Audio device error: {e}"
+            self.logger.error(error_msg)
+            self.recording_failed.emit(error_msg)
+            
         except Exception as e:
-            self.logger.error(f"Recording failed: {e}")
-            self.state_manager.stt_recording_failed()
+            error_msg = f"Recording failed: {e}"
+            self.logger.error(error_msg)
+            self.recording_failed.emit(error_msg)
+            
         finally:
             self.recording = False
+            self._progress_timer.stop()
 
     def audio_callback(self, indata, frames, time_, status):
-        """Audio input callback."""
+        """Audio input callback - runs in audio thread."""
         if status:
             self.logger.warning(f"InputStream status: {status}")
-        if self.recording:  # Only append if we're actively recording
-            self.frames.append(indata.copy().tobytes())
+            
+        if self.recording:
+            try:
+                # Convert numpy array to bytes and store thread-safely
+                with self._frames_lock:
+                    if indata.dtype != np.int16:
+                        audio_data = (indata * 32767).astype(np.int16)
+                    else:
+                        audio_data = indata.copy()
+                    self.frames.append(audio_data.tobytes())
+            except Exception as e:
+                self.logger.error(f"Error in audio callback: {e}")
 
     def stop_recording(self):
-        """Stop recording and process speech-to-text."""
+        """Stop recording - safe to call from GUI thread."""
         if not self.state_manager.stt_stop_recording():
             return
         
         self.logger.debug("Stopping audio recording")
         self.recording = False
+        self._progress_timer.stop()
         
         # Wait for the recording thread to finish
         if self.record_thread and self.record_thread.is_alive():
-            self.record_thread.join(timeout=2.0)  # Wait max 2 seconds
+            self.record_thread.join(timeout=2.0)
             if self.record_thread.is_alive():
                 self.logger.warning("Recording thread did not stop gracefully")
+        
+        # Emit signal
+        self.recording_stopped.emit()
 
     def save_audio(self):
         """Save recorded audio frames to file."""
         try:
-            # Ensure directory exists before saving
             os.makedirs(os.path.dirname(self.audio_file_path), exist_ok=True)
             
-            audio_data_bytes = b''.join(self.frames)
-            data_np = np.frombuffer(audio_data_bytes, dtype='int16')
-            wavio.write(self.audio_file_path, data_np, self.fs, sampwidth=2)
+            with self._frames_lock:
+                audio_data_bytes = b''.join(self.frames)
+            
+            with wave.open(self.audio_file_path, 'wb') as wav_file:
+                wav_file.setnchannels(1)
+                wav_file.setsampwidth(2)
+                wav_file.setframerate(self.fs)
+                wav_file.writeframes(audio_data_bytes)
+                
             self.logger.debug(f"Audio saved to {self.audio_file_path}")
+            self.audio_saved.emit(self.audio_file_path)
+            
         except Exception as e:
-            self.logger.error(f"Failed to save audio: {e}")
+            error_msg = f"Failed to save audio: {e}"
+            self.logger.error(error_msg)
+            self.recording_failed.emit(error_msg)
+
+    def _update_progress(self):
+        """Update recording progress - runs in main thread."""
+        # if self.recording and self._recording_start_time:
+            # Calculate recording duration or audio level
+            # duration = self._recording_start_time.elapsed() / 1000.0  # Convert to seconds
+            # self.recording_progress.emit(duration)
+        pass
+
+    def _handle_recording_error(self, error_message):
+        """Handle recording errors - runs in main thread."""
+        self.logger.error(f"Recording error handled: {error_message}")
+        # Reset state
+        if hasattr(self.state_manager, 'stt_recording_failed'):
+            self.state_manager.stt_recording_failed()
+        else:
+            # Fallback
+            if hasattr(self.state_manager, 'reset_stt_state'):
+                self.state_manager.reset_stt_state()
+
+    def cleanup(self):
+        """Clean up resources - call this when closing the application."""
+        if self.recording:
+            self.stop_recording()
+        
+        self._progress_timer.stop()
+        
+        # Clean up temporary files if needed
+        if os.path.exists(self.audio_file_path):
+            try:
+                os.remove(self.audio_file_path)
+                self.logger.debug("Temporary audio file cleaned up")
+            except Exception as e:
+                self.logger.warning(f"Failed to clean up audio file: {e}")
+
+    def get_recording_state(self):
+        """Get current recording state - thread-safe."""
+        return self.recording
+
+    def get_audio_devices(self):
+        """Get available audio input devices."""
+        try:
+            devices = sd.query_devices()
+            input_devices = []
+            for i, device in enumerate(devices):
+                if device['max_input_channels'] > 0:
+                    input_devices.append({
+                        'index': i,
+                        'name': device['name'],
+                        'channels': device['max_input_channels']
+                    })
+            return input_devices
+        except Exception as e:
+            self.logger.error(f"Failed to get audio devices: {e}")
+            return []
