@@ -551,7 +551,6 @@ class UIManager(QObject):
         if self.conversation_visible:
             if self.is_multiline_input():
                 self.handle_multiline_resize()
-            self.copy_button.setVisible(False)
             self.conversation_visible = False
             self.is_expanded = False
             self.expansion_changed.emit(False)
