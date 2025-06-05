@@ -55,7 +55,7 @@ class UIManager(QObject):
         self._create_main_container()
         self._create_input_section()
         self._create_response_section()
-        self._create_copy_button()
+        self._create_conversation_toggle_button()
         self._setup_shortcuts()
 
     def connect_signals(self, callbacks):
@@ -79,8 +79,6 @@ class UIManager(QObject):
             self.stt_button.clicked.connect(callbacks['stt_clicked'])
         if 'settings_clicked' in callbacks:
             self.settings_button.clicked.connect(callbacks['settings_clicked'])
-        if 'copy_clicked' in callbacks:
-            self.copy_button.clicked.connect(callbacks['copy_clicked'])
         if 'start_thinking_animation' in callbacks:
             self.animation_callbacks['start_thinking'] = callbacks['start_thinking_animation']
         if 'stop_thinking_animation' in callbacks:
@@ -89,7 +87,7 @@ class UIManager(QObject):
         self.multiline_toggle_button.clicked.connect(self._toggle_input_type)
         self.conversation_toggle_button.clicked.connect(self.toggle_response_visibility)
         self.history_button.clicked.connect(self._toggle_history_view)
-
+        self.copy_button.clicked.connect(callbacks['copy_clicked'])
 
     def connect_input_signals(self, callbacks):
         """Connect UI signals to callbacks."""
@@ -280,11 +278,6 @@ class UIManager(QObject):
             else:
                 self.logger.debug("Window is expanded, skipping window resize")
 
-            # Handle copy button positioning if response area is visible
-            if self.conversation_area.isVisible():
-                self.logger.debug("Scheduling copy button positioning")
-                QTimer.singleShot(10, self.position_copy_button)
-
         except Exception as e:
             self.logger.error("Unexpected error in handle_multiline_resize: %s", e, exc_info=True)
 
@@ -421,39 +414,6 @@ class UIManager(QObject):
         input_layout.addWidget(self.settings_button)
 
         container_layout.addLayout(input_layout)
-        self._create_conversation_toggle_button()
-
-
-    def _create_conversation_toggle_button(self):
-        """Create the conversation toggle button as a floating element at bottom edge."""
-        self.conversation_toggle_button = QPushButton()
-        self.conversation_toggle_button.setParent(self.main_container)
-        self.conversation_toggle_button.setFixedSize(ElementSize.CONVERSATION_TOGGLE_BUTTON_WIDTH, ElementSize.CONVERSATION_TOGGLE_BUTTON_HEIGHT)
-        self.conversation_toggle_button.setFont(QFont("Segoe UI", 8))
-        self.update_conversation_toggle_button(self.conversation_visible)
-        self.position_conversation_toggle_button()
-        self.conversation_toggle_button.raise_()
-
-    def position_conversation_toggle_button(self):
-        """Position the conversation toggle button at the bottom edge of the window."""
-        if not self.conversation_toggle_button or not self.main_container:
-            return
-            
-        try:
-            # Get container dimensions
-            container_geometry = self.main_container.geometry()
-            button_width = self.conversation_toggle_button.width()
-            button_height = self.conversation_toggle_button.height()
-            
-            # Position at bottom center, slightly inset from the edge
-            x = (container_geometry.width() - button_width) // 2  # Center horizontally
-            y = container_geometry.height() - button_height - 2   # 2px from bottom edge
-            
-            self.conversation_toggle_button.move(x, y)
-            self.logger.debug(f"Conversation toggle button positioned at ({x}, {y})")
-            
-        except Exception as e:
-            self.logger.error(f"Error positioning conversation toggle button: {e}")
 
     def update_conversation_toggle_button(self, is_expanded):
         """Update conversation toggle button appearance based on current state."""
@@ -585,7 +545,6 @@ class UIManager(QObject):
             QTimer.singleShot(10, self.position_conversation_toggle_button)
             
             self.logger.debug("Response area shown")
-            self.position_copy_button()
 
     def hide_conversation_area(self):
         """Hide response area and copy button."""
@@ -807,24 +766,18 @@ class UIManager(QObject):
         response_layout.setContentsMargins(0, 0, 0, 0)
         response_layout.setSpacing(5)
 
-        # Create history button container
-        history_button_container = QWidget()
-        history_button_layout = QHBoxLayout(history_button_container)
-        history_button_layout.setContentsMargins(0, 0, 0, 0)
-        history_button_layout.setSpacing(0)
+        # Create horizontal layout for buttons
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(0, 0, 0, 0)
         
-        self.history_button = QPushButton()
-        self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))  # Replace with your icon path
-        self.history_button.setToolTip("Show Conversation History")
-        self.history_button.setObjectName("historyButton")
-        self.history_button.setFixedHeight(30)
-        self.history_button.setFixedWidth(30)  # Make it square
-        self.history_button.clicked.connect(self._toggle_history_view)
+        history_button = self._create_history_toggle_button()
+        copy_button = self._create_copy_button()
         
-        history_button_layout.addWidget(self.history_button)
-        history_button_layout.addStretch()  # Push button to the left, leave space for copy button
+        button_layout.addWidget(history_button, alignment=Qt.AlignLeft)
+        button_layout.addStretch()  # This pushes buttons to opposite sides
+        button_layout.addWidget(copy_button, alignment=Qt.AlignRight)
         
-        response_layout.addWidget(history_button_container)
+        response_layout.addLayout(button_layout)
 
         # Create conversation area
         self.conversation_area = QTextBrowser()
@@ -839,7 +792,7 @@ class UIManager(QObject):
 
         # Store references
         self.response_container = response_container
-        self.history_button_container = history_button_container  # Store for potential future use
+        self.history_button_container = history_button  # Store for potential future use
         
         # Hide the response container initially
         response_container.setVisible(False)
@@ -853,32 +806,27 @@ class UIManager(QObject):
 #       Button Functions
 #   ##########################################################################################
 
-    def position_copy_button(self):
-        """Position copy button in the top right of the conversation area."""
-        if not self.conversation_area or not self.copy_button:
+    def position_conversation_toggle_button(self):
+        """Position the conversation toggle button at the bottom edge of the window."""
+        if not self.conversation_toggle_button or not self.main_container:
             return
-        
+            
         try:
-            # Get conversation area geometry relative to the main container
-            conversation_rect = self.conversation_area.geometry()
+            # Get container dimensions
+            container_geometry = self.main_container.geometry()
+            button_width = self.conversation_toggle_button.width()
+            button_height = self.conversation_toggle_button.height()
             
-            # Account for the history button height and spacing
-            history_button_height = 35  # 30px button + 5px spacing
+            # Position at bottom center, slightly inset from the edge
+            x = (container_geometry.width() - button_width) // 2  # Center horizontally
+            y = container_geometry.height() - button_height - 2   # 2px from bottom edge
             
-            # Position copy button in top-right corner of actual conversation display area
-            button_size = 30
-            margin = 8
-            
-            x = conversation_rect.right() - button_size - margin
-            y = conversation_rect.top() + history_button_height + margin  # Add offset for history button
-            
-            self.copy_button.move(x, y)
-            self.copy_button.setVisible(self.conversation_visible)
-            
-            self.logger.debug(f"Copy button positioned at ({x}, {y}) with history button offset")
+            self.conversation_toggle_button.move(x, y)
+            self.logger.debug(f"Conversation toggle button positioned at ({x}, {y})")
             
         except Exception as e:
-            self.logger.error(f"Error positioning copy button: {e}")
+            self.logger.error(f"Error positioning conversation toggle button: {e}")
+
 
     def update_stt_button_appearance(self, state):
         """Update STT button appearance."""
@@ -913,15 +861,34 @@ class UIManager(QObject):
         self.multiline_toggle_button.style().unpolish(self.multiline_toggle_button)
         self.multiline_toggle_button.style().polish(self.multiline_toggle_button)
 
+
     def _create_copy_button(self):
-        """Create copy button."""
         self.copy_button = QPushButton(Text.COPY_BUTTON)
+        self.copy_button.setToolTip("Copy Button")
         self.copy_button.setObjectName("copyButton")
-        self.copy_button.setFixedSize(
-            ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
-        self.copy_button.setVisible(False)
-        self.copy_button.setParent(self.main_container)
-        self.copy_button.raise_()
+        self.copy_button.setFixedSize(ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
+        return self.copy_button
+
+    def _create_conversation_toggle_button(self):
+        """Create the conversation toggle button as a floating element at bottom edge."""
+        self.conversation_toggle_button = QPushButton()
+        self.conversation_toggle_button.setParent(self.main_container)
+        self.conversation_toggle_button.setFixedSize(ElementSize.CONVERSATION_TOGGLE_BUTTON_WIDTH, ElementSize.CONVERSATION_TOGGLE_BUTTON_HEIGHT)
+        self.conversation_toggle_button.setFont(QFont("Segoe UI", 8))
+        self.update_conversation_toggle_button(self.conversation_visible)
+        self.position_conversation_toggle_button()
+        self.conversation_toggle_button.raise_()
+
+    def _create_history_toggle_button(self):
+        # Create history button container
+        self.history_button = QPushButton()
+        self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))  # Replace with your icon path
+        self.history_button.setToolTip("Show Conversation History")
+        self.history_button.setObjectName("historyButton")
+        self.history_button.setFixedHeight(30)
+        self.history_button.setFixedWidth(30)
+    
+        return self.history_button
 
 #   ##########################################################################################
 #       State Functions
@@ -981,9 +948,6 @@ class UIManager(QObject):
 
     def handle_window_resize(self, window_size):
         """Handle window resize to reposition elements and adjust constraints."""
-        # Reposition copy button
-        if hasattr(self, 'copy_button') and self.copy_button.isVisible():
-            self.position_copy_button()
         if hasattr(self, 'conversation_toggle_button'):
             self.position_conversation_toggle_button()
 

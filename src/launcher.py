@@ -551,9 +551,6 @@ class Launcher(QMainWindow):
             QTimer.singleShot(10, lambda: (
                 self.ui_manager.conversation_area.setVisible(False)
             ))
-            QTimer.singleShot(30, lambda: (
-                self.ui_manager.copy_button.setVisible(False)
-            ))
 
 
     def show_status(self, message):
