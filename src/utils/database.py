@@ -1,6 +1,7 @@
 import logging
 import os
-from sqlalchemy import create_engine, Column, String, DateTime, Integer, Boolean, Text, ForeignKey
+from pathlib import Path
+from sqlalchemy import create_engine, Column, String, DateTime, Integer, Boolean, Text, ForeignKey, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, Session
 from pydantic import BaseModel, Field
@@ -8,7 +9,6 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 import json
 import uuid
-
 from utils.constants import Database, Directories, Files
 
 # SQLAlchemy Models
@@ -105,37 +105,107 @@ class ConversationResponse(BaseModel):
 # Main Manager Class
 class AIConversationManager:
     def __init__(self, logger):
-        self.logger:logging.Logger = logger.getChild('database')
+        self.logger: logging.Logger = logger.getChild('database')
         self.db_connection_string = Database.CONVERSATIONS_DATABASE_CONNECTION_STRING
         self.logger.info(f"Initializing AIConversationManager with database: {self.db_connection_string}")
+        
         try:
             # Create database directory if it doesn't exist (for SQLite)
             if self.db_connection_string.startswith('sqlite:///'):
-                db_dir = Directories.CONVERSATIONS_DATABASE_DIR
-                if db_dir and not os.path.exists(db_dir):
-                    os.makedirs(db_dir, exist_ok=True)
-                    self.logger.info(f"Created database directory: {db_dir}")
+                # Extract the database path from connection string
+                db_path = Path(self.db_connection_string.replace('sqlite:///', ''))
+                db_dir = db_path.parent
                 
-                # Check if database file exists and create if it doesn't
-                db_path = Files.CONVERSATIONS_DATABASE_PATH
-                if not os.path.exists(db_path):
-                    # Create empty database file
-                    with open(db_path, 'w') as f:
-                        pass  # Creates empty file
-                    self.logger.info(f"Created database file: {db_path}")
-
-            self.engine = create_engine(self.db_connection_string)
+                self.logger.info(f"Database path: {db_path}")
+                self.logger.info(f"Database directory: {db_dir}")
+                
+                # More detailed logging
+                self.logger.info(f"Directory exists before creation: {db_dir.exists()}")
+                self.logger.info(f"Directory is absolute: {db_dir.is_absolute()}")
+                self.logger.info(f"Current working directory: {os.getcwd()}")
+                self.logger.info(f"Current user: {os.getuid()}")
+                
+                # Create directory if it doesn't exist with proper error handling
+                try:
+                    if not db_dir.exists():
+                        self.logger.info(f"Attempting to create directory: {db_dir}")
+                        db_dir.mkdir(parents=True, exist_ok=True, mode=0o755)
+                        self.logger.info(f"mkdir() completed")
+                    
+                    # Check if directory was actually created
+                    self.logger.info(f"Directory exists after creation: {db_dir.exists()}")
+                    
+                    if db_dir.exists():
+                        # Check directory permissions
+                        self.logger.info(f"Directory is readable: {os.access(db_dir, os.R_OK)}")
+                        self.logger.info(f"Directory is writable: {os.access(db_dir, os.W_OK)}")
+                        self.logger.info(f"Directory is executable: {os.access(db_dir, os.X_OK)}")
+                        
+                        # List directory contents
+                        try:
+                            contents = list(db_dir.iterdir())
+                            self.logger.info(f"Directory contents: {contents}")
+                        except Exception as e:
+                            self.logger.error(f"Cannot list directory contents: {e}")
+                    else:
+                        self.logger.error("Directory was not created successfully")
+                        
+                    # Check if database file exists and is writable
+                    if db_path.exists():
+                        self.logger.info(f"Database file exists: {db_path}")
+                        self.logger.info(f"Database file is writable: {os.access(db_path, os.W_OK)}")
+                    else:
+                        self.logger.info(f"Database file does not exist (will be created): {db_path}")
+                        
+                except (OSError, PermissionError) as e:
+                    self.logger.error(f"Failed to create/access database directory: {e}")
+                    raise
+            
+            # Create engine with proper settings for SQLite
+            if self.db_connection_string.startswith('sqlite:///'):
+                self.logger.info("Creating SQLAlchemy engine...")
+                self.engine = create_engine(
+                    self.db_connection_string,
+                    connect_args={
+                        "check_same_thread": False,
+                        "timeout": 20
+                    },
+                    echo=False,
+                    pool_pre_ping=True
+                )
+            else:
+                self.engine = create_engine(self.db_connection_string)
+            
+            self.logger.info("Creating SessionLocal...")
             self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+            
+            # Create all tables
+            self.logger.info("Creating database tables...")
             Base.metadata.create_all(bind=self.engine)
             self.logger.info("Database engine created and tables initialized successfully")
+            
+            # Test the connection
+            self._test_connection()
+            
         except Exception as e:
             self.logger.error(f"Failed to initialize database: {e}")
+            raise
+
+    def _test_connection(self):
+        """Test database connection"""
+        try:
+            with self.get_db() as db:
+                # Simple query to test connection - using text() for raw SQL
+                result = db.execute(text("SELECT 1")).fetchone()
+                self.logger.info("Database connection test successful")
+        except Exception as e:
+            self.logger.error(f"Database connection test failed: {e}")
             raise
         
     def get_db(self) -> Session:
         """Get database session with context manager support"""
         return self.SessionLocal()
-        
+    
     # Conversation Operations
     def create_conversation(self, conversation_data: ConversationCreate) -> ConversationResponse:
         self.logger.info(f"Creating new conversation with title: {conversation_data.title}")
@@ -234,8 +304,6 @@ class AIConversationManager:
             self.logger.error(f"Failed to update conversation {conversation_id}: {e}")
             raise
     
-    
-    
     def delete_conversation(self, conversation_id: str) -> bool:
         self.logger.info(f"Deleting conversation {conversation_id}")
         
@@ -257,7 +325,6 @@ class AIConversationManager:
         except Exception as e:
             self.logger.error(f"Failed to delete conversation {conversation_id}: {e}")
             raise
-    
     
     # Message Operations
     def add_message(self, conversation_id: str, message_data: MessageCreate) -> MessageResponse:
@@ -293,6 +360,7 @@ class AIConversationManager:
         except Exception as e:
             self.logger.error(f"Failed to add message to conversation {conversation_id}: {e}")
             raise
+
     
     def get_messages(self, conversation_id: str, limit: int = None, include_deleted: bool = False) -> List[MessageResponse]:
         self.logger.debug(f"Retrieving messages for conversation {conversation_id} (limit: {limit}, include_deleted: {include_deleted})")
@@ -317,7 +385,7 @@ class AIConversationManager:
         except Exception as e:
             self.logger.error(f"Failed to retrieve messages for conversation {conversation_id}: {e}")
             raise
-    
+        
     # Helper methods
     def _conversation_to_response(self, conversation: ConversationModel) -> ConversationResponse:
         return ConversationResponse(
