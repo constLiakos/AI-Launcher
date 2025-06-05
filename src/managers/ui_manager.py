@@ -16,7 +16,7 @@ class UIManager(QObject):
     expansion_changed = pyqtSignal(bool)
     visual_state_changed = pyqtSignal(str)
 
-    def __init__(self, parent_window, logger, config):
+    def __init__(self, parent_window, logger, config, style_manager:StyleManager):
         super().__init__()
         self.parent = parent_window
         self.logger = logger.getChild('ui_manager')
@@ -46,7 +46,7 @@ class UIManager(QObject):
         self.show_history_mode = False
         self.conversation_manager:ConversationManager = None
         self.markdown_render = MarkdownRenderer(logger)
-        self.style_manager = StyleManager(logger)
+        self.style_manager = style_manager
 
 
     def setup_ui(self, multiline_input=False):
@@ -576,6 +576,10 @@ class UIManager(QObject):
             self.set_response_text(self.get_current_response_text())
             self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
 
+    def reapply_conversation_history_theme(self):
+        if self.conversation_visible:
+            self._show_conversation_history()
+
     def _show_conversation_history(self):
         """Display the full conversation history."""
         self.get_current_response_text()
@@ -617,7 +621,7 @@ class UIManager(QObject):
         return [f"""
                 <!DOCTYPE html><html><head><style>
                 {self.style_manager.get_history_conversation_style()}
-                </style></head><body>"""]
+                </style></head><body class='body'>"""]
 
     def _format_single_message(self, message):
         """Format a single message into HTML."""
@@ -664,7 +668,7 @@ class UIManager(QObject):
         """Get icon HTML or fallback emoji."""
         if hasattr(Files, icon_attr):
             icon_path = getattr(Files, icon_attr)
-            return f"<img src='{str(icon_path)}' width='18' height='18' style='vertical-align: middle;'>"
+            return f"<img src='{str(icon_path)}' width='25' height='25' style='vertical-align: middle;'>"
         return fallback_emoji
 
     def _format_user_message(self, content, time_str):

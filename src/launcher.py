@@ -98,7 +98,7 @@ class Launcher(QMainWindow):
         self.tray_manager = TrayManager(
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
         self.ui_manager = UIManager(
-            self, logger, self.config)
+            self, logger, self.config, self.style_manager)
         self.ui_manager.set_conversation_manager(self.conversation_manager)
         
         # Set up WindowManager after window exists
@@ -332,6 +332,7 @@ class Launcher(QMainWindow):
         """Apply the modern stylesheet using StyleManager."""
         self.setStyleSheet(
             self.style_manager.get_complete_style(self.current_theme))
+        self.ui_manager.reapply_conversation_history_theme()
 
 
     @pyqtSlot(str)

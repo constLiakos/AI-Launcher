@@ -892,11 +892,11 @@ class StyleManager:
             font-weight: 400;
         }}  
         """
-    
+
     def get_history_conversation_style(self):
         colors = self.get_theme_colors()
         return f"""
-            body {{
+            #body {{
                 font-family: 'Segoe UI', Arial, sans-serif;
                 margin: 0;
                 background-color: {colors['field_bg']};
