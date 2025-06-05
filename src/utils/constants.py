@@ -34,6 +34,10 @@ class Files:
     SETTINGS_GEAR_ICON_PATH = _base_path / "assets" / "settings.png"
     MIC_IDLE_ICON_PATH = _base_path / "assets" / "mic_white_idle.png"
     MIC_RECORDING_ICON_PATH = _base_path / "assets" / "mic_white_recording.png"
+    CONVERSATION_BTN_SHOW_RESPONSE_PATH = _base_path / "assets" / "show_last_response_btn.png"
+    CONVERSATION_BTN_SHOW_HISTORY_PATH = _base_path / "assets" / "show_history_btn.png"
+    USER_ICON_PATH = _base_path / "assets" / "user.png"
+    ASSISTANT_ICON_PATH = _base_path / "assets" / "assistant.png"
     CONVERSATIONS_DATABASE_PATH = Directories.CONVERSATIONS_DATABASE_DIR / 'ai_conversations.db'
 
     

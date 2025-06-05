@@ -608,10 +608,10 @@ class UIManager(QObject):
         
         if self.show_history_mode:
             self._show_conversation_history()
-            self.history_button.setText("📄 Show Current Response")
+            self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_RESPONSE_PATH)))
         else:
             self._show_current_response()
-            self.history_button.setText("📜 Show Conversation History")
+            self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
 
     def _show_conversation_history(self):
         """Display the full conversation history."""
@@ -744,6 +744,7 @@ class UIManager(QObject):
         else:
             self.show_conversation_area()
 
+
     def _create_response_section(self):
         """Create response area with history button."""
         container_layout = self.main_container.layout()
@@ -754,17 +755,24 @@ class UIManager(QObject):
         response_layout.setContentsMargins(0, 0, 0, 0)
         response_layout.setSpacing(5)
 
-        # Create history button
-        history_button_layout = QHBoxLayout()
+        # Create history button container
+        history_button_container = QWidget()
+        history_button_layout = QHBoxLayout(history_button_container)
         history_button_layout.setContentsMargins(0, 0, 0, 0)
+        history_button_layout.setSpacing(0)
         
-        self.history_button = QPushButton("📜 Show Conversation History")
+        self.history_button = QPushButton()
+        self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))  # Replace with your icon path
+        self.history_button.setToolTip("Show Conversation History")
         self.history_button.setObjectName("historyButton")
         self.history_button.setFixedHeight(30)
-        history_button_layout.addWidget(self.history_button)
-        history_button_layout.addStretch()
+        self.history_button.setFixedWidth(30)  # Make it square
+        self.history_button.clicked.connect(self._toggle_history_view)
         
-        response_layout.addLayout(history_button_layout)
+        history_button_layout.addWidget(self.history_button)
+        history_button_layout.addStretch()  # Push button to the left, leave space for copy button
+        
+        response_layout.addWidget(history_button_container)
 
         # Create conversation area
         self.conversation_area = QTextBrowser()
@@ -777,9 +785,12 @@ class UIManager(QObject):
         self._setup_emoji_font(self.conversation_area)
         response_layout.addWidget(self.conversation_area)
 
+        # Store references
+        self.response_container = response_container
+        self.history_button_container = history_button_container  # Store for potential future use
+        
         # Hide the response container initially
         response_container.setVisible(False)
-        self.response_container = response_container  # Store reference
         
         container_layout.addWidget(response_container)
         container_layout.setStretchFactor(container_layout.itemAt(0).layout(), 0)  # Input section
@@ -791,30 +802,31 @@ class UIManager(QObject):
 #   ##########################################################################################
 
     def position_copy_button(self):
-        """Position copy button in response area."""
-        if self.conversation_area.isVisible():
-            response_pos = self.conversation_area.pos()
-            response_geometry = self.conversation_area.geometry()
-
-            self.logger.debug(
-                f"Response area position: {response_pos}, geometry: {response_geometry}")
-
-            button_x = (response_pos.x() + response_geometry.width() -
-                        self.copy_button.width() - ElementSize.SCROLLBAR_SIZE -
-                        ElementSize.COPY_BUTTON_RIGHT_MARGIN)
-            button_y = response_pos.y() + ElementSize.COPY_BUTTON_RIGHT_MARGIN
-
-            self.logger.debug(
-                f"Calculated copy button position: x={button_x}, y={button_y}")
-
-            self.copy_button.move(button_x, button_y)
-            self.copy_button.raise_()
-            self.copy_button.setVisible(True)
-
-            self.logger.debug("Copy button positioned and made visible")
-        else:
-            self.logger.debug(
-                "Response area not visible, copy button not positioned")
+        """Position copy button in the top right of the conversation area."""
+        if not self.conversation_area or not self.copy_button:
+            return
+        
+        try:
+            # Get conversation area geometry relative to the main container
+            conversation_rect = self.conversation_area.geometry()
+            
+            # Account for the history button height and spacing
+            history_button_height = 35  # 30px button + 5px spacing
+            
+            # Position copy button in top-right corner of actual conversation display area
+            button_size = 30
+            margin = 8
+            
+            x = conversation_rect.right() - button_size - margin
+            y = conversation_rect.top() + history_button_height + margin  # Add offset for history button
+            
+            self.copy_button.move(x, y)
+            self.copy_button.setVisible(self.conversation_visible)
+            
+            self.logger.debug(f"Copy button positioned at ({x}, {y}) with history button offset")
+            
+        except Exception as e:
+            self.logger.error(f"Error positioning copy button: {e}")
 
     def update_stt_button_appearance(self, state):
         """Update STT button appearance."""

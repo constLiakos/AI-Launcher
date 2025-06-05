@@ -505,6 +505,18 @@ class StyleManager:
             background: rgba(79, 156, 249, 0.1);
             border: 1px solid rgba(79, 156, 249, 0.5);
         }}
+        #historyButton {{
+            background: {colors['transparent_white']};
+            border: 1px solid rgba(79, 156, 249, 0.3);
+            border-radius: 8px;
+            color: {colors['primary']};
+            font-size: 13px;
+            padding: 2px;
+        }}
+        #historyButton:hover {{
+            background: rgba(79, 156, 249, 0.1);
+            border: 1px solid rgba(79, 156, 249, 0.5);
+        }}
         """
     
     def _get_thin_scrollbar_style(self):
