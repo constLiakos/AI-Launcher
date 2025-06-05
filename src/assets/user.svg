@@ -1,0 +1,18 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#4338CA"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="url(#bgGradient)" stroke="none"/>
+  
+  <!-- Person outline with thicker stroke -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Head -->
+    <circle cx="32" cy="22" r="6"/>
+    <!-- Body moved up -->
+    <path d="M20 46 C20 38, 25 34, 32 34 C39 34, 44 38, 44 46"/>
+  </g>
+</svg>
