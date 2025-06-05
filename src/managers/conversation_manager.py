@@ -1,11 +1,12 @@
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+from utils.constants import Conversation
 from utils.database import AIConversationManager, ConversationCreate, MessageCreate, ConversationResponse, MessageResponse, ConversationUpdate
 
 class ConversationManager:
     """Manages conversation history for context in API requests using database storage."""
     
-    def __init__(self, logger, max_conversations: int = 5, db_manager: Optional[AIConversationManager] = None):
+    def __init__(self, logger, max_conversations: int = Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT, db_manager: Optional[AIConversationManager] = None):
         self.logger = logger
         self.max_conversations = max_conversations
         self.current_conversation_id: Optional[str] = None
