@@ -421,7 +421,7 @@ class Launcher(QMainWindow):
         try:
             self.state_manager.add_response_chunk(chunk)
             if not self.ui_manager.is_conversation_visible():
-                self.ui_manager.expand_ui()
+                self.ui_manager.show_conversation_area()
             self._update_response_display()
             self._auto_scroll_response()
         except Exception as e:
@@ -466,7 +466,7 @@ class Launcher(QMainWindow):
 
         # Update UI - expand if not visible
         if not self.ui_manager.is_conversation_visible():
-            self.ui_manager.expand_ui()
+            self.ui_manager.show_conversation_area()
 
         # Display error
         self.ui_manager.conversation_area.setHtml(error_text)

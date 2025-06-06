@@ -110,10 +110,6 @@ class UIManager(QObject):
 #       UI Functions
 #   ##########################################################################################
 
-    def expand_ui(self):
-        """Expand UI to show conversation area - alias for show_conversation_area."""
-        self.show_conversation_area()
-
     def _apply_visual_state(self, state):
         """Apply visual changes based on state."""
         if state == "thinking":
