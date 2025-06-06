@@ -45,8 +45,8 @@ class UIManager(QObject):
 
         self.show_history_mode = False
         self.conversation_manager:ConversationManager = None
-        self.markdown_render = MarkdownRenderer(logger)
         self.style_manager = style_manager
+        self.markdown_render = MarkdownRenderer(logger, self.style_manager)
 
     def setup_ui(self, multiline_input=False):
         """Create and setup all UI components."""

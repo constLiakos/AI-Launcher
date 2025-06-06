@@ -57,6 +57,7 @@ class StyleManager:
             'border_focus': '#4f9cf9',
             'placeholder': '#9ca3af',
             'text_color': '#2d3142',
+            'thinking_text_color': "#c6c7cf",
             'dialog_bg_start': '#f8fafc',
             'dialog_bg_end': '#e2e8f0',
             'response_bg': 'rgba(248, 250, 252, 0.9)',
@@ -93,6 +94,7 @@ class StyleManager:
             'border_focus': '#4f9cf9',
             'placeholder': '#9ca3af',
             'text_color': '#ffffff',
+            'thinking_text_color': "#afafaf",
             'dialog_bg_start': '#2d3142',
             'dialog_bg_end': '#1a1d29',
             'response_bg': 'rgba(55, 65, 81, 0.9)',
@@ -988,3 +990,7 @@ class StyleManager:
                 color: {colors['text_color']};
             }}
     """
+
+    def get_llm_thinking_style(self):
+        colors = self.get_theme_colors()
+        return f"font-style: italic; color: {colors['thinking_text_color']};"
