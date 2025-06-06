@@ -20,6 +20,8 @@ class SettingsDialog(QDialog):
         self.style_manager = StyleManager(logger)
         self.about_dialog = None
         self.stt_settings_dialog = None
+        self._is_dragging = False
+        self._drag_position = None
         
         # Store original theme for comparison
         self.original_theme = self.config.get('theme', Theme.DEFAULT_THEME)
@@ -665,3 +667,19 @@ class SettingsDialog(QDialog):
         
         dialog.hotkey_recorded.connect(on_hotkey_recorded)
         dialog.exec_()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._is_dragging = True
+            self._drag_position = event.globalPos() - self.frameGeometry().topLeft()
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self._is_dragging and event.buttons() == Qt.LeftButton:
+            self.move(event.globalPos() - self._drag_position)
+            event.accept()
+
+    def mouseReleaseEvent(self, event):
+        self._is_dragging = False
+        self._drag_position = None
+        event.accept()

@@ -16,6 +16,8 @@ class STTSettingsDialog(QDialog):
         self.logger = logger.getChild('stt_settings_dialog')
         self.config = config
         self.style_manager = StyleManager(logger)
+        self._is_dragging = False
+        self._drag_position = None
 
         self.setup_ui()
         self.load_settings()
@@ -441,3 +443,18 @@ class STTSettingsDialog(QDialog):
         self.error_message.show()
         QTimer.singleShot(5000, self.error_message.hide)
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._is_dragging = True
+            self._drag_position = event.globalPos() - self.frameGeometry().topLeft()
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        if self._is_dragging and event.buttons() == Qt.LeftButton:
+            self.move(event.globalPos() - self._drag_position)
+            event.accept()
+
+    def mouseReleaseEvent(self, event):
+        self._is_dragging = False
+        self._drag_position = None
+        event.accept()
