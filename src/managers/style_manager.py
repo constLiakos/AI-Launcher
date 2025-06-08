@@ -134,116 +134,6 @@ class StyleManager:
 
         }
 
-    # === SETTINGS DIALOG STYLES ===
-    def get_settings_dialog_styles(self):
-        """Get complete styles for settings dialog."""
-        colors = self.get_theme_colors()
-        self.logger.debug("Generated settings dialog styles")
-        return f"""
-        QDialog {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {colors['bg_dialog_start']}, stop:1 {colors['bg_dialog_end']});
-        }}
-        
-        #titleLabel {{
-            font-size: 24px;
-            font-weight: bold;
-            color: {colors['text_primary']};
-            margin-bottom: 10px;
-        }}
-        
-        #scroll_area1 {{
-            color: {colors['text_primary']};
-            background: {colors['bg_primary']};
-        }}
-        
-        #fieldLabel {{
-            font-size: 14px;
-            font-weight: 500;
-            color: {colors['text_primary']};
-            margin-bottom: 5px;
-        }}
-        
-        #settingsInputField {{
-            padding: 12px 16px;
-            border: 2px solid {colors['settings_input_border']};
-            border-radius: 12px;
-            font-size: 14px;
-            background: {colors['settings_input_bg']};
-            color: {colors['text_primary']};
-            min-height: 20px;
-        }}
-        
-        #settingsInputField:focus {{
-            border: 2px solid {colors['settings_input_border_focus']};
-            outline: none;
-            background: {colors['settings_input_bg_focus']};
-        }}
-        
-        #settingsInputField::placeholder {{
-            color: {colors['text_placeholder']};
-        }}
-
-        #settingsTextArea {{
-            padding: 12px 16px;
-            border: 2px solid {colors['settings_input_border']};
-            border-radius: 12px;
-            font-size: 14px;
-            background: {colors['settings_input_bg']};
-            color: {colors['text_primary']};
-            min-height: 80px;
-            font-family: monospace;
-        }}
-
-        #settingsTextArea:focus {{
-            border: 2px solid {colors['settings_input_border_focus']};
-            outline: none;
-            background: {colors['settings_input_bg_focus']};
-        }}
-                
-        QComboBox {{
-            padding: 12px 16px;
-            border: 2px solid {colors['settings_input_border']};
-            border-radius: 12px;
-            font-size: 14px;
-            background: {colors['settings_input_bg']};
-            color: {colors['text_primary']};
-            min-height: 20px;
-        }}
-        
-        QComboBox:focus {{
-            border: 2px solid {colors['settings_input_border_focus']};
-            outline: none;
-            background: {colors['settings_input_bg_focus']};
-        }}
-        
-        QComboBox::drop-down {{
-            border: none;
-            width: 30px;
-        }}
-        
-        QComboBox::down-arrow {{
-            image: none;
-            border: 2px solid {colors['text_primary']};
-            width: 6px;
-            height: 6px;
-            border-top: none;
-            border-left: none;
-            margin-right: 10px;
-        }}
-        
-        QComboBox QAbstractItemView {{
-            background: {colors['settings_input_bg']};
-            color: {colors['text_primary']};
-            border: 1px solid {colors['settings_input_border']};
-            border-radius: 8px;
-            padding: 4px;
-        }}
-        
-        {self._get_settings_button_styles()}
-        """
-
-
     def _get_settings_button_styles(self):
         """Get button styles for settings dialog."""
         colors = self.get_theme_colors()
@@ -442,6 +332,7 @@ class StyleManager:
         colors = self.get_theme_colors()
         return f"""
         /* Modern thin scrollbar styles */
+        /* Modern thin scrollbar styles */
         QScrollBar:vertical {{
             background: transparent;
             width: 8px;
@@ -450,18 +341,18 @@ class StyleManager:
         }}
 
         QScrollBar::handle:vertical {{
-            background: {colors['bg_primary']};
+            background: rgba(79, 156, 249, 0.3);
             border-radius: 4px;
             min-height: 20px;
             margin: 2px;
         }}
 
         QScrollBar::handle:vertical:hover {{
-            background: {colors['bg_primary']};
+            background: rgba(79, 156, 249, 0.5);
         }}
 
         QScrollBar::handle:vertical:pressed {{
-            background: {colors['bg_primary']};
+            background: rgba(79, 156, 249, 0.7);
         }}
 
         QScrollBar::add-line:vertical,
@@ -476,67 +367,6 @@ class StyleManager:
         }}
 
         QScrollBar:horizontal {{
-            height: 0px;
-        }}
-        """
-
-    def get_conversation_area_style(self):
-        """Get response area styles."""
-        colors = self.get_theme_colors()
-        self.logger.debug("Generated response area styles")
-
-        emoji_font = self.get_emoji_font()
-        font_size = emoji_font.pointSize()
-        
-        # Use the font families chain for better emoji support
-        font_families = getattr(self, '_font_families', "'Ubuntu', 'Noto Color Emoji'")
-        
-        return f"""
-        #conversationArea {{
-            background: {colors['bg_conversation']};
-            border: 1px solid rgba(79, 156, 249, 0.2);
-            border-radius: 15px;
-            padding: 20px;
-            font-size: {font_size}px;
-            line-height: 1.6;
-            color: {colors['text_primary']};
-            font-family: {font_families};
-        }}
-        /* Modern thin scrollbar styles */
-        #conversationArea QScrollBar:vertical {{
-            background: transparent;
-            width: 8px;
-            border-radius: 4px;
-            margin: 0px;
-        }}
-
-        #conversationArea QScrollBar::handle:vertical {{
-            background: rgba(79, 156, 249, 0.3);
-            border-radius: 4px;
-            min-height: 20px;
-            margin: 2px;
-        }}
-
-        #conversationArea QScrollBar::handle:vertical:hover {{
-            background: rgba(79, 156, 249, 0.5);
-        }}
-
-        #conversationArea QScrollBar::handle:vertical:pressed {{
-            background: rgba(79, 156, 249, 0.7);
-        }}
-
-        #conversationArea QScrollBar::add-line:vertical,
-        #conversationArea QScrollBar::sub-line:vertical {{
-            height: 0px;
-            background: transparent;
-        }}
-
-        #conversationArea QScrollBar::add-page:vertical,
-        #conversationArea QScrollBar::sub-page:vertical {{
-            background: transparent;
-        }}
-
-        #conversationArea QScrollBar:horizontal {{
             height: 0px;
         }}
         """
@@ -566,59 +396,6 @@ class StyleManager:
             self.get_button_styles() +
             self.get_conversation_area_style()
         )
-
-    class ButtonStyles:
-        """Additional button style utilities."""
-        
-        def __init__(self, parent_instance):
-            self.parent = parent_instance
-
-        def get_default_button(self):
-            colors = self.parent.get_theme_colors()
-            return f"""
-            QPushButton {{
-                background: {colors['button_secondary_bg']};
-                color: {colors['text_on_secondary']};
-                border: none;
-                border-radius: 12px;
-                font-size: 12px;
-                font-weight: 500;
-                padding: 8px 16px;
-                min-width: 50px;
-            }}
-            QPushButton:hover {{
-                background: {colors['button_secondary_hover']};
-                color: {colors['text_on_secondary']};
-            }}
-            """
-                
-        def get_copy_button_success_style(self):
-            """Get success style for copy button."""
-            colors = self.parent.get_theme_colors()
-            self.parent.logger.debug("Generated copy button success style")
-            return f"""
-            QPushButton {{
-                background: {colors['semantic_success']};
-                color: {colors['text_primary']};
-                border: none;
-                border-radius: 8px;
-                padding: 8px 16px;
-            }}
-            """
-        def get_hotkeyRecorderBTN_style(self):
-            colors = self.parent.get_theme_colors()
-            self.parent.logger.debug("get_hotkeyRecorderBTN_style")
-            return f"""
-            #hotkeyRecorderBTN {{
-                background: {colors['state_recording']};
-                color: {colors['text_on_primary']};
-                border: none
-            }}
-            
-            #hotkeyRecorderBTN:hover {{
-                background: {colors['state_recording_hover']};
-            }}
-            """
         
     def get_emoji_font(self):
         """Get emoji-compatible font for use in other components."""
@@ -669,85 +446,6 @@ class StyleManager:
         self._font_families = font_families
         
         return font
-    
-    def get_settings_input_field_style(self):
-        """Get style for input fields."""
-        colors = self.get_theme_colors()
-        return f"""
-        QLineEdit {{
-            padding: 12px 16px;
-            border: 2px solid {colors['settings_input_border']};
-            border-radius: 12px;
-            font-size: 14px;
-            background: {colors['bg_primary']};
-            color: {colors['text_primary']};
-            min-height: 20px;
-        }}
-        QLineEdit:focus {{
-            border: 2px solid {colors['border_focus']};
-            outline: none;
-            background: {colors['bg_primary']};
-        }}
-        """
-
-    def get_settings_textarea_style(self):
-        """Get style for text areas."""
-        colors = self.get_theme_colors()
-        return f"""
-        QTextEdit {{
-            padding: 12px 16px;
-            border: 2px solid {colors['settings_input_border']};
-            border-radius: 12px;
-            font-size: 14px;
-            background: {colors['bg_primary']};
-            color: {colors['text_primary']};
-            font-family: monospace;
-        }}
-        QTextEdit:focus {{
-            border: 2px solid {colors['border_focus']};
-            outline: none;
-            background: {colors['bg_primary']};
-        }}
-        """
-
-    def get_settings_combobox_style(self):
-        """Get style for combo boxes."""
-        colors = self.get_theme_colors()
-        return f"""
-        #settingsComboBox {{
-            padding: 12px 16px;
-            border: 2px solid {colors['settings_input_border']};
-            border-radius: 12px;
-            font-size: 14px;
-            background: {colors['bg_primary']};
-            color: {colors['text_primary']};
-            min-height: 20px;
-        }}
-        #settingsComboBox:focus {{
-            border: 2px solid {colors['border_focus']};
-            outline: none;
-            background: {colors['bg_primary']};
-        }}
-        
-        /* Target dropdown with specific parent */
-        #settingsComboBox QAbstractItemView {{
-            border: 2px solid {colors['settings_input_border']} !important;
-            border-radius: 8px !important;
-            background: {colors['bg_primary']} !important;
-            color: {colors['text_primary']} !important;
-            selection-background-color: {colors['border_focus']} !important;
-        }}
-        #settingsComboBox QAbstractItemView::item {{
-            padding: 8px 12px;
-            background: transparent;
-        }}
-        #settingsComboBox QAbstractItemView::item:hover {{
-            background: {colors['bg_primary']} !important;
-        }}
-        #settingsComboBox QAbstractItemView::item:selected {{
-            background: {colors['border_focus']} !important;
-        }}
-        """
 
     def get_widget_style(self):
         """Get style for combo boxes."""
@@ -760,49 +458,14 @@ class StyleManager:
         }}
         """
     
-    def get_hotkey_recorder_style(self):
-        """Hotkey Recorder Widget Style"""
+    def get_llm_thinking_style(self):
         colors = self.get_theme_colors()
-        return f"""
-        {self.button_styles.get_default_button()}
-        #title{{
-            color: {colors['text_primary']};
-            border: none;
-            padding: 12px 15px;
-            font-size: 15px;
-            font-weight: 500;
-        }}
-        #window{{
-            color: {colors['text_primary']};
-            background-color: {colors['bg_primary']}; 
-            border: 2px solid {colors['border_default']};
-            border-radius: 5px;
-            padding: 15px 20px;
-            font-size: 14px;
-            font-weight: 400;
-        }}
-        #current_label{{
-            color: {colors['text_primary']};
-            font-size: 12px;
-            font-weight: 300;
-            font-style: italic;
-        }}
-        #hotkey_display{{
-            color: {colors['text_primary']};
-            border: none;
-            font-size: 14px;
-            font-weight: 400;
-        }}
-        #instructions{{
-            color: {colors['text_primary']};
-            background-color: {colors['bg_primary']}; 
-            border: 2px solid {colors['border_default']};
-            border-radius: 5px;
-            padding: 5px 5px;
-            font-size: 12px;
-            font-weight: 400;
-        }}  
-        """
+        return f"font-style: italic; color: {colors['text_thinking']};"
+
+
+#   ##########################################################################################
+#       Conversation Area
+#   ##########################################################################################
 
     def get_history_conversation_style(self):
         colors = self.get_theme_colors()
@@ -900,6 +563,322 @@ class StyleManager:
             }}
     """
 
-    def get_llm_thinking_style(self):
+    def get_conversation_area_style(self):
+        """Get response area styles."""
         colors = self.get_theme_colors()
-        return f"font-style: italic; color: {colors['text_thinking']};"
+        self.logger.debug("Generated response area styles")
+
+        emoji_font = self.get_emoji_font()
+        font_size = emoji_font.pointSize()
+        
+        # Use the font families chain for better emoji support
+        font_families = getattr(self, '_font_families', "'Ubuntu', 'Noto Color Emoji'")
+        
+        return f"""
+        #conversationArea {{
+            background: {colors['bg_conversation']};
+            border: 1px solid rgba(79, 156, 249, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            font-size: {font_size}px;
+            line-height: 1.6;
+            color: {colors['text_primary']};
+            font-family: {font_families};
+        }}
+        /* Modern thin scrollbar styles */
+        { self._get_thin_scrollbar_style() }
+        """
+
+#   ##########################################################################################
+#       Settings Dialog
+#   ##########################################################################################
+
+    # Settings - Main Dialog
+
+    def get_settings_dialog_styles(self):
+        """Get complete styles for settings dialog."""
+        colors = self.get_theme_colors()
+        self.logger.debug("Generated settings dialog styles")
+        return f"""
+        QDialog {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 {colors['bg_dialog_start']}, stop:1 {colors['bg_dialog_end']});
+        }}
+        
+        #titleLabel {{
+            font-size: 24px;
+            font-weight: bold;
+            color: {colors['text_primary']};
+            margin-bottom: 10px;
+        }}
+        
+        #scroll_area1 {{
+            color: {colors['text_primary']};
+            background: {colors['bg_primary']};
+        }}
+        
+        #fieldLabel {{
+            font-size: 14px;
+            font-weight: 500;
+            color: {colors['text_primary']};
+            margin-bottom: 5px;
+        }}
+        
+        #settingsInputField {{
+            padding: 12px 16px;
+            border: 2px solid {colors['settings_input_border']};
+            border-radius: 12px;
+            font-size: 14px;
+            background: {colors['settings_input_bg']};
+            color: {colors['text_primary']};
+            min-height: 20px;
+        }}
+        
+        #settingsInputField:focus {{
+            border: 2px solid {colors['settings_input_border_focus']};
+            outline: none;
+            background: {colors['settings_input_bg_focus']};
+        }}
+        
+        #settingsInputField::placeholder {{
+            color: {colors['text_placeholder']};
+        }}
+
+        #settingsTextArea {{
+            padding: 12px 16px;
+            border: 2px solid {colors['settings_input_border']};
+            border-radius: 12px;
+            font-size: 14px;
+            background: {colors['settings_input_bg']};
+            color: {colors['text_primary']};
+            min-height: 80px;
+            font-family: monospace;
+        }}
+
+        #settingsTextArea:focus {{
+            border: 2px solid {colors['settings_input_border_focus']};
+            outline: none;
+            background: {colors['settings_input_bg_focus']};
+        }}
+                
+        QComboBox {{
+            padding: 12px 16px;
+            border: 2px solid {colors['settings_input_border']};
+            border-radius: 12px;
+            font-size: 14px;
+            background: {colors['settings_input_bg']};
+            color: {colors['text_primary']};
+            min-height: 20px;
+        }}
+        
+        QComboBox:focus {{
+            border: 2px solid {colors['settings_input_border_focus']};
+            outline: none;
+            background: {colors['settings_input_bg_focus']};
+        }}
+        
+        QComboBox::drop-down {{
+            border: none;
+            width: 30px;
+        }}
+        
+        QComboBox::down-arrow {{
+            image: none;
+            border: 2px solid {colors['text_primary']};
+            width: 6px;
+            height: 6px;
+            border-top: none;
+            border-left: none;
+            margin-right: 10px;
+        }}
+        
+        QComboBox QAbstractItemView {{
+            background: {colors['settings_input_bg']};
+            color: {colors['text_primary']};
+            border: 1px solid {colors['settings_input_border']};
+            border-radius: 8px;
+            padding: 4px;
+        }}
+        
+        {self._get_settings_button_styles()}
+        """
+
+    # Hotkey Recorder Dialog
+    def get_hotkey_recorder_style(self):
+        """Hotkey Recorder Widget Style"""
+        colors = self.get_theme_colors()
+        return f"""
+        {self.button_styles.get_default_button()}
+        #title{{
+            color: {colors['text_primary']};
+            border: none;
+            padding: 12px 15px;
+            font-size: 15px;
+            font-weight: 500;
+        }}
+        #window{{
+            color: {colors['text_primary']};
+            background-color: {colors['bg_primary']}; 
+            border: 2px solid {colors['border_default']};
+            border-radius: 5px;
+            padding: 15px 20px;
+            font-size: 14px;
+            font-weight: 400;
+        }}
+        #current_label{{
+            color: {colors['text_primary']};
+            font-size: 12px;
+            font-weight: 300;
+            font-style: italic;
+        }}
+        #hotkey_display{{
+            color: {colors['text_primary']};
+            border: none;
+            font-size: 14px;
+            font-weight: 400;
+        }}
+        #instructions{{
+            color: {colors['text_primary']};
+            background-color: {colors['bg_primary']}; 
+            border: 2px solid {colors['border_default']};
+            border-radius: 5px;
+            padding: 5px 5px;
+            font-size: 12px;
+            font-weight: 400;
+        }}  
+        """
+    
+    # Settings - Dropdown Combobox
+    def get_settings_combobox_style(self):
+        """Get style for combo boxes."""
+        colors = self.get_theme_colors()
+        return f"""
+        #settingsComboBox {{
+            padding: 12px 16px;
+            border: 2px solid {colors['settings_input_border']};
+            border-radius: 12px;
+            font-size: 14px;
+            background: {colors['bg_primary']};
+            color: {colors['text_primary']};
+            min-height: 20px;
+        }}
+        #settingsComboBox:focus {{
+            border: 2px solid {colors['border_focus']};
+            outline: none;
+            background: {colors['bg_primary']};
+        }}
+        
+        /* Target dropdown with specific parent */
+        #settingsComboBox QAbstractItemView {{
+            border: 2px solid {colors['settings_input_border']} !important;
+            border-radius: 8px !important;
+            background: {colors['bg_primary']} !important;
+            color: {colors['text_primary']} !important;
+            selection-background-color: {colors['border_focus']} !important;
+        }}
+        #settingsComboBox QAbstractItemView::item {{
+            padding: 8px 12px;
+            background: transparent;
+        }}
+        #settingsComboBox QAbstractItemView::item:hover {{
+            background: {colors['bg_primary']} !important;
+        }}
+        #settingsComboBox QAbstractItemView::item:selected {{
+            background: {colors['border_focus']} !important;
+        }}
+        """
+    
+    # Settings - Input Field 
+    def get_settings_input_field_style(self):
+        """Get style for input fields."""
+        colors = self.get_theme_colors()
+        return f"""
+        QLineEdit {{
+            padding: 12px 16px;
+            border: 2px solid {colors['settings_input_border']};
+            border-radius: 12px;
+            font-size: 14px;
+            background: {colors['bg_primary']};
+            color: {colors['text_primary']};
+            min-height: 20px;
+        }}
+        QLineEdit:focus {{
+            border: 2px solid {colors['border_focus']};
+            outline: none;
+            background: {colors['bg_primary']};
+        }}
+        """
+
+    def get_settings_textarea_style(self):
+        """Get style for text areas."""
+        colors = self.get_theme_colors()
+        return f"""
+        QTextEdit {{
+            padding: 12px 16px;
+            border: 2px solid {colors['settings_input_border']};
+            border-radius: 12px;
+            font-size: 14px;
+            background: {colors['bg_primary']};
+            color: {colors['text_primary']};
+            font-family: monospace;
+        }}
+        QTextEdit:focus {{
+            border: 2px solid {colors['border_focus']};
+            outline: none;
+            background: {colors['bg_primary']};
+        }}
+        """
+    
+# Button Styles
+    class ButtonStyles:
+        """Additional button style utilities."""
+        
+        def __init__(self, parent_instance):
+            self.parent = parent_instance
+
+        def get_default_button(self):
+            colors = self.parent.get_theme_colors()
+            return f"""
+            QPushButton {{
+                background: {colors['button_secondary_bg']};
+                color: {colors['text_on_secondary']};
+                border: none;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 500;
+                padding: 8px 16px;
+                min-width: 50px;
+            }}
+            QPushButton:hover {{
+                background: {colors['button_secondary_hover']};
+                color: {colors['text_on_secondary']};
+            }}
+            """
+                
+        def get_copy_button_success_style(self):
+            """Get success style for copy button."""
+            colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("Generated copy button success style")
+            return f"""
+            QPushButton {{
+                background: {colors['semantic_success']};
+                color: {colors['text_primary']};
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+            }}
+            """
+        def get_hotkeyRecorderBTN_style(self):
+            colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("get_hotkeyRecorderBTN_style")
+            return f"""
+            #hotkeyRecorderBTN {{
+                background: {colors['state_recording']};
+                color: {colors['text_on_primary']};
+                border: none
+            }}
+            
+            #hotkeyRecorderBTN:hover {{
+                background: {colors['state_recording_hover']};
+            }}
+            """
