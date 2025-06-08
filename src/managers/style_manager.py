@@ -95,6 +95,10 @@ class StyleManager:
             'button_secondary_bg': '#f3f4f6',
             'button_secondary_hover': '#d1d5db',
             'button_secondary_active': '#9ca3af',
+            'button_tertiary_bg': 'rgba(255, 255, 255, 0.4)',
+            'button_tertiarty_border': 'rgba(79, 156, 249, 0.3)',
+            'button_tertiarty_hover_bg': 'rgba(79, 156, 249, 0.1)',
+            'button_tertiarty_hover_border': 'rgba(79, 156, 249, 0.5)',
 
             # === STATE COLORS ===
             'state_recording': "#e77c7c",
@@ -371,7 +375,7 @@ class StyleManager:
         self.logger.debug("Generated main application button styles")
         return f"""
 
-        #settingsButton {{
+        #settingsButton, #multilineToggleButton, #multilineToggleButtonActive, #sttButton  {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 {colors['brand_primary']}, stop:1 #3b82f6);
             border: none;
@@ -380,80 +384,16 @@ class StyleManager:
             font-size: 18px;
             font-weight: bold;
         }}
-        #settingsButton:hover {{
+        #settingsButton:hover, #multilineToggleButton:hover, #multilineToggleButtonActive:hover, #sttButton:hover {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 #3b82f6, stop:1 #2563eb);
         }}
-        #settingsButton:pressed {{
+        #settingsButton:pressed, #multilineToggleButton:pressed, #multilineToggleButtonActive:pressed{{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 #2563eb, stop:1 #1d4ed8);
         }}
 
-        #multilineToggleButton {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['brand_primary']}, stop:1 #3b82f6);
-            border: none;
-            border-radius: 25px;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-        }}
-        #multilineToggleButton:hover {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 #3b82f6, stop:1 #2563eb);
-        }}
-        #multilineToggleButton:pressed {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 #2563eb, stop:1 #1d4ed8);
-        }}
 
-        #multilineToggleButtonActive {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['brand_primary']}, stop:1 #3b82f6);
-            border: none;
-            border-radius: 25px;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-        }}
-        #multilineToggleButtonActive:hover {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 #3b82f6, stop:1 #2563eb);
-        }}
-        #multilineToggleButtonActive:pressed {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 #2563eb, stop:1 #1d4ed8);
-        }}
-
-        #copyButton {{
-            background: {colors['surface_overlay']};
-            border: 1px solid rgba(79, 156, 249, 0.3);
-            border-radius: 8px;
-            color: {colors['brand_primary']};
-            font-size: 16px;
-            padding: 2px;
-        }}
-        #copyButton:hover {{
-            background: rgba(79, 156, 249, 0.1);
-            border: 1px solid rgba(79, 156, 249, 0.5);
-        }}
-        #sttButton {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['brand_primary']}, stop:1 #3b82f6);
-            color: {colors['brand_primary_hover']};
-            border: none;
-            border-radius: 25px;
-            font-size: 18px;
-            font-weight: bold;
-        }}
-        #sttButton:hover {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['brand_primary_hover']}, stop:1 #2563eb);
-            border: none;
-            border-radius: 25px;
-            font-size: 18px;
-            font-weight: bold;
-        }}
         #sttButtonRecording {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 {colors['state_recording']}, stop:1 #ef5350);
@@ -471,28 +411,29 @@ class StyleManager:
             font-size: 18px;
             font-weight: bold;
         }}
+
+        #copyButton, #historyButton {{
+            background: {colors['button_tertiary_bg']};
+            border: 1px solid {colors['button_tertiarty_border']};
+            border-radius: 8px;
+            color: {colors['brand_primary']};
+            font-size: 16px;
+            padding: 2px;
+        }}
+        #copyButton:hover, #historyButton:hover {{
+            background: {colors['button_tertiarty_hover_bg']};
+            border: 1px solid {colors['button_tertiarty_hover_border']};
+        }}
+
         #conversationToggleButton, #conversationToggleButtonExpanded {{
-            background: {colors['surface_overlay']};
-            border: 1px solid rgba(79, 156, 249, 0.3);
+            background: {colors['button_tertiary_bg']};
+            border: 1px solid {colors['button_tertiarty_border']};
             border-radius: 2px;
             color: {colors['brand_primary']};
         }}
         #conversationToggleButton:hover, #conversationToggleButtonExpanded:hover {{
-            background: rgba(79, 156, 249, 0.1);
-            border: 1px solid rgba(79, 156, 249, 0.5);
-        }}
-
-        #historyButton {{
-            background: {colors['surface_overlay']};
-            border: 1px solid rgba(79, 156, 249, 0.3);
-            border-radius: 8px;
-            color: {colors['brand_primary']};
-            font-size: 13px;
-            padding: 2px;
-        }}
-        #historyButton:hover {{
-            background: rgba(79, 156, 249, 0.1);
-            border: 1px solid rgba(79, 156, 249, 0.5);
+            background: {colors['button_tertiarty_hover_bg']};
+            border: 1px solid {colors['button_tertiarty_hover_border']};
         }}
         """
     
