@@ -9,8 +9,7 @@ class StyleManager:
 
         self.current_theme = Theme.DEFAULT_THEME
         self.themes = {
-            Theme.CLASSIC: self._get_classic_theme(),
-            Theme.DARK: self._get_dark_theme()
+            Theme.CLASSIC: self._get_light_theme()
         }
         
         self.button_styles = self.ButtonStyles(self)
@@ -36,78 +35,99 @@ class StyleManager:
         # self.logger.debug(f"Retrieved colors for theme: {self.current_theme}")
         return colors
     
-    def _get_classic_theme(self):
-        """Classic theme colors."""
+    def _get_light_theme(self):
+        """Light theme with blue accents."""
         return {
-            'primary': "#5CA1F7",
-            'secondary': '#8B5CF6',
-            'success': '#22C55E',
-            'error': '#EF4444',
-            'warning': '#856404',
-            'warning_bg': '#fff3cd',
-            'pink': '#EC4899',
-            'white': '#FFFFFF',
-            'dark': '#2D3142',
-            'transparent_white': 'rgba(255, 255, 255, 0.8)',
-            'window_bg_start': '#f8fafc',
-            'window_bg_end': '#e2e8f0',
-            'field_bg': '#ffffff',
-            'field_bg_focus': '#ffffff',
-            'border_normal': '#d1d5db',
-            'border_focus': '#4f9cf9',
-            'placeholder': '#9ca3af',
-            'text_color': '#2d3142',
-            'thinking_text_color': "#c6c7cf",
-            'dialog_bg_start': '#f8fafc',
-            'dialog_bg_end': '#e2e8f0',
-            'response_bg': 'rgba(248, 250, 252, 0.9)',
+            # === BRAND COLORS ===
+            'brand_primary': "#5CA1F7",
+            'brand_primary_hover': "#4A8AE8", 
+            'brand_primary_active': "#3b82f6",
+            'brand_secondary': '#8B5CF6',
+            'brand_accent': '#EC4899',
+            
+            # === SEMANTIC COLORS ===
+            'semantic_success': '#22C55E',
+            'semantic_warning': '#856404',
+            'semantic_warning_bg': '#fff3cd',
+            'semantic_error': '#EF4444',
+            'semantic_info': '#3B82F6',
+
+            # === TEXT COLORS ===
+            'text_primary': '#2d3142',
+            'text_secondary': '#6b7280',
+            'text_muted': '#9ca3af',
+            'text_placeholder': '#9ca3af',
+            'text_inverse': '#ffffff',
+            'text_thinking': "#c6c7cf",
+            'text_tertiary': '#9ca3af',
+            'text_on_primary': '#ffffff',
+            'text_on_secondary': '#374151',     
+
+
+            # === BACKGROUND COLORS ===
+            'bg_primary': '#ffffff',
+            'bg_secondary': '#f8fafc',
+            'bg_tertiary': '#f3f4f6',
+            'bg_elevated': 'rgba(248, 250, 252, 0.9)',
+            'bg_overlay': 'rgba(255, 255, 255, 0.8)',
+            'bg_window_start': '#f8fafc',
+            'bg_window_end': '#e2e8f0',
+            'bg_dialog_start': '#f8fafc',
+            'bg_dialog_end': '#e2e8f0',
+            'bg_conversation': 'rgba(248, 250, 252, 0.9)',
+
+            # === MAIN  APP INPUT COLORS ===
+            'main_input_bg': '#ffffff',
+            'main_input_bg_focus': '#ffffff',
+            'main_input_border': '#d1d5db',
+            'main_input_border_focus': '#4f9cf9',
+
+            # === SETTINGS INPUT COLORS ===
+            'settings_input_bg': '#ffffff',
+            'settings_input_bg_focus': '#ffffff',
+            'settings_input_border': '#d1d5db',
+            'settings_input_border_focus': '#4f9cf9',
+
+            # === BUTTON COLORS ===
+            'button_primary_bg': "#5CA1F7",
+            'button_primary_hover': "#4A8AE8",
+            'button_primary_active': "#3b82f6",
             'button_secondary_bg': '#f3f4f6',
-            'button_secondary_hover_bg': '#d1d5db',
-            'button_secondary_text': '#374151',
-            'button_stt_idle_bg': "#5CA1F7",
-            'button_stt_recording_bg': "#f8baba",
-            'button_stt_recording_hover_bg': "#eea2a2",
-            'button_stt_hover_bg': "#4A8AE8",
-            'history_assistant_label_bg': "#5CA1F7",
-            'history_user_label_bg': "#5CA1F7",
+            'button_secondary_hover': '#d1d5db',
+            'button_secondary_active': '#9ca3af',
+
+            # === STATE COLORS ===
+            'state_recording': "#e77c7c",
+            'state_recording_hover': "#e25a5a",
+            'state_active': "#5CA1F7",
+            'state_inactive': '#9ca3af',
+
+            # === COMPONENT SPECIFIC ===
+            'history_accent': "#5CA1F7",
             'history_message_bg': "#ebf0f5",
-        }
-    
-    def _get_dark_theme(self):
-        """Dark theme colors."""
-        return {
-            'primary': '#4F9CF9',
-            'secondary': '#8B5CF6',
-            'success': '#22C55E',
-            'error': '#EF4444',
-            'warning': '#F97316',
-            'warning_bg': '#fff3cd',
-            'pink': '#EC4899',
-            'white': '#FFFFFF',
-            'dark': '#2D3142',
-            'transparent_white': 'rgba(255, 255, 255, 0.1)',
-            'window_bg_start': '#2d3142',
-            'window_bg_end': '#1a1d29',
-            'field_bg': '#374151',
-            'field_bg_focus': '#4b5563',
-            'border_normal': '#4a5568',
-            'border_focus': '#4f9cf9',
-            'placeholder': '#9ca3af',
-            'text_color': '#ffffff',
-            'thinking_text_color': "#afafaf",
-            'dialog_bg_start': '#2d3142',
-            'dialog_bg_end': '#1a1d29',
-            'response_bg': 'rgba(55, 65, 81, 0.9)',
-            'button_secondary_bg': '#4b5563',
-            'button_secondary_hover_bg': '#2d3142',
-            'button_secondary_text': '#ffffff',
-            'button_stt_idle_bg': "#5CA1F7",
-            'button_stt_recording_bg': "#f8baba",
-            'button_stt_recording_hover_bg': "#eea2a2",
-            'button_stt_hover_bg': "#4A8AE8",
-            'history_assistant_label_bg': "#5CA1F7",
-            'history_user_label_bg': "#5CA1F7",
-            'history_message_bg': "#ebf0f5",
+            'conversation_border': 'rgba(79, 156, 249, 0.2)',
+            'scrollbar_track': 'transparent',
+            'scrollbar_thumb': 'rgba(79, 156, 249, 0.3)',
+            'scrollbar_thumb_hover': 'rgba(79, 156, 249, 0.5)',
+
+            # === SURFACE ALIASES (for easier migration) ===
+            'surface_primary': '#ffffff',
+            'surface_secondary': '#f8fafc',
+            'surface_tertiary': '#f3f4f6',
+            'surface_elevated': 'rgba(248, 250, 252, 0.9)',
+            'surface_overlay': 'rgba(255, 255, 255, 0.8)',
+            
+            # === BORDER COLORS ===
+            'border_subtle': 'rgba(79, 156, 249, 0.15)',     # Very light brand color
+            'border_soft': 'rgba(209, 213, 219, 0.8)',       # Soft neutral
+            'border_default': '#d1d5db',                      # Current input borders
+            'border_focus': '#4f9cf9',                        # Focus states
+            
+            # === CONTAINER BORDERS ===
+            'container_border': 'rgba(79, 156, 249, 0.12)',  # Main container
+            'dialog_border': 'rgba(209, 213, 219, 0.6)',     # Dialogs
+            'surface_border': 'rgba(148, 163, 184, 0.2)',    # General surfaces
+
         }
 
     # === SETTINGS DIALOG STYLES ===
@@ -118,79 +138,79 @@ class StyleManager:
         return f"""
         QDialog {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {colors['dialog_bg_start']}, stop:1 {colors['dialog_bg_end']});
+                stop:0 {colors['bg_dialog_start']}, stop:1 {colors['bg_dialog_end']});
         }}
         
         #titleLabel {{
             font-size: 24px;
             font-weight: bold;
-            color: {colors['text_color']};
+            color: {colors['text_primary']};
             margin-bottom: 10px;
         }}
         
         #scroll_area1 {{
-            color: {colors['text_color']};
-            background: {colors['field_bg']};
+            color: {colors['text_primary']};
+            background: {colors['bg_primary']};
         }}
         
         #fieldLabel {{
             font-size: 14px;
             font-weight: 500;
-            color: {colors['text_color']};
+            color: {colors['text_primary']};
             margin-bottom: 5px;
         }}
         
         #settingsInputField {{
             padding: 12px 16px;
-            border: 2px solid {colors['border_normal']};
+            border: 2px solid {colors['settings_input_border']};
             border-radius: 12px;
             font-size: 14px;
-            background: {colors['field_bg']};
-            color: {colors['text_color']};
+            background: {colors['settings_input_bg']};
+            color: {colors['text_primary']};
             min-height: 20px;
         }}
         
         #settingsInputField:focus {{
-            border: 2px solid {colors['border_focus']};
+            border: 2px solid {colors['settings_input_border_focus']};
             outline: none;
-            background: {colors['field_bg_focus']};
+            background: {colors['settings_input_bg_focus']};
         }}
         
         #settingsInputField::placeholder {{
-            color: {colors['placeholder']};
+            color: {colors['text_placeholder']};
         }}
 
         #settingsTextArea {{
             padding: 12px 16px;
-            border: 2px solid {colors['border_normal']};
+            border: 2px solid {colors['settings_input_border']};
             border-radius: 12px;
             font-size: 14px;
-            background: {colors['field_bg']};
-            color: {colors['text_color']};
+            background: {colors['settings_input_bg']};
+            color: {colors['text_primary']};
             min-height: 80px;
             font-family: monospace;
         }}
 
         #settingsTextArea:focus {{
-            border: 2px solid {colors['border_focus']};
+            border: 2px solid {colors['settings_input_border_focus']};
             outline: none;
-            background: {colors['field_bg_focus']};
+            background: {colors['settings_input_bg_focus']};
         }}
                 
         QComboBox {{
             padding: 12px 16px;
-            border: 2px solid {colors['border_normal']};
+            border: 2px solid {colors['settings_input_border']};
             border-radius: 12px;
             font-size: 14px;
-            background: {colors['field_bg']};
-            color: {colors['text_color']};
+            background: {colors['settings_input_bg']};
+            color: {colors['text_primary']};
             min-height: 20px;
         }}
         
         QComboBox:focus {{
-            border: 2px solid {colors['border_focus']};
+            border: 2px solid {colors['settings_input_border_focus']};
             outline: none;
-            background: {colors['field_bg_focus']};
+            background: {colors['settings_input_bg_focus']};
         }}
         
         QComboBox::drop-down {{
@@ -200,7 +220,7 @@ class StyleManager:
         
         QComboBox::down-arrow {{
             image: none;
-            border: 2px solid {colors['text_color']};
+            border: 2px solid {colors['text_primary']};
             width: 6px;
             height: 6px;
             border-top: none;
@@ -209,9 +229,9 @@ class StyleManager:
         }}
         
         QComboBox QAbstractItemView {{
-            background: {colors['field_bg']};
-            color: {colors['text_color']};
-            border: 1px solid {colors['border_normal']};
+            background: {colors['settings_input_bg']};
+            color: {colors['text_primary']};
+            border: 1px solid {colors['settings_input_border']};
             border-radius: 8px;
             padding: 4px;
         }}
@@ -229,8 +249,8 @@ class StyleManager:
 
         #saveButton {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['primary']}, stop:1 #3b82f6);  
-            color: {colors['white']};
+                stop:0 {colors['brand_primary']}, stop:1 #3b82f6);  
+            color: {colors['text_on_primary']};
             border: none;
         }}
         
@@ -249,16 +269,7 @@ class StyleManager:
         
         #cancelButton:hover {{
         }}
-        #hotkeyRecorderBTN {{
-            background: {colors['button_stt_recording_bg']};
-            color: {colors['button_secondary_text']};
-            border: none
-        }}
-        
-        #hotkeyRecorderBTN:hover {{
-            background: {colors['button_stt_recording_hover_bg']};
-            color: {colors['button_secondary_text']};
-        }}
+
         """
 
     # === MAIN APPLICATION STYLES ===
@@ -273,10 +284,10 @@ class StyleManager:
         
         #mainContainer {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['window_bg_start']},
-                stop:1 {colors['window_bg_end']});
+                stop:0 {colors['bg_window_start']},
+                stop:1 {colors['bg_window_end']});
             border-radius: 25px;
-            border: 1px solid {colors['border_normal']};
+            border: 1px solid {colors['container_border']};
         }}
         """
     
@@ -287,76 +298,45 @@ class StyleManager:
         return {
             'normal': f"""
             #inputField {{
-                background: {colors['field_bg']};
-                border: 2px solid {colors['border_normal']};
+                background: {colors['main_input_bg']};
+                border: 2px solid {colors['main_input_border']};
                 border-radius: 20px;
                 padding: 15px 20px;
                 font-size: 16px;
-                color: {colors['text_color']};
+                color: {colors['text_primary']};
                 font-weight: 400;
             }}
              
             #inputField:focus {{
-                border: 2px solid {colors['border_focus']};
-                background: {colors['field_bg_focus']};
-                outline: none;
-            }}
-
-            QTextEdit#inputField {{
-                background: {colors['field_bg']};
-                border: 2px solid {colors['border_normal']};
-                border-radius: 20px;
-                padding: 15px 20px;
-                font-size: 16px;
-                color: {colors['text_color']};
-                font-weight: 400;
-            }}
-            
-            QTextEdit#inputField:focus {{
-                border: 2px solid {colors['border_focus']};
-                background: {colors['field_bg_focus']};
+                background: {colors['main_input_bg_focus']};
+                border: 2px solid {colors['main_input_border_focus']};
                 outline: none;
             }}
             
             #inputField::placeholder {{
-                color: {colors['placeholder']};
+                color: {colors['text_placeholder']};
                 font-style: italic;
             }}
             """,
             'typing': f"""
             #inputFieldTyping {{
-                background: {colors['field_bg']};
-                border: 2px solid {colors['primary']};
+                background: {colors['main_input_bg']};
+                border: 2px solid {colors['main_input_border']};
                 border-radius: 20px;
                 padding: 15px 20px;
                 font-size: 16px;
-                color: {colors['text_color']};
+                color: {colors['text_primary']};
                 font-weight: 400;
             }}
             
             #inputFieldTyping:focus {{
-                border: 2px solid {colors['border_focus']};
-                background: {colors['field_bg_focus']};
-                outline: none;
-            }}
-            QTextEdit#inputFieldTyping {{
-                background: {colors['field_bg']};
-                border: 2px solid {colors['primary']};
-                border-radius: 20px;
-                padding: 15px 20px;
-                font-size: 16px;
-                color: {colors['text_color']};
-                font-weight: 400;
-            }}
-            
-            QTextEdit#inputFieldTyping:focus {{
-                border: 2px solid {colors['border_focus']};
-                background: {colors['field_bg_focus']};
+                background: {colors['main_input_bg_focus']};
+                border: 2px solid {colors['main_input_border_focus']};
                 outline: none;
             }}
             
             #inputFieldTyping::placeholder {{
-                color: {colors['placeholder']};
+                color: {colors['text_placeholder']};
                 font-style: italic;
             }}
             """
@@ -369,18 +349,18 @@ class StyleManager:
         # self.logger.debug(f"Generated animated thinking style with color: {color}")
         return f"""
         #inputFieldThinking {{
-            background: {colors['field_bg']};
+            background: {colors['bg_primary']};
             border: 3px solid {color};
             border-radius: 20px;
             padding: 15px 20px;
             font-size: 16px;
-            color: {colors['text_color']};
+            color: {colors['text_primary']};
             font-weight: 400;
         }}
         
         #inputFieldThinking:focus {{
             border: 3px solid {color};
-            background: {colors['field_bg_focus']};
+            background: {colors['bg_primary']};
             outline: none;
         }}
         """
@@ -393,7 +373,7 @@ class StyleManager:
 
         #settingsButton {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['primary']}, stop:1 #3b82f6);
+                stop:0 {colors['brand_primary']}, stop:1 #3b82f6);
             border: none;
             border-radius: 25px;
             color: white;
@@ -411,7 +391,7 @@ class StyleManager:
 
         #multilineToggleButton {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['primary']}, stop:1 #3b82f6);
+                stop:0 {colors['brand_primary']}, stop:1 #3b82f6);
             border: none;
             border-radius: 25px;
             color: white;
@@ -429,7 +409,7 @@ class StyleManager:
 
         #multilineToggleButtonActive {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['primary']}, stop:1 #3b82f6);
+                stop:0 {colors['brand_primary']}, stop:1 #3b82f6);
             border: none;
             border-radius: 25px;
             color: white;
@@ -446,10 +426,10 @@ class StyleManager:
         }}
 
         #copyButton {{
-            background: {colors['transparent_white']};
+            background: {colors['surface_overlay']};
             border: 1px solid rgba(79, 156, 249, 0.3);
             border-radius: 8px;
-            color: {colors['primary']};
+            color: {colors['brand_primary']};
             font-size: 16px;
             padding: 2px;
         }}
@@ -459,8 +439,8 @@ class StyleManager:
         }}
         #sttButton {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['button_stt_idle_bg']}, stop:1 #3b82f6);
-            color: white;
+                stop:0 {colors['brand_primary']}, stop:1 #3b82f6);
+            color: {colors['brand_primary_hover']};
             border: none;
             border-radius: 25px;
             font-size: 18px;
@@ -468,8 +448,7 @@ class StyleManager:
         }}
         #sttButton:hover {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['button_stt_hover_bg']}, stop:1 #2563eb);
-            color: white;
+                stop:0 {colors['brand_primary_hover']}, stop:1 #2563eb);
             border: none;
             border-radius: 25px;
             font-size: 18px;
@@ -477,8 +456,8 @@ class StyleManager:
         }}
         #sttButtonRecording {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['button_stt_recording_bg']}, stop:1 #ef5350);
-            color: white;
+                stop:0 {colors['state_recording']}, stop:1 #ef5350);
+            color: {colors['text_on_primary']};
             border: none;
             border-radius: 25px;
             font-size: 18px;
@@ -486,38 +465,28 @@ class StyleManager:
         }}
         #sttButtonRecording:hover {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['button_stt_hover_bg']}, stop:1 #d32f2f);
-            color: white;
+                stop:0 {colors['state_recording']}, stop:1 #d32f2f);
             border: none;
             border-radius: 25px;
             font-size: 18px;
             font-weight: bold;
         }}
-        #conversationToggleButton {{
-            background: {colors['transparent_white']};
+        #conversationToggleButton, #conversationToggleButtonExpanded {{
+            background: {colors['surface_overlay']};
             border: 1px solid rgba(79, 156, 249, 0.3);
             border-radius: 2px;
-            color: {colors['primary']};
+            color: {colors['brand_primary']};
         }}
-        #conversationToggleButton:hover {{
+        #conversationToggleButton:hover, #conversationToggleButtonExpanded:hover {{
             background: rgba(79, 156, 249, 0.1);
             border: 1px solid rgba(79, 156, 249, 0.5);
         }}
-        #conversationToggleButtonExpanded {{
-            background: {colors['transparent_white']};
-            border: 1px solid rgba(79, 156, 249, 0.3);
-            border-radius: 2px;
-            color: {colors['primary']};
-        }}
-        #conversationToggleButtonExpanded:hover {{
-            background: rgba(79, 156, 249, 0.1);
-            border: 1px solid rgba(79, 156, 249, 0.5);
-        }}
+
         #historyButton {{
-            background: {colors['transparent_white']};
+            background: {colors['surface_overlay']};
             border: 1px solid rgba(79, 156, 249, 0.3);
             border-radius: 8px;
-            color: {colors['primary']};
+            color: {colors['brand_primary']};
             font-size: 13px;
             padding: 2px;
         }}
@@ -540,18 +509,18 @@ class StyleManager:
         }}
 
         QScrollBar::handle:vertical {{
-            background: {colors['field_bg_focus']};
+            background: {colors['bg_primary']};
             border-radius: 4px;
             min-height: 20px;
             margin: 2px;
         }}
 
         QScrollBar::handle:vertical:hover {{
-            background: {colors['field_bg_focus']};
+            background: {colors['bg_primary']};
         }}
 
         QScrollBar::handle:vertical:pressed {{
-            background: {colors['field_bg_focus']};
+            background: {colors['bg_primary']};
         }}
 
         QScrollBar::add-line:vertical,
@@ -583,13 +552,13 @@ class StyleManager:
         
         return f"""
         #conversationArea {{
-            background: {colors['response_bg']};
+            background: {colors['bg_conversation']};
             border: 1px solid rgba(79, 156, 249, 0.2);
             border-radius: 15px;
             padding: 20px;
             font-size: {font_size}px;
             line-height: 1.6;
-            color: {colors['text_color']};
+            color: {colors['text_primary']};
             font-family: {font_families};
         }}
         /* Modern thin scrollbar styles */
@@ -668,7 +637,7 @@ class StyleManager:
             return f"""
             QPushButton {{
                 background: {colors['button_secondary_bg']};
-                color: {colors['button_secondary_text']};
+                color: {colors['text_on_secondary']};
                 border: none;
                 border-radius: 12px;
                 font-size: 12px;
@@ -677,8 +646,8 @@ class StyleManager:
                 min-width: 50px;
             }}
             QPushButton:hover {{
-                background: {colors['button_secondary_hover_bg']};
-                color: {colors['button_secondary_text']};
+                background: {colors['button_secondary_hover']};
+                color: {colors['text_on_secondary']};
             }}
             """
                 
@@ -688,8 +657,8 @@ class StyleManager:
             self.parent.logger.debug("Generated copy button success style")
             return f"""
             QPushButton {{
-                background: {colors['success']};
-                color: {colors['white']};
+                background: {colors['semantic_success']};
+                color: {colors['text_primary']};
                 border: none;
                 border-radius: 8px;
                 padding: 8px 16px;
@@ -700,14 +669,13 @@ class StyleManager:
             self.parent.logger.debug("get_hotkeyRecorderBTN_style")
             return f"""
             #hotkeyRecorderBTN {{
-                background: {colors['button_stt_recording_bg']};
-                color: {colors['button_secondary_text']};
+                background: {colors['state_recording']};
+                color: {colors['text_on_primary']};
                 border: none
             }}
             
             #hotkeyRecorderBTN:hover {{
-                background: {colors['button_stt_recording_hover_bg']};
-                color: {colors['button_secondary_text']};
+                background: {colors['state_recording_hover']};
             }}
             """
         
@@ -767,17 +735,17 @@ class StyleManager:
         return f"""
         QLineEdit {{
             padding: 12px 16px;
-            border: 2px solid {colors['border_normal']};
+            border: 2px solid {colors['settings_input_border']};
             border-radius: 12px;
             font-size: 14px;
-            background: {colors['field_bg']};
-            color: {colors['text_color']};
+            background: {colors['bg_primary']};
+            color: {colors['text_primary']};
             min-height: 20px;
         }}
         QLineEdit:focus {{
             border: 2px solid {colors['border_focus']};
             outline: none;
-            background: {colors['field_bg_focus']};
+            background: {colors['bg_primary']};
         }}
         """
 
@@ -787,17 +755,17 @@ class StyleManager:
         return f"""
         QTextEdit {{
             padding: 12px 16px;
-            border: 2px solid {colors['border_normal']};
+            border: 2px solid {colors['settings_input_border']};
             border-radius: 12px;
             font-size: 14px;
-            background: {colors['field_bg']};
-            color: {colors['text_color']};
+            background: {colors['bg_primary']};
+            color: {colors['text_primary']};
             font-family: monospace;
         }}
         QTextEdit:focus {{
             border: 2px solid {colors['border_focus']};
             outline: none;
-            background: {colors['field_bg_focus']};
+            background: {colors['bg_primary']};
         }}
         """
 
@@ -807,25 +775,25 @@ class StyleManager:
         return f"""
         #settingsComboBox {{
             padding: 12px 16px;
-            border: 2px solid {colors['border_normal']};
+            border: 2px solid {colors['settings_input_border']};
             border-radius: 12px;
             font-size: 14px;
-            background: {colors['field_bg']};
-            color: {colors['text_color']};
+            background: {colors['bg_primary']};
+            color: {colors['text_primary']};
             min-height: 20px;
         }}
         #settingsComboBox:focus {{
             border: 2px solid {colors['border_focus']};
             outline: none;
-            background: {colors['field_bg_focus']};
+            background: {colors['bg_primary']};
         }}
         
         /* Target dropdown with specific parent */
         #settingsComboBox QAbstractItemView {{
-            border: 2px solid {colors['border_normal']} !important;
+            border: 2px solid {colors['settings_input_border']} !important;
             border-radius: 8px !important;
-            background: {colors['field_bg']} !important;
-            color: {colors['text_color']} !important;
+            background: {colors['bg_primary']} !important;
+            color: {colors['text_primary']} !important;
             selection-background-color: {colors['border_focus']} !important;
         }}
         #settingsComboBox QAbstractItemView::item {{
@@ -833,7 +801,7 @@ class StyleManager:
             background: transparent;
         }}
         #settingsComboBox QAbstractItemView::item:hover {{
-            background: {colors['field_bg_focus']} !important;
+            background: {colors['bg_primary']} !important;
         }}
         #settingsComboBox QAbstractItemView::item:selected {{
             background: {colors['border_focus']} !important;
@@ -845,9 +813,9 @@ class StyleManager:
         colors = self.get_theme_colors()
         return f"""
         QWidget{{
-            background: {colors['field_bg']};
+            background: {colors['bg_primary']};
             border: none;
-            color: {colors['text_color']};
+            color: {colors['text_primary']};
         }}
         """
     
@@ -857,37 +825,37 @@ class StyleManager:
         return f"""
         {self.button_styles.get_default_button()}
         #title{{
-            color: {colors['text_color']};
+            color: {colors['text_primary']};
             border: none;
             padding: 12px 15px;
             font-size: 15px;
             font-weight: 500;
         }}
         #window{{
-            color: {colors['text_color']};
-            background-color: {colors['field_bg']}; 
-            border: 2px solid {colors['border_normal']};
+            color: {colors['text_primary']};
+            background-color: {colors['bg_primary']}; 
+            border: 2px solid {colors['border_default']};
             border-radius: 5px;
             padding: 15px 20px;
             font-size: 14px;
             font-weight: 400;
         }}
         #current_label{{
-            color: {colors['text_color']};
+            color: {colors['text_primary']};
             font-size: 12px;
             font-weight: 300;
             font-style: italic;
         }}
         #hotkey_display{{
-            color: {colors['text_color']};
+            color: {colors['text_primary']};
             border: none;
             font-size: 14px;
             font-weight: 400;
         }}
         #instructions{{
-            color: {colors['text_color']};
-            background-color: {colors['field_bg']}; 
-            border: 2px solid {colors['border_normal']};
+            color: {colors['text_primary']};
+            background-color: {colors['bg_primary']}; 
+            border: 2px solid {colors['border_default']};
             border-radius: 5px;
             padding: 5px 5px;
             font-size: 12px;
@@ -901,7 +869,7 @@ class StyleManager:
             #body {{
                 font-family: 'Segoe UI', Arial, sans-serif;
                 margin: 0;
-                background-color: {colors['field_bg']};
+                background-color: {colors['bg_primary']};
                 line-height: 1.4;
             }}
             .message-container {{ 
@@ -919,14 +887,14 @@ class StyleManager:
                 margin-right: 150px;
             }}
             .user-message {{ 
-                color: {colors['text_color']};
+                color: {colors['text_primary']};
                 border: 2px solid #007bff;
                 border-radius: 18px 18px 4px 18px;
                 word-wrap: break-word;
                 text-align: right;
             }}
             .assistant-message {{ 
-                color: {colors['text_color']};
+                color: {colors['text_primary']};
                 border-radius: 18px 18px 18px 4px;
                 border: 2px solid #333333;
                 word-wrap: break-word;
@@ -934,7 +902,7 @@ class StyleManager:
             }}
             .system-message {{
                 text-align: center;
-                color: {colors['text_color']};
+                color: {colors['text_primary']};
                 border: 1px solid #ffcc80;
                 border-radius: 12px;
                 margin: 15px auto;
@@ -943,14 +911,14 @@ class StyleManager:
             }}
             .message-header-user {{
                 font-size: 11px;
-                color:{colors['history_user_label_bg']};
+                color:{colors['history_accent']};
                 margin-bottom: 6px;
                 font-weight: bold;
                 text-align: right;
             }}
             .message-header-assistant {{
                 font-size: 11px;
-                color: {colors['history_assistant_label_bg']};
+                color: {colors['history_accent']};
                 margin-bottom: 6px;
                 font-weight: bold;
                 text-align: left;
@@ -961,10 +929,10 @@ class StyleManager:
                 border-radius: 5px;
             }}
             .user-message .message-content {{
-                color: {colors['text_color']};
+                color: {colors['text_primary']};
             }}
             .assistant-message .message-content {{
-                color: {colors['text_color']};
+                color: {colors['text_primary']};
             }}
             .message-content p {{ 
                 margin: 6px 0; 
@@ -984,13 +952,13 @@ class StyleManager:
                 font-size: 13px;
             }}
             .user-message .message-content code {{
-                color: {colors['text_color']};
+                color: {colors['text_primary']};
             }}
             .assistant-message .message-content code {{
-                color: {colors['text_color']};
+                color: {colors['text_primary']};
             }}
     """
 
     def get_llm_thinking_style(self):
         colors = self.get_theme_colors()
-        return f"font-style: italic; color: {colors['thinking_text_color']};"
+        return f"font-style: italic; color: {colors['text_thinking']};"
