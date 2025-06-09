@@ -572,11 +572,10 @@ class UIManager(QObject):
         self.logger.debug("toggle history view button triggered")
         self.show_history_mode = not self.show_history_mode
         
+        self.set_response_text(self.get_current_response_text())
         if self.show_history_mode:
-            self._show_conversation_history()
             self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_RESPONSE_PATH)))
         else:
-            self.set_response_text(self.get_current_response_text())
             self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
 
     def _clear_history(self):
@@ -729,10 +728,13 @@ class UIManager(QObject):
 
     def set_response_text(self, text):
         """Set response text - now aware of history mode."""
-        self.show_history_mode = False
         self._current_response = text
         html_content = self.markdown_render.to_html(text)
-        self.conversation_area.setHtml(html_content)
+
+        if self.show_history_mode:
+            self._show_conversation_history()
+        else:
+            self.conversation_area.setHtml(html_content)
 
     def is_showing_history(self):
         """Check if currently showing conversation history."""
