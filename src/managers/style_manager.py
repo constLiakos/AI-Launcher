@@ -302,7 +302,7 @@ class StyleManager:
             font-weight: bold;
         }}
 
-        #copyButton, #historyButton {{
+        #copyButton, #historyButton, #clearHistoryButton {{
             background: {colors['button_tertiary_bg']};
             border: 1px solid {colors['button_tertiarty_border']};
             border-radius: 8px;
@@ -310,7 +310,7 @@ class StyleManager:
             font-size: 16px;
             padding: 2px;
         }}
-        #copyButton:hover, #historyButton:hover {{
+        #copyButton:hover, #historyButton:hover, #clearHistoryButton:hover {{
             background: {colors['button_tertiarty_hover_bg']};
             border: 1px solid {colors['button_tertiarty_hover_border']};
         }}

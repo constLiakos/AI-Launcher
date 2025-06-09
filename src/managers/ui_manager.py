@@ -28,7 +28,8 @@ class UIManager(QObject):
         self.stt_button = None
         self.settings_button = None
         self.copy_button = None
-        self.history_button = None  # New button for conversation history
+        self.history_button = None
+        self.clear_history_button = None
         self.input_type_is_multiline = False
         self.multiline_toggle_button = None
         self.conversation_toggle_button = None
@@ -86,6 +87,7 @@ class UIManager(QObject):
         self.multiline_toggle_button.clicked.connect(self._toggle_input_type)
         self.conversation_toggle_button.clicked.connect(self.toggle_response_visibility)
         self.history_button.clicked.connect(self._toggle_history_view)
+        self.clear_history_button.clicked.connect(self._clear_history)
         self.copy_button.clicked.connect(callbacks['copy_clicked'])
 
     def connect_input_signals(self, callbacks):
@@ -471,6 +473,12 @@ class UIManager(QObject):
                 except TypeError:
                     pass
 
+            if hasattr(self.clear_history_button, 'clicked'):
+                try:
+                    self.clear_history_button.clicked.disconnect()
+                except TypeError:
+                    pass
+
         except Exception as e:
             self.logger.error(f"Error disconnecting signals: {e}")
 
@@ -570,6 +578,11 @@ class UIManager(QObject):
         else:
             self.set_response_text(self.get_current_response_text())
             self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
+
+    def _clear_history(self):
+        """Clear History"""
+        self.conversation_manager.clear_current_conversation()
+        self.reapply_conversation_history_theme()
 
     def reapply_conversation_history_theme(self):
         if self.conversation_visible:
@@ -769,9 +782,11 @@ class UIManager(QObject):
         button_layout.setContentsMargins(0, 0, 0, 0)
         
         history_button = self._create_history_toggle_button()
+        clear_history_button = self._create_clear_history_button()
         copy_button = self._create_copy_button()
         
         button_layout.addWidget(history_button, alignment=Qt.AlignLeft)
+        button_layout.addWidget(clear_history_button, alignment=Qt.AlignLeft)
         button_layout.addStretch()  # This pushes buttons to opposite sides
         button_layout.addWidget(copy_button, alignment=Qt.AlignRight)
         
@@ -790,7 +805,6 @@ class UIManager(QObject):
 
         # Store references
         self.response_container = response_container
-        self.history_button_container = history_button  # Store for potential future use
         
         # Hide the response container initially
         response_container.setVisible(False)
@@ -881,13 +895,23 @@ class UIManager(QObject):
     def _create_history_toggle_button(self):
         # Create history button container
         self.history_button = QPushButton()
-        self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))  # Replace with your icon path
+        self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
         self.history_button.setToolTip("Show Conversation History")
         self.history_button.setObjectName("historyButton")
         self.history_button.setFixedHeight(30)
         self.history_button.setFixedWidth(30)
     
         return self.history_button
+    
+    def _create_clear_history_button(self):
+        self.clear_history_button = QPushButton()
+        self.clear_history_button.setIcon(QIcon(str(Files.CLEAR_CONVESRATION_BTN)))
+        self.clear_history_button.setToolTip("Clear Conversation History")
+        self.clear_history_button.setObjectName("clearHistoryButton")
+        self.clear_history_button.setFixedHeight(30)
+        self.clear_history_button.setFixedWidth(30)
+    
+        return self.clear_history_button
 
 #   ##########################################################################################
 #       State Functions
