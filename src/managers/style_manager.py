@@ -882,3 +882,29 @@ class StyleManager:
                 background: {colors['state_recording_hover']};
             }}
             """
+        
+
+    # In your StyleManager class, add this to the appropriate style method:
+
+    def get_error_message_style(self):
+        """Get CSS styles for error message popup."""
+        return """
+            #errorMessage {
+                background-color: rgba(255, 243, 205, 0.95);
+                border: 1px solid #ffeaa7;
+                border-radius: 8px;
+                color: #856404;
+                font-weight: bold;
+                padding: 12px 16px;
+                font-size: 12px;
+                max-width: 400px;
+                min-width: 200px;
+            }
+            
+            #errorMessage QLabel {
+                background-color: transparent;
+                border: none;
+                color: #856404;
+                font-weight: bold;
+            }
+        """

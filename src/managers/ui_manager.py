@@ -1,6 +1,6 @@
 import logging
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit,
-                             QPushButton, QTextBrowser, QFrame, QShortcut,
+                             QPushButton, QTextBrowser, QFrame, QShortcut, QLabel,
                              QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSlot, QTimer, pyqtSignal, QObject
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
@@ -9,6 +9,7 @@ from managers.style_manager import StyleManager
 from utils.constants import (
     ElementSize, Files, InputSettings, Text, WindowSize)
 from utils.markdown_render import MarkdownRenderer
+from widgets.error_message import ErrorMessage
 
 
 class UIManager(QObject):
@@ -33,6 +34,7 @@ class UIManager(QObject):
         self.input_type_is_multiline = False
         self.multiline_toggle_button = None
         self.conversation_toggle_button = None
+        self.error_message = None
 
         self.original_input_height = None
         self.original_window_height = None
@@ -1008,3 +1010,57 @@ class UIManager(QObject):
 
             self.conversation_area.setMinimumHeight(min_response_height)
             self.conversation_area.setMaximumHeight(max_response_height)
+
+        # Reposition error message if it's visible
+        if self.error_message and self.error_message.isVisible():
+            self._position_error_message()
+
+    def show_error_message(self, message):
+        """Show error message in a floating popup for 5 seconds."""
+        try:
+            # Create error message widget if it doesn't exist
+            if self.error_message is None:
+                self.error_message = ErrorMessage(self.parent)
+                self.error_message.setStyleSheet(self.style_manager.get_error_message_style())
+            
+            # Position the error message above the input field
+            self._position_error_message()
+            
+            # Show the message
+            self.error_message.show_message(message, 5000)
+            
+            self.logger.debug(f"Showing error message: {message}")
+            
+        except Exception as e:
+            self.logger.error(f"Error showing error message: {e}")
+
+    def _position_error_message(self):
+        """Position the error message in the center of the current window's content area."""
+        if not self.error_message or not self.parent:
+            return
+            
+        try:
+            # Get the actual content area (excluding window frame)
+            content_rect = self.parent.centralWidget().geometry() if self.parent.centralWidget() else self.parent.rect()
+            content_global_pos = self.parent.mapToGlobal(content_rect.topLeft())
+            
+            # Calculate error message size
+            self.error_message.adjustSize()
+            error_width = self.error_message.width()
+            error_height = self.error_message.height()
+            
+            # Position in exact center of content area
+            x = content_global_pos.x() + (content_rect.width() - error_width) // 2
+            y = content_global_pos.y() + (content_rect.height() - error_height) // 2
+            
+            # Ensure it stays within screen bounds
+            screen = self.parent.screen().geometry()
+            x = max(10, min(x, screen.width() - error_width - 10))
+            y = max(10, min(y, screen.height() - error_height - 10))
+            
+            self.error_message.move(x, y)
+            
+            self.logger.debug(f"Positioned error message at center ({x}, {y}) - content area: {content_rect.width()}x{content_rect.height()}")
+            
+        except Exception as e:
+            self.logger.error(f"Error positioning error message: {e}")

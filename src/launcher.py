@@ -375,14 +375,19 @@ class Launcher(QMainWindow):
 
     @pyqtSlot()
     def on_recording_completed(self):
-        # Get transcribed text and fill the input field
-        transcribed_text = self.stt_api_client.transcribe()
-        if transcribed_text and transcribed_text.strip():
-            self.ui_manager.input_field.setText(transcribed_text)
-            # Optionally set focus back to input field
-            self.ui_manager.input_field.setFocus()
-            if self.ui_manager.is_multiline_input():
-                self.ui_manager.handle_multiline_resize()
+        try:
+            # Get transcribed text and fill the input field
+            transcribed_text = self.stt_api_client.transcribe()
+            if transcribed_text and transcribed_text.strip():
+                self.ui_manager.input_field.setText(transcribed_text)
+                # Optionally set focus back to input field
+                self.ui_manager.input_field.setFocus()
+                if self.ui_manager.is_multiline_input():
+                    self.ui_manager.handle_multiline_resize()
+        except Exception as e:
+            # Log the error and optionally show user feedback
+            logger.error(f"Failed to transcribe audio: {str(e)}")
+            self.ui_manager.show_error_message(f"Transcription failed: {str(e)}")
 
     def update_stt_button_appearance(self, state):
         """Update STT button appearance based on state."""
@@ -728,3 +733,5 @@ class Launcher(QMainWindow):
                     self.force_send_request()
                     return True
         return super().eventFilter(obj, event)
+
+
