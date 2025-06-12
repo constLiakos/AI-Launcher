@@ -67,6 +67,6 @@ class MarkdownRenderer:
         """Convert markdown text to HTML."""
         # Include 'tables' extension to enable table support
         # and your ThinkExtension.
-        md = markdown.Markdown(extensions=[ThinkExtension(self.style_manager), 'tables', 'codehilite', 'fenced_code', 'attr_list', 'def_list', 'sane_lists', 'abbr'])
+        md = markdown.Markdown(extensions=[ThinkExtension(self.style_manager), 'sane_lists',  'tables', 'codehilite', 'fenced_code', 'attr_list', 'def_list', 'abbr', 'md_in_html', 'toc', 'nl2br'])
         html = md.convert(text)
         return html
