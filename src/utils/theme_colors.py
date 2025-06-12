@@ -45,15 +45,13 @@ class ThemeColors:
             'text_on_primary': '#ffffff',
             'text_on_secondary': '#374151',     
             # === BACKGROUND COLORS ===
-            'bg_primary': '#ffffff',
+            'bg_primary': 'rgba(255,255,255, 0.2)',
             'bg_secondary': '#f8fafc',
             'bg_tertiary': '#f3f4f6',
             'bg_elevated': 'rgba(248, 250, 252, 0.9)',
             'bg_overlay': 'rgba(255, 255, 255, 0.8)',
             'bg_window_start': '#f8fafc',
             'bg_window_end': '#e2e8f0',
-            'bg_dialog_start': '#f8fafc',
-            'bg_dialog_end': '#e2e8f0',
             'bg_conversation': 'rgba(248, 250, 252, 0.9)',
             # === MAIN  APP INPUT COLORS ===
             'main_input_bg': '#ffffff',
@@ -147,15 +145,13 @@ class ThemeColors:
             'text_on_primary': '#ffffff',
             'text_on_secondary': '#ffffff',
             # === BACKGROUND COLORS ===
-            'bg_primary': '#2d3142',
+            'bg_primary': 'rgba(45,49,66, 0.2)',
             'bg_secondary': '#252836',
             'bg_tertiary': '#1a1d29',
             'bg_elevated': 'rgba(37, 40, 54, 0.9)',
             'bg_overlay': 'rgba(26, 29, 41, 0.8)',
             'bg_window_start': '#2d3142',
             'bg_window_end': '#1a1d29',
-            'bg_dialog_start': '#2d3142',
-            'bg_dialog_end': '#1a1d29',
             'bg_conversation': 'rgba(37, 40, 54, 0.9)',
             # === MAIN APP INPUT COLORS ===
             'main_input_bg': '#374151',
@@ -249,15 +245,13 @@ class ThemeColors:
             'text_on_primary': '#ffffff',
             'text_on_secondary': '#33403C',     
             # === BACKGROUND COLORS ===
-            'bg_primary': '#FAFBF8',
+            'bg_primary': 'rgba(250,251,248, 0.2)',
             'bg_secondary': '#F1F4F0',
             'bg_tertiary': '#E8EDE6',
             'bg_elevated': 'rgba(241, 244, 240, 0.9)',
             'bg_overlay': 'rgba(250, 251, 248, 0.8)',
             'bg_window_start': '#F1F4F0',
             'bg_window_end': '#E0E6DC',
-            'bg_dialog_start': '#F1F4F0',
-            'bg_dialog_end': '#E0E6DC',
             'bg_conversation': 'rgba(241, 244, 240, 0.9)',
             # === MAIN APP INPUT COLORS ===
             'main_input_bg': '#FAFBF8',
@@ -351,15 +345,13 @@ class ThemeColors:
             'text_on_primary': '#ffffff',
             'text_on_secondary': '#4A2C3A',     
             # === BACKGROUND COLORS ===
-            'bg_primary': '#FDF8FB',
+            'bg_primary': 'rgba(253,248,251, 0.2)',
             'bg_secondary': '#F8F0F4',
             'bg_tertiary': '#F3E5EA',
             'bg_elevated': 'rgba(248, 240, 244, 0.9)',
             'bg_overlay': 'rgba(253, 248, 251, 0.8)',
             'bg_window_start': '#F8F0F4',
             'bg_window_end': '#F0D9E1',
-            'bg_dialog_start': '#F8F0F4',
-            'bg_dialog_end': '#F0D9E1',
             'bg_conversation': 'rgba(248, 240, 244, 0.9)',
             # === MAIN APP INPUT COLORS ===
             'main_input_bg': '#FDF8FB',
@@ -453,15 +445,13 @@ class ThemeColors:
             'text_on_primary': '#ffffff',
             'text_on_secondary': '#2E3B2E',     
             # === BACKGROUND COLORS ===
-            'bg_primary': '#FAFCFF',  # Very subtle sky blue tint
+            'bg_primary': 'rgba(253, 252, 250, 0.15)',  # Very subtle sky blue tint
             'bg_secondary': '#F0F6FF',  # Gentle light blue
             'bg_tertiary': '#F2F8F2',  # Gentle light green
             'bg_elevated': 'rgba(240, 246, 255, 0.9)',
             'bg_overlay': 'rgba(250, 252, 255, 0.8)',
             'bg_window_start': "#DFE9F8",  # Gentle blue to sunset gradient
             'bg_window_end': '#FFF3E0',  # Warm sunset glow
-            'bg_dialog_start': '#DFE9F8',
-            'bg_dialog_end': '#FFF3E0',
             'bg_conversation': 'rgba(252, 255, 255, 0.8)',
             # === MAIN APP INPUT COLORS ===
             'main_input_bg': 'rgba(253, 252, 250, 0.5)',  # Soft warm cream for text area
