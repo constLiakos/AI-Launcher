@@ -282,7 +282,9 @@ class Theme:
     """Theme constants"""
     CLASSIC = "Classic"
     DARK = "Dark"
-    DEFAULT_THEME = CLASSIC
+    NATURE = "Nature"
+    DEFAULT_THEME = "Classic"
+
 
 # =============================================================================
 # TIMING AND ANIMATION

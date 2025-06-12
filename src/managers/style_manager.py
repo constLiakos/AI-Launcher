@@ -2,15 +2,15 @@ import logging
 from utils.constants import Theme
 from PyQt5.QtGui import QFont, QFontDatabase
 
+from utils.theme_colors import ThemeColors
+
 class StyleManager:
     """Manages all UI styles for the application."""
     def __init__(self, logger:logging.Logger):
         self.logger = logger.getChild('style_manager')
 
         self.current_theme = Theme.DEFAULT_THEME
-        self.themes = {
-            Theme.CLASSIC: self._get_light_theme()
-        }
+        self.themes = ThemeColors.get_all_themes()
         
         self.button_styles = self.ButtonStyles(self)
     
@@ -34,105 +34,6 @@ class StyleManager:
         colors = self.themes[self.current_theme]
         # self.logger.debug(f"Retrieved colors for theme: {self.current_theme}")
         return colors
-    
-    def _get_light_theme(self):
-        """Light theme with blue accents."""
-        return {
-            # === BRAND COLORS ===
-            'brand_primary': "#5CA1F7",
-            'brand_primary_hover': "#4A8AE8", 
-            'brand_primary_active': "#3b82f6",
-            'brand_secondary': '#8B5CF6',
-            'brand_accent': '#EC4899',
-            
-            # === SEMANTIC COLORS ===
-            'semantic_success': '#22C55E',
-            'semantic_warning': '#856404',
-            'semantic_warning_bg': '#fff3cd',
-            'semantic_error': '#EF4444',
-            'semantic_info': '#3B82F6',
-
-            # === TEXT COLORS ===
-            'text_primary': '#2d3142',
-            'text_secondary': '#6b7280',
-            'text_muted': '#9ca3af',
-            'text_placeholder': '#9ca3af',
-            'text_inverse': '#ffffff',
-            'text_thinking': "#c6c7cf",
-            'text_tertiary': '#9ca3af',
-            'text_on_primary': '#ffffff',
-            'text_on_secondary': '#374151',     
-
-
-            # === BACKGROUND COLORS ===
-            'bg_primary': '#ffffff',
-            'bg_secondary': '#f8fafc',
-            'bg_tertiary': '#f3f4f6',
-            'bg_elevated': 'rgba(248, 250, 252, 0.9)',
-            'bg_overlay': 'rgba(255, 255, 255, 0.8)',
-            'bg_window_start': '#f8fafc',
-            'bg_window_end': '#e2e8f0',
-            'bg_dialog_start': '#f8fafc',
-            'bg_dialog_end': '#e2e8f0',
-            'bg_conversation': 'rgba(248, 250, 252, 0.9)',
-
-            # === MAIN  APP INPUT COLORS ===
-            'main_input_bg': '#ffffff',
-            'main_input_bg_focus': '#ffffff',
-            'main_input_border': '#d1d5db',
-            'main_input_border_focus': '#4f9cf9',
-
-            # === SETTINGS INPUT COLORS ===
-            'settings_input_bg': '#ffffff',
-            'settings_input_bg_focus': '#ffffff',
-            'settings_input_border': '#d1d5db',
-            'settings_input_border_focus': '#4f9cf9',
-
-            # === BUTTON COLORS ===
-            'button_primary_bg': "#5CA1F7",
-            'button_primary_hover': "#4A8AE8",
-            'button_primary_active': "#3b82f6",
-            'button_secondary_bg': '#f3f4f6',
-            'button_secondary_hover': '#d1d5db',
-            'button_secondary_active': '#9ca3af',
-            'button_tertiary_bg': 'rgba(255, 255, 255, 0.4)',
-            'button_tertiarty_border': 'rgba(79, 156, 249, 0.3)',
-            'button_tertiarty_hover_bg': 'rgba(79, 156, 249, 0.1)',
-            'button_tertiarty_hover_border': 'rgba(79, 156, 249, 0.5)',
-
-            # === STATE COLORS ===
-            'state_recording': "#e77c7c",
-            'state_recording_hover': "#e25a5a",
-            'state_active': "#5CA1F7",
-            'state_inactive': '#9ca3af',
-
-            # === COMPONENT SPECIFIC ===
-            'history_accent': "#5CA1F7",
-            'history_message_bg': "#ebf0f5",
-            'conversation_border': 'rgba(79, 156, 249, 0.2)',
-            'scrollbar_track': 'transparent',
-            'scrollbar_thumb': 'rgba(79, 156, 249, 0.3)',
-            'scrollbar_thumb_hover': 'rgba(79, 156, 249, 0.5)',
-
-            # === SURFACE ALIASES (for easier migration) ===
-            'surface_primary': '#ffffff',
-            'surface_secondary': '#f8fafc',
-            'surface_tertiary': '#f3f4f6',
-            'surface_elevated': 'rgba(248, 250, 252, 0.9)',
-            'surface_overlay': 'rgba(255, 255, 255, 0.8)',
-            
-            # === BORDER COLORS ===
-            'border_subtle': 'rgba(79, 156, 249, 0.15)',     # Very light brand color
-            'border_soft': 'rgba(209, 213, 219, 0.8)',       # Soft neutral
-            'border_default': '#d1d5db',                      # Current input borders
-            'border_focus': '#4f9cf9',                        # Focus states
-            
-            # === CONTAINER BORDERS ===
-            'container_border': 'rgba(79, 156, 249, 0.12)',  # Main container
-            'dialog_border': 'rgba(209, 213, 219, 0.6)',     # Dialogs
-            'surface_border': 'rgba(148, 163, 184, 0.2)',    # General surfaces
-
-        }
 
     def _get_settings_button_styles(self):
         """Get button styles for settings dialog."""
@@ -140,22 +41,21 @@ class StyleManager:
         return f"""
         {self.button_styles.get_default_button()}
 
-
         #saveButton {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['brand_primary']}, stop:1 #3b82f6);  
+                stop:0 {colors['brand_primary']}, stop:1 {colors['button_gradient_end']});  
             color: {colors['text_on_primary']};
             border: none;
         }}
         
         #saveButton:hover {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 #3b82f6, stop:1 #2563eb);
+                stop:0 {colors['button_hover_start']}, stop:1 {colors['button_hover_end']});
         }}
         
         #saveButton:pressed {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 #2563eb, stop:1 #1d4ed8);
+                stop:0 {colors['button_pressed_start']}, stop:1 {colors['button_pressed_end']});
         }}
         
         #cancelButton {{
@@ -163,7 +63,6 @@ class StyleManager:
         
         #cancelButton:hover {{
         }}
-
         """
 
     # === MAIN APPLICATION STYLES ===
@@ -264,29 +163,27 @@ class StyleManager:
         colors = self.get_theme_colors()
         self.logger.debug("Generated main application button styles")
         return f"""
-
         #settingsButton, #multilineToggleButton, #multilineToggleButtonActive, #sttButton  {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['brand_primary']}, stop:1 #3b82f6);
+                stop:0 {colors['brand_primary']}, stop:1 {colors['button_gradient_end']});
             border: none;
             border-radius: 25px;
-            color: white;
+            color: {colors['text_on_primary']};
             font-size: 18px;
             font-weight: bold;
         }}
         #settingsButton:hover, #multilineToggleButton:hover, #multilineToggleButtonActive:hover, #sttButton:hover {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 #3b82f6, stop:1 #2563eb);
+                stop:0 {colors['button_hover_start']}, stop:1 {colors['button_hover_end']});
         }}
         #settingsButton:pressed, #multilineToggleButton:pressed, #multilineToggleButtonActive:pressed{{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 #2563eb, stop:1 #1d4ed8);
+                stop:0 {colors['button_pressed_start']}, stop:1 {colors['button_pressed_end']});
         }}
-
 
         #sttButtonRecording {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['state_recording']}, stop:1 #ef5350);
+                stop:0 {colors['state_recording']}, stop:1 {colors['stt_recording_end']});
             color: {colors['text_on_primary']};
             border: none;
             border-radius: 25px;
@@ -295,13 +192,12 @@ class StyleManager:
         }}
         #sttButtonRecording:hover {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                stop:0 {colors['state_recording']}, stop:1 #d32f2f);
+                stop:0 {colors['state_recording_hover']}, stop:1 {colors['stt_recording_hover_end']});
             border: none;
             border-radius: 25px;
             font-size: 18px;
             font-weight: bold;
         }}
-
         #copyButton, #historyButton, #clearHistoryButton {{
             background: {colors['button_tertiary_bg']};
             border: 1px solid {colors['button_tertiarty_border']};
@@ -314,7 +210,6 @@ class StyleManager:
             background: {colors['button_tertiarty_hover_bg']};
             border: 1px solid {colors['button_tertiarty_hover_border']};
         }}
-
         #conversationToggleButton, #conversationToggleButtonExpanded {{
             background: {colors['button_tertiary_bg']};
             border: 1px solid {colors['button_tertiarty_border']};
@@ -332,40 +227,33 @@ class StyleManager:
         colors = self.get_theme_colors()
         return f"""
         /* Modern thin scrollbar styles */
-        /* Modern thin scrollbar styles */
         QScrollBar:vertical {{
-            background: transparent;
+            background: {colors['scrollbar_track']};
             width: 8px;
             border-radius: 4px;
             margin: 0px;
         }}
-
         QScrollBar::handle:vertical {{
-            background: rgba(79, 156, 249, 0.3);
+            background: {colors['scrollbar_thumb']};
             border-radius: 4px;
             min-height: 20px;
             margin: 2px;
         }}
-
         QScrollBar::handle:vertical:hover {{
-            background: rgba(79, 156, 249, 0.5);
+            background: {colors['scrollbar_thumb_hover']};
         }}
-
         QScrollBar::handle:vertical:pressed {{
-            background: rgba(79, 156, 249, 0.7);
+            background: {colors['scrollbar_thumb_hover']};
         }}
-
         QScrollBar::add-line:vertical,
         QScrollBar::sub-line:vertical {{
             height: 0px;
             background: transparent;
         }}
-
         QScrollBar::add-page:vertical,
         QScrollBar::sub-page:vertical {{
             background: transparent;
         }}
-
         QScrollBar:horizontal {{
             height: 0px;
         }}
@@ -483,7 +371,7 @@ class StyleManager:
             .user-message-wrapper {{
                 text-align: right;
                 margin-left: 150px;
-                border: 2px solid black;
+                border: 2px solid {colors['text_secondary']};
                 border-radius: 15px;
             }}
             .assistant-message-wrapper {{
@@ -492,7 +380,7 @@ class StyleManager:
             }}
             .user-message {{ 
                 color: {colors['text_primary']};
-                border: 2px solid #007bff;
+                border: 2px solid {colors['brand_primary']};
                 border-radius: 18px 18px 4px 18px;
                 word-wrap: break-word;
                 text-align: right;
@@ -500,14 +388,14 @@ class StyleManager:
             .assistant-message {{ 
                 color: {colors['text_primary']};
                 border-radius: 18px 18px 18px 4px;
-                border: 2px solid #333333;
+                border: 2px solid {colors['text_secondary']};
                 word-wrap: break-word;
                 text-align: left;
             }}
             .system-message {{
                 text-align: center;
                 color: {colors['text_primary']};
-                border: 1px solid #ffcc80;
+                border: 1px solid {colors['semantic_warning']};
                 border-radius: 12px;
                 margin: 15px auto;
                 font-size: 14px;
@@ -563,11 +451,11 @@ class StyleManager:
             }}
     """
 
+
     def get_conversation_area_style(self):
         """Get response area styles."""
         colors = self.get_theme_colors()
         self.logger.debug("Generated response area styles")
-
         emoji_font = self.get_emoji_font()
         font_size = emoji_font.pointSize()
         
@@ -577,7 +465,7 @@ class StyleManager:
         return f"""
         #conversationArea {{
             background: {colors['bg_conversation']};
-            border: 1px solid rgba(79, 156, 249, 0.2);
+            border: 1px solid {colors['conversation_border']};
             border-radius: 15px;
             padding: 20px;
             font-size: {font_size}px;
@@ -594,7 +482,6 @@ class StyleManager:
 #   ##########################################################################################
 
     # Settings - Main Dialog
-
     def get_settings_dialog_styles(self):
         """Get complete styles for settings dialog."""
         colors = self.get_theme_colors()
@@ -643,7 +530,6 @@ class StyleManager:
         #settingsInputField::placeholder {{
             color: {colors['text_placeholder']};
         }}
-
         #settingsTextArea {{
             padding: 12px 16px;
             border: 2px solid {colors['settings_input_border']};
@@ -654,7 +540,6 @@ class StyleManager:
             min-height: 80px;
             font-family: monospace;
         }}
-
         #settingsTextArea:focus {{
             border: 2px solid {colors['settings_input_border_focus']};
             outline: none;
@@ -684,7 +569,7 @@ class StyleManager:
         
         QComboBox::down-arrow {{
             image: none;
-            border: 2px solid {colors['text_primary']};
+            border: 2px solid {colors['dropdown_arrow_color']};
             width: 6px;
             height: 6px;
             border-top: none;
@@ -774,17 +659,17 @@ class StyleManager:
             border-radius: 8px !important;
             background: {colors['bg_primary']} !important;
             color: {colors['text_primary']} !important;
-            selection-background-color: {colors['border_focus']} !important;
+            selection-background-color: {colors['combobox_selection_bg']} !important;
         }}
         #settingsComboBox QAbstractItemView::item {{
             padding: 8px 12px;
             background: transparent;
         }}
         #settingsComboBox QAbstractItemView::item:hover {{
-            background: {colors['bg_primary']} !important;
+            background: {colors['combobox_item_hover']} !important;
         }}
         #settingsComboBox QAbstractItemView::item:selected {{
-            background: {colors['border_focus']} !important;
+            background: {colors['combobox_selection_bg']} !important;
         }}
         """
     
