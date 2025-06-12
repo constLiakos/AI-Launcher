@@ -87,7 +87,7 @@ class WindowManager(QObject):
             self.window_minimized.emit()  # Emit minimize signal
             self.logger.debug("WindowManager: Window hidden/minimized")
             # Signal for any additional actions (like tray notification)
-            self.tray_message_requested.emit("AI Launcher", "Hidden to system tray")
+            # self.tray_message_requested.emit("AI Launcher", "Hidden to system tray")
         else:
             self.logger.warning("WindowManager: Cannot hide window - no window reference")
         

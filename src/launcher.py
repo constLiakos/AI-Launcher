@@ -136,7 +136,6 @@ class Launcher(QMainWindow):
         # Show tray message if tray is available
         if hasattr(self.tray_manager, 'tray_icon'):
             logger.debug("Showing background tray message")
-            self.tray_manager.show_default_message()
         else:
             logger.debug("No tray manager available for background message")
         
