@@ -13,6 +13,8 @@ class ThemeColors:
             Theme.CLASSIC: ThemeColors._get_light_theme(),
             Theme.DARK: ThemeColors._get_dark_theme(),
             Theme.NATURE: ThemeColors._get_nature_theme(),
+            Theme.ROSE: ThemeColors._get_rose_theme(),
+            Theme.HUAWEI: ThemeColors._get_huawei_theme(),
         }
         return themes
     
@@ -320,4 +322,208 @@ class ThemeColors:
             'dropdown_arrow_color': '#5D6B66',       # For combo box down arrow
             'combobox_selection_bg': '#E8F5E8',      # For combobox item selection
             'combobox_item_hover': '#F1F8F1',        # For combobox item hover
+        }
+    
+    @staticmethod
+    def _get_rose_theme():
+        """Sunset theme with warm purples, oranges, and pink accents."""
+        return {
+            # === BRAND COLORS ===
+            'brand_primary': "#FF6B9D",
+            'brand_primary_hover': "#FF5A8A",
+            'brand_primary_active': "#E91E63",
+            'brand_secondary': '#9C27B0',
+            'brand_accent': '#FF9800',
+            # === SEMANTIC COLORS ===
+            'semantic_success': '#4CAF50',
+            'semantic_warning': '#FF9800',
+            'semantic_warning_bg': '#FFF3E0',
+            'semantic_error': '#F44336',
+            'semantic_info': '#FF6B9D',
+            # === TEXT COLORS ===
+            'text_primary': '#4A2C3A',
+            'text_secondary': '#6D4C57',
+            'text_muted': '#9E7B8A',
+            'text_placeholder': '#9E7B8A',
+            'text_inverse': '#ffffff',
+            'text_thinking': "#B8A1AB",
+            'text_tertiary': '#9E7B8A',
+            'text_on_primary': '#ffffff',
+            'text_on_secondary': '#4A2C3A',     
+            # === BACKGROUND COLORS ===
+            'bg_primary': '#FDF8FB',
+            'bg_secondary': '#F8F0F4',
+            'bg_tertiary': '#F3E5EA',
+            'bg_elevated': 'rgba(248, 240, 244, 0.9)',
+            'bg_overlay': 'rgba(253, 248, 251, 0.8)',
+            'bg_window_start': '#F8F0F4',
+            'bg_window_end': '#F0D9E1',
+            'bg_dialog_start': '#F8F0F4',
+            'bg_dialog_end': '#F0D9E1',
+            'bg_conversation': 'rgba(248, 240, 244, 0.9)',
+            # === MAIN APP INPUT COLORS ===
+            'main_input_bg': '#FDF8FB',
+            'main_input_bg_focus': '#FDF8FB',
+            'main_input_border': '#E8C2D0',
+            'main_input_border_focus': '#FF6B9D',
+            # === SETTINGS INPUT COLORS ===
+            'settings_input_bg': '#FDF8FB',
+            'settings_input_bg_focus': '#FDF8FB',
+            'settings_input_border': '#E8C2D0',
+            'settings_input_border_focus': '#FF6B9D',
+            # === BUTTON COLORS ===
+            'button_primary_bg': "#FF6B9D",
+            'button_primary_hover': "#FF5A8A",
+            'button_primary_active': "#E91E63",
+            'button_secondary_bg': '#F3E5EA',
+            'button_secondary_hover': '#E8C2D0',
+            'button_secondary_active': '#D8A2B8',
+            'button_tertiary_bg': 'rgba(253, 248, 251, 0.4)',
+            'button_tertiarty_border': 'rgba(255, 107, 157, 0.3)',
+            'button_tertiarty_hover_bg': 'rgba(255, 107, 157, 0.1)',
+            'button_tertiarty_hover_border': 'rgba(255, 107, 157, 0.5)',
+            # === STATE COLORS ===
+            'state_recording': "#FF7043",
+            'state_recording_hover': "#FF5722",
+            'state_active': "#FF6B9D",
+            'state_inactive': '#9E7B8A',
+            # === COMPONENT SPECIFIC ===
+            'history_accent': "#FF6B9D",
+            'history_message_bg': "#F7ECF0",
+            'conversation_border': 'rgba(255, 107, 157, 0.2)',
+            'scrollbar_track': 'transparent',
+            'scrollbar_thumb': 'rgba(255, 107, 157, 0.3)',
+            'scrollbar_thumb_hover': 'rgba(255, 107, 157, 0.5)',
+            # === SURFACE ALIASES ===
+            'surface_primary': '#FDF8FB',
+            'surface_secondary': '#F8F0F4',
+            'surface_tertiary': '#F3E5EA',
+            'surface_elevated': 'rgba(248, 240, 244, 0.9)',
+            'surface_overlay': 'rgba(253, 248, 251, 0.8)',
+            # === BORDER COLORS ===
+            'border_subtle': 'rgba(255, 107, 157, 0.15)',
+            'border_soft': 'rgba(232, 194, 208, 0.8)',
+            'border_default': '#E8C2D0',
+            'border_focus': '#FF6B9D',
+            # === CONTAINER BORDERS ===
+            'container_border': 'rgba(255, 107, 157, 0.12)',
+            'dialog_border': 'rgba(232, 194, 208, 0.6)',
+            'surface_border': 'rgba(216, 162, 184, 0.2)',
+            # === ADDITIONAL COLORS FOR HARDCODED VALUES ===
+            'button_gradient_start': '#FF6B9D',      # For button gradients
+            'button_gradient_end': '#E91E63',
+            'button_hover_start': '#FF5A8A',
+            'button_hover_end': '#E91E63',
+            'button_pressed_start': '#E91E63',
+            'button_pressed_end': '#C2185B',
+            'stt_recording_end': '#FF7043',          # STT button recording state
+            'stt_recording_hover_end': '#FF5722',
+            'message_user_border': '#FF6B9D',        # History conversation styles
+            'message_assistant_border': '#9C27B0',
+            'message_system_border': '#FF9800',
+            'dropdown_arrow_color': '#6D4C57',       # For combo box down arrow
+            'combobox_selection_bg': '#F7ECF0',      # For combobox item selection
+            'combobox_item_hover': '#FBEEF2',        # For combobox item hover
+        }
+        
+    @staticmethod
+    def _get_huawei_theme():
+        """Huawei sunset theme with sky blues, tree greens, and sunset oranges."""
+        return {
+            # === BRAND COLORS ===
+            'brand_primary': "#FF8A50",  # Warm sunset orange
+            'brand_primary_hover': "#FF7043",
+            'brand_primary_active': "#F4511E",
+            'brand_secondary': '#42A5F5',  # Nicely vivid but not overwhelming sky blue
+            'brand_accent': '#66BB6A',  # Pleasant vivid green
+            # === SEMANTIC COLORS ===
+            'semantic_success': '#4CAF50',  # Good vivid green, not too deep
+            'semantic_warning': '#FFB74D',  # Golden sunset
+            'semantic_warning_bg': '#FFF8E1',
+            'semantic_error': '#FF7043',  # Sunset red-orange
+            'semantic_info': '#29B6F6',  # Nice vivid sky blue
+            # === TEXT COLORS ===
+            'text_primary': '#2E3B2E',  # Deep forest green-brown
+            'text_secondary': '#455A64',  # Blue-grey like evening sky
+            'text_muted': '#78909C',  # Muted blue-grey
+            'text_placeholder': '#78909C',
+            'text_inverse': '#ffffff',
+            'text_thinking': "#90A4AE",
+            'text_tertiary': '#78909C',
+            'text_on_primary': '#ffffff',
+            'text_on_secondary': '#2E3B2E',     
+            # === BACKGROUND COLORS ===
+            'bg_primary': '#FAFCFF',  # Very subtle sky blue tint
+            'bg_secondary': '#F0F6FF',  # Gentle light blue
+            'bg_tertiary': '#F2F8F2',  # Gentle light green
+            'bg_elevated': 'rgba(240, 246, 255, 0.9)',
+            'bg_overlay': 'rgba(250, 252, 255, 0.8)',
+            'bg_window_start': "#DFE9F8",  # Gentle blue to sunset gradient
+            'bg_window_end': '#FFF3E0',  # Warm sunset glow
+            'bg_dialog_start': '#DFE9F8',
+            'bg_dialog_end': '#FFF3E0',
+            'bg_conversation': 'rgba(252, 255, 255, 0.8)',
+            # === MAIN APP INPUT COLORS ===
+            'main_input_bg': 'rgba(253, 252, 250, 0.5)',  # Soft warm cream for text area
+            'main_input_bg_focus': 'rgba(253, 252, 248, 0.6)',  # Slightly warmer on focus
+            'main_input_border': "#C4E0FC",  # Soft blue border
+            'main_input_border_focus': '#FF8A50',  # Sunset orange focus
+            # === SETTINGS INPUT COLORS ===
+            'settings_input_bg': '#FFFBF0',
+            'settings_input_bg_focus': '#FFF8E1',
+            'settings_input_border': '#B3D9FF',
+            'settings_input_border_focus': '#FF8A50',
+            # === BUTTON COLORS ===
+            'button_primary_bg': "#FF8A50",  # Sunset orange
+            'button_primary_hover': "#FF7043",
+            'button_primary_active': "#F4511E",
+            'button_secondary_bg': '#81C784',  # Pleasant medium green, not too bright
+            'button_secondary_hover': '#66BB6A',  # Slightly more vivid on hover
+            'button_secondary_active': '#4CAF50',  # Standard green active
+            'button_tertiary_bg': 'rgba(250, 252, 255, 0.4)',
+            'button_tertiarty_border': 'rgba(255, 138, 80, 0.3)',
+            'button_tertiarty_hover_bg': 'rgba(255, 138, 80, 0.1)',
+            'button_tertiarty_hover_border': 'rgba(255, 138, 80, 0.5)',
+            # === STATE COLORS ===
+            'state_recording': "#FF7043",  # Warm sunset
+            'state_recording_hover': "#FF5722",
+            'state_active': "#FF8A50",  # Sunset orange
+            'state_inactive': '#78909C',  # Muted sky
+            # === COMPONENT SPECIFIC ===
+            'history_accent': "#FF8A50",  # Sunset accent
+            'history_message_bg': "#F0F8FF",  # Gentle light blue
+            'conversation_border': 'rgba(255, 138, 80, 0.2)',
+            'scrollbar_track': 'transparent',
+            'scrollbar_thumb': 'rgba(66, 165, 245, 0.35)',  # Balanced blue scrollbar
+            'scrollbar_thumb_hover': 'rgba(66, 165, 245, 0.5)',
+            # === SURFACE ALIASES ===
+            'surface_primary': '#FAFCFF',
+            'surface_secondary': '#F0F6FF',
+            'surface_tertiary': '#F2F8F2',
+            'surface_elevated': 'rgba(240, 246, 255, 0.9)',
+            'surface_overlay': 'rgba(250, 252, 255, 0.8)',
+            # === BORDER COLORS ===
+            'border_subtle': 'rgba(66, 165, 245, 0.18)',  # Gentle blue
+            'border_soft': 'rgba(179, 217, 255, 0.8)',  # Soft blue
+            'border_default': '#B3D9FF',  # Pleasant light blue
+            'border_focus': '#FF8A50',  # Sunset focus
+            # === CONTAINER BORDERS ===
+            'container_border': 'rgba(102, 187, 106, 0.15)',  # Gentle green
+            'dialog_border': 'rgba(179, 217, 255, 0.6)',
+            'surface_border': 'rgba(144, 202, 249, 0.25)',
+            # === ADDITIONAL COLORS FOR HARDCODED VALUES ===
+            'button_gradient_start': '#FF8A50',  # Sunset gradient
+            'button_gradient_end': '#F4511E',
+            'button_hover_start': '#FF7043',
+            'button_hover_end': '#F4511E',
+            'button_pressed_start': '#F4511E',
+            'button_pressed_end': '#E64A19',
+            'stt_recording_end': '#FF7043',  # Sunset recording
+            'stt_recording_hover_end': '#FF5722',
+            'message_user_border': '#FF8A50',  # Sunset orange for user
+            'message_assistant_border': '#42A5F5',  # Balanced sky blue for assistant
+            'message_system_border': '#66BB6A',  # Pleasant green for system
+            'dropdown_arrow_color': '#455A64',  # Evening sky color
+            'combobox_selection_bg': '#E6F3FF',  # Gentle blue selection
+            'combobox_item_hover': '#F0F8FF',  # Soft blue hover
         }

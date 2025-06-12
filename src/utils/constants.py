@@ -280,10 +280,12 @@ class BackgroundColors:
 
 class Theme:
     """Theme constants"""
+    DEFAULT_THEME = "Classic"
     CLASSIC = "Classic"
     DARK = "Dark"
     NATURE = "Nature"
-    DEFAULT_THEME = "Classic"
+    ROSE = "Rose"
+    HUAWEI = "Huawei"
 
 
 # =============================================================================

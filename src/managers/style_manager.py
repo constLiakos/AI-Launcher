@@ -489,7 +489,7 @@ class StyleManager:
         return f"""
         QDialog {{
             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {colors['bg_dialog_start']}, stop:1 {colors['bg_dialog_end']});
+                stop:0 {colors['bg_window_start']}, stop:1 {colors['bg_window_end']});
         }}
         
         #titleLabel {{
