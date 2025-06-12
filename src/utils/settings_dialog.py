@@ -639,7 +639,7 @@ class SettingsDialog(QDialog):
 #       Hotkey Recorder Functions
 #   ##########################################################################################
 
-    def _create_hotkey_recoreder_button(self):
+    def _create_hotkey_recorder_button(self):
         hotkey_recorder_btn = QPushButton(Text.SETTINGS_DIALOG_HOTKEY_BUTTON_NAME)
         hotkey_recorder_btn.setObjectName("hotkeyRecorderBTN")
         hotkey_recorder_btn.setMinimumHeight(SettingsDialogSize.BUTTON_MIN_HEIGHT)
