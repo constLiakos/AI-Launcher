@@ -412,6 +412,10 @@ class SettingsDialog(QDialog):
             self.stt_settings_dialog.show()
             self.stt_settings_dialog.raise_()
             self.stt_settings_dialog.activateWindow()
+        else:
+            self.stt_settings_dialog.show()
+            self.stt_settings_dialog.raise_()
+            self.stt_settings_dialog.activateWindow()
 
 
 #   ##########################################################################################
