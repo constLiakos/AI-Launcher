@@ -643,32 +643,32 @@ class StyleManager:
             border: 2px solid {colors['settings_input_border']};
             border-radius: 12px;
             font-size: 14px;
-            background: {colors['bg_primary']};
+            background: {colors['bg_secondary']};
             color: {colors['text_primary']};
             min-height: 20px;
         }}
         #settingsComboBox:focus {{
             border: 2px solid {colors['border_focus']};
             outline: none;
-            background: {colors['bg_primary']};
+            background: {colors['bg_secondary']};
         }}
         
         /* Target dropdown with specific parent */
-        #settingsComboBox QAbstractItemView {{
+        QListView {{
             border: 2px solid {colors['settings_input_border']} !important;
             border-radius: 8px !important;
-            background: {colors['bg_primary']} !important;
+            background: {colors['bg_secondary']} !important;
             color: {colors['text_primary']} !important;
             selection-background-color: {colors['combobox_selection_bg']} !important;
         }}
-        #settingsComboBox QAbstractItemView::item {{
+        QListView::item {{
             padding: 8px 12px;
             background: transparent;
         }}
-        #settingsComboBox QAbstractItemView::item:hover {{
+        QListView::item:hover {{
             background: {colors['combobox_item_hover']} !important;
         }}
-        #settingsComboBox QAbstractItemView::item:selected {{
+        QListView::item:selected {{
             background: {colors['combobox_selection_bg']} !important;
         }}
         """
