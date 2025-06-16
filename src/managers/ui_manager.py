@@ -612,7 +612,6 @@ class UIManager(QObject):
         
         # Connect conversation widget signals
         self.conversation_widget.copy_requested.connect(self._handle_copy_request)
-        self.conversation_widget.history_cleared.connect(self._handle_history_cleared)
         
         # Create response container to manage visibility
         self.response_container = QWidget()
@@ -635,10 +634,6 @@ class UIManager(QObject):
         if hasattr(self, '_copy_callback') and self._copy_callback:
             self._copy_callback()
 
-
-    def _handle_history_cleared(self):
-        """Handle history cleared signal from conversation widget."""
-        self.logger.debug("History cleared from conversation widget")
 
 #   ##########################################################################################
 #       Button Functions

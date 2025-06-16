@@ -12,7 +12,6 @@ class ConversationWidget(QWidget):
     
     # Signals
     copy_requested = pyqtSignal()
-    history_cleared = pyqtSignal()
     
     def __init__(self, style_manager, logger, parent=None):
         super().__init__(parent)
@@ -166,7 +165,6 @@ class ConversationWidget(QWidget):
         if self.conversation_manager:
             self.conversation_manager.clear_current_conversation()
             self.reapply_conversation_history_theme()
-            self.history_cleared.emit()
     
             # Visual feedback
             original_text = self.clear_history_button.text()
