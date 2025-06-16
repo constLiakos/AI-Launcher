@@ -9,6 +9,7 @@ from managers.style_manager import StyleManager
 from utils.constants import (
     ElementSize, Files, InputSettings, Text, WindowSize)
 from utils.markdown_render import MarkdownRenderer
+from widgets.conversation_widget import ConversationWidget
 from widgets.error_message import ErrorMessage
 
 
@@ -22,32 +23,29 @@ class UIManager(QObject):
         self.parent = parent_window
         self.logger = logger.getChild('ui_manager')
         self.config = config
+        self.style_manager = style_manager
 
+        # UI Components
         self.main_container = None
         self.input_field = None
-        self.conversation_area = None
+        self.conversation_widget = None  # Changed from conversation_area
         self.stt_button = None
         self.settings_button = None
-        self.copy_button = None
-        self.history_button = None
-        self.clear_history_button = None
-        self.input_type_is_multiline = False
         self.multiline_toggle_button = None
         self.conversation_toggle_button = None
         self.error_message = None
-
+        
+        # State
+        self.input_type_is_multiline = False
         self.original_window_height = None
         self.min_window_height = WindowSize.COMPACT_HEIGHT
         self.animation_callbacks = {}
-        self.state_manager_callbacks = {}
-
         self.current_visual_state = "normal"
         self.is_expanded = False
         self.conversation_visible = False
-
-        self.show_history_mode = False
-        self.conversation_manager:ConversationManager = None
-        self.style_manager = style_manager
+        
+        # Managers
+        self.conversation_manager = None
         self.markdown_render = MarkdownRenderer(logger, self.style_manager)
 
     def setup_ui(self, multiline_input=False):
@@ -61,25 +59,27 @@ class UIManager(QObject):
 
     def connect_signals(self, callbacks):
         """Connect UI signals to callbacks."""
-
         self._disconnect_all_signals()
-
+        
+        # Input field signals
         if 'input_changed' in callbacks:
             if hasattr(self.input_field, 'toPlainText'):
-                # QTextEdit - textChanged doesn't pass text
                 self.input_field.textChanged.connect(
                     lambda: callbacks['input_changed'](self.get_input_text()))
             else:
-                # QLineEdit - textChanged passes text
-                self.input_field.textChanged.connect(
-                    callbacks['input_changed'])
+                self.input_field.textChanged.connect(callbacks['input_changed'])
+        
         if 'return_pressed' in callbacks:
-            # Install event filter on parent to handle key events
             self.input_field.installEventFilter(self.parent)
+        
+        # Button signals
         if 'stt_clicked' in callbacks:
             self.stt_button.clicked.connect(callbacks['stt_clicked'])
+
         if 'settings_clicked' in callbacks:
             self.settings_button.clicked.connect(callbacks['settings_clicked'])
+        
+        # Animation callbacks
         if 'start_thinking_animation' in callbacks:
             self.animation_callbacks['start_thinking'] = callbacks['start_thinking_animation']
         if 'stop_thinking_animation' in callbacks:
@@ -87,9 +87,6 @@ class UIManager(QObject):
 
         self.multiline_toggle_button.clicked.connect(self._toggle_input_type)
         self.conversation_toggle_button.clicked.connect(self.toggle_response_visibility)
-        self.history_button.clicked.connect(self._toggle_history_view)
-        self.clear_history_button.clicked.connect(self._clear_history)
-        self.copy_button.clicked.connect(callbacks['copy_clicked'])
 
     def connect_input_signals(self, callbacks):
         """Connect UI signals to callbacks."""
@@ -527,14 +524,36 @@ class UIManager(QObject):
 #       Response Area Functions
 #   ##########################################################################################
 
+    def clear_conversation_area(self):
+        self.conversation_widget.conversation_area.clear()
+
+    def get_coversation_area_text(self):
+        return self.conversation_widget.conversation_area.toPlainText()
+
+    def auto_scroll(self):
+        self.conversation_widget.auto_scroll()
+
+    def show_error_in_conversation(self, error_message):
+        """Show error message in conversation area."""
+        try:
+            error_text = f"<p style='color: red;'><strong>Error:</strong> {error_message}</p>"
+            self.set_response_text(error_text)
+            
+            # Ensure conversation area is visible
+            if not self.conversation_visible:
+                self.show_conversation_area()
+                
+        except Exception as e:
+            self.logger.error(f"Error showing error in conversation: {e}")
+
     def show_conversation_area(self):
-        """Show response area and copy button."""
+        """Show response area and conversation widget."""
         if not self.conversation_visible:
             if self.is_multiline_input():
                 self.handle_multiline_resize()
             
             self.response_container.setVisible(True)
-            self.conversation_area.setVisible(True)
+            self.conversation_widget.setVisible(True)
             self.conversation_visible = True
             self.is_expanded = True
             self.expansion_changed.emit(True)
@@ -546,10 +565,11 @@ class UIManager(QObject):
             self.logger.debug("Response area shown")
 
     def hide_conversation_area(self):
-        """Hide response area and copy button."""
+        """Hide response area and conversation widget."""
         if self.conversation_visible:
             if self.is_multiline_input():
                 self.handle_multiline_resize()
+            
             self.conversation_visible = False
             self.is_expanded = False
             self.expansion_changed.emit(False)
@@ -559,20 +579,17 @@ class UIManager(QObject):
             QTimer.singleShot(50, lambda: self.response_container.setVisible(False))
             self.logger.debug("Response area hidden")
 
+    def toggle_response_visibility(self):
+        """Toggle response area visibility."""
+        self.logger.debug(f"toggle_response_visibility, conversation is: {self.conversation_visible}")
+        if self.conversation_visible:
+            self.hide_conversation_area()
+        else:
+            self.show_conversation_area()
+
     def set_conversation_manager(self, conversation_manager):
         """Set the conversation manager reference."""
         self.conversation_manager = conversation_manager
-
-    def _toggle_history_view(self):
-        """Toggle between showing last response only and full conversation history."""
-        self.logger.debug("toggle history view button triggered")
-        self.show_history_mode = not self.show_history_mode
-        
-        self.set_response_text(self.get_current_response_text())
-        if self.show_history_mode:
-            self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_RESPONSE_PATH)))
-        else:
-            self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
 
     def _clear_history(self):
         """Clear History"""
@@ -593,21 +610,21 @@ class UIManager(QObject):
         try:
             history = self.conversation_manager.get_conversation_history()
             if not history:
-                self.conversation_area.setHtml("<p><i>No conversation history available.</i></p>")
+                self.conversation_widget.conversation_area.setHtml("<p><i>No conversation history available.</i></p>")
                 return
             
             html_content = self._format_conversation_history(history)
-            self.conversation_area.setHtml(html_content)
-            self._setup_emoji_font(self.conversation_area)
+            self.conversation_widget.conversation_area.setHtml(html_content)
+            self._setup_emoji_font(self.conversation_widget.conversation_area)
             
             # Scroll to the bottom to show most recent messages
-            scrollbar = self.conversation_area.verticalScrollBar()
+            scrollbar = self.conversation_widget.conversation_area.verticalScrollBar()
             scrollbar.setValue(scrollbar.maximum())
             
         except Exception as e:
             self.logger.error(f"Error loading conversation history: {e}")
-            self.conversation_area.setHtml("<p><i>Error loading conversation history.</i></p>")
-            self._setup_emoji_font(self.conversation_area)
+            self.conversation_widget.conversation_area.setHtml("<p><i>Error loading conversation history.</i></p>")
+            self._setup_emoji_font(self.conversation_widget.conversation_area)
 
     def _format_conversation_history(self, history):
         """Format conversation history as HTML for display with text message bubble style."""
@@ -727,22 +744,22 @@ class UIManager(QObject):
         self._current_response = text
         html_content = self.markdown_render.to_html(text)
 
-        if self.show_history_mode:
+        if self.conversation_widget.show_history_mode:
             self._show_conversation_history()
         else:
-            self.conversation_area.setHtml(html_content)
+            self.conversation_widget.conversation_area.setHtml(html_content)
 
     def is_showing_history(self):
         """Check if currently showing conversation history."""
-        return self.show_history_mode
+        return self.conversation_widget.show_history_mode
 
 
     def append_response_text(self, text):
         """Append text to response - only works in current response mode."""
-        if not self.show_history_mode:
-            current = self.conversation_area.toHtml()
-            self.conversation_area.setHtml(current + text)
-            # self._current_response = self.conversation_area.toHtml()
+        if not self.conversation_widget.show_history_mode:
+            current = self.conversation_widget.conversation_area.toHtml()
+            self.conversation_widget.conversation_area.setHtml(current + text)
+            # self._current_response = self.conversation_widget.conversation_area.toHtml()
 
     def get_current_response_text(self):
         """Get the current response text."""
@@ -756,61 +773,47 @@ class UIManager(QObject):
     def is_conversation_visible(self):
         return self.conversation_visible
 
-    def toggle_response_visibility(self):
-        """Toggle response area visibility."""
-        self.logger.debug(f"toggle_response_visibility, conversation is : {self.conversation_visible}")
-        if self.conversation_visible:
-            self.hide_conversation_area()
-        else:
-            self.show_conversation_area()
-
 
     def _create_response_section(self):
-        """Create response area with history button."""
+        """Create response section with conversation widget."""
         container_layout = self.main_container.layout()
-
-        # Create a container for the response section
-        response_container = QWidget()
-        response_layout = QVBoxLayout(response_container)
+        
+        # Create conversation widget
+        self.conversation_widget = ConversationWidget(
+            style_manager=self.style_manager,
+            logger=self.logger,
+            parent=self.main_container
+        )
+        
+        # Connect conversation widget signals
+        self.conversation_widget.copy_requested.connect(self._handle_copy_request)
+        self.conversation_widget.history_cleared.connect(self._handle_history_cleared)
+        
+        # Create response container to manage visibility
+        self.response_container = QWidget()
+        response_layout = QVBoxLayout(self.response_container)
         response_layout.setContentsMargins(0, 0, 0, 0)
-        response_layout.setSpacing(5)
-
-        # Create horizontal layout for buttons
-        button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(0, 0, 0, 0)
+        response_layout.addWidget(self.conversation_widget)
         
-        history_button = self._create_history_toggle_button()
-        clear_history_button = self._create_clear_history_button()
-        copy_button = self._create_copy_button()
+        # Hide initially
+        self.response_container.setVisible(False)
+        self.conversation_widget.setVisible(False)
         
-        button_layout.addWidget(history_button, alignment=Qt.AlignLeft)
-        button_layout.addWidget(clear_history_button, alignment=Qt.AlignLeft)
-        button_layout.addStretch()  # This pushes buttons to opposite sides
-        button_layout.addWidget(copy_button, alignment=Qt.AlignRight)
-        
-        response_layout.addLayout(button_layout)
-
-        # Create conversation area
-        self.conversation_area = QTextBrowser()
-        self.conversation_area.setObjectName("conversationArea")
-        self.conversation_area.setAcceptRichText(True)
-        self.conversation_area.setOpenExternalLinks(True)
-        self.conversation_area.setVisible(False)
-        self.conversation_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        self._setup_emoji_font(self.conversation_area)
-        response_layout.addWidget(self.conversation_area)
-
-        # Store references
-        self.response_container = response_container
-        
-        # Hide the response container initially
-        response_container.setVisible(False)
-        
-        container_layout.addWidget(response_container)
+        container_layout.addWidget(self.response_container)
         container_layout.setStretchFactor(container_layout.itemAt(0).layout(), 0)  # Input section
-        container_layout.setStretchFactor(response_container, 1)  # Response area takes remaining space
+        container_layout.setStretchFactor(self.response_container, 1)  # Response area
         container_layout.addStretch()
+
+    def _handle_copy_request(self):
+        """Handle copy request from conversation widget."""
+        # This will be connected to the main copy callback
+        if hasattr(self, '_copy_callback') and self._copy_callback:
+            self._copy_callback()
+
+    def _handle_history_cleared(self):
+        """Handle history cleared signal from conversation widget."""
+        self.logger.debug("History cleared from conversation widget")
+
 
 #   ##########################################################################################
 #       Button Functions
@@ -890,26 +893,6 @@ class UIManager(QObject):
         self.conversation_toggle_button.raise_()
         QTimer.singleShot(50, self.position_conversation_toggle_button)
 
-    def _create_history_toggle_button(self):
-        # Create history button container
-        self.history_button = QPushButton()
-        self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
-        self.history_button.setToolTip("Show Conversation History")
-        self.history_button.setObjectName("historyButton")
-        self.history_button.setFixedHeight(30)
-        self.history_button.setFixedWidth(30)
-    
-        return self.history_button
-    
-    def _create_clear_history_button(self):
-        self.clear_history_button = QPushButton()
-        self.clear_history_button.setIcon(QIcon(str(Files.CLEAR_CONVESRATION_BTN)))
-        self.clear_history_button.setToolTip("Clear Conversation History")
-        self.clear_history_button.setObjectName("clearHistoryButton")
-        self.clear_history_button.setFixedHeight(30)
-        self.clear_history_button.setFixedWidth(30)
-    
-        return self.clear_history_button
 
 #   ##########################################################################################
 #       State Functions
@@ -1002,8 +985,8 @@ class UIManager(QObject):
             max_response_height = max(
                 int(max_response_height), min_response_height)
 
-            self.conversation_area.setMinimumHeight(min_response_height)
-            self.conversation_area.setMaximumHeight(max_response_height)
+            self.conversation_widget.conversation_area.setMinimumHeight(min_response_height)
+            self.conversation_widget.conversation_area.setMaximumHeight(max_response_height)
 
         # Reposition error message if it's visible
         if self.error_message and self.error_message.isVisible():
@@ -1058,3 +1041,28 @@ class UIManager(QObject):
             
         except Exception as e:
             self.logger.error(f"Error positioning error message: {e}")
+
+
+    def clear_response_on_minimize(self):
+        """Clear response area and contract UI when showing window"""
+        try:
+            # Clear the response area
+            self.clear_conversation_area()
+            self.logger.debug("Response area cleared")
+            
+            # Contract the UI if it's expanded
+            if self.is_currently_expanded():
+                self.hide_conversation_area()
+                self.logger.debug("UI contracted after clearing response")
+                
+            # Clear state manager's accumulated response
+            if hasattr(self, 'state_manager'):
+                # self.state_manager.clear_accumulated_response()
+                self.hide_conversation_area()
+                self.logger.debug("State manager response cleared")
+                
+            # Reset input field focus
+            self.input_field.setFocus()
+                
+        except Exception as e:
+            self.logger.error(f"Error clearing response on show: {e}")

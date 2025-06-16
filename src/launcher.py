@@ -149,7 +149,7 @@ class Launcher(QMainWindow):
         clear_on_minimize = self.config.get('clear_on_minimize', False)
         if clear_on_minimize:
             logger.debug("Clearing previous response on window show (config enabled)")
-            self._clear_response_on_minimize()
+            self.ui_manager.clear_response_on_minimize()
         
         logger.info("Window hidden successfully")
         
@@ -166,30 +166,6 @@ class Launcher(QMainWindow):
             
         logger.info("Window shown successfully")
 
-    def _clear_response_on_minimize(self):
-        """Clear response area and contract UI when showing window"""
-        try:
-            # Clear the response area
-            if hasattr(self, 'ui_manager') and self.ui_manager:
-                self.ui_manager.conversation_area.clear()
-                logger.debug("Response area cleared")
-                
-                # Contract the UI if it's expanded
-                if self.ui_manager.is_currently_expanded():
-                    self.ui_manager.hide_conversation_area()
-                    logger.debug("UI contracted after clearing response")
-                    
-                # Clear state manager's accumulated response
-                if hasattr(self, 'state_manager'):
-                    # self.state_manager.clear_accumulated_response()
-                    self.ui_manager.hide_conversation_area()
-                    logger.debug("State manager response cleared")
-                    
-                # Reset input field focus
-                self.ui_manager.input_field.setFocus()
-                
-        except Exception as e:
-            logger.error(f"Error clearing response on show: {e}")
 
     def stt_configure(self):
         """Initialize STT API client with better error handling."""
@@ -299,7 +275,7 @@ class Launcher(QMainWindow):
     def copy_response(self):
         """Copy accumulated response text to clipboard."""
         try:
-            response_text = self.state_manager.accumulated_response or self.ui_manager.conversation_area.toPlainText()
+            response_text = self.state_manager.accumulated_response or self.ui_manager.get_coversation_area_text()
             if response_text.strip():
                 clipboard = QApplication.clipboard()
                 clipboard.setText(response_text)
@@ -435,9 +411,7 @@ class Launcher(QMainWindow):
 
     def _auto_scroll_response(self):
         """Separate auto-scroll logic."""
-        cursor = self.ui_manager.conversation_area.textCursor()
-        cursor.movePosition(cursor.End)
-        self.ui_manager.conversation_area.setTextCursor(cursor)
+        self.ui_manager.auto_scroll()
 
     def _handle_completion(self, request_id):
         """Handle request completion with conversation storage."""
@@ -459,29 +433,29 @@ class Launcher(QMainWindow):
         self.ui_manager.settings_button.setEnabled(True)
         self.ui_manager.input_field.setFocus()
 
-    def _handle_error(self, error_message, request_id):
-        """Handle errors with validation."""
-        logger.error(f"Request {request_id} failed: {error_message}")
-        if not self.state_manager.handle_error(error_message, request_id):
-            return
-
-        # Get error text from StateManager
-        error_text = self.state_manager.get_accumulated_response()
-
-        # Update UI - expand if not visible
-        if not self.ui_manager.is_conversation_visible():
-            self.ui_manager.show_conversation_area()
-
-        # Display error
-        self.ui_manager.conversation_area.setHtml(error_text)
-
-        # Return UI to normal state
-        self.ui_manager.set_visual_state("normal")
-        self.ui_manager.settings_button.setEnabled(True)
-        self.ui_manager.input_field.setFocus()
-
-        # Clean up worker through StateManager
-        self.state_manager._cleanup_worker_thread()
+    def _handle_error(self, error_message, request_id=None):
+        """Handle errors during API calls."""
+        try:
+            logger.error(f"API Error (request_id: {request_id}): {error_message}")
+            
+            # Update UI state
+            self.ui_manager.set_visual_state("error")
+            
+            # Show error in conversation area through UIManager delegation
+            error_text = f"<p style='color: red;'><strong>Error:</strong> {error_message}</p>"
+            self.ui_manager.set_response_text(error_text)  # Use delegation method
+            
+            # Show conversation area if not visible
+            if not self.ui_manager.is_conversation_visible():
+                self.ui_manager.show_conversation_area()
+            
+            # Show error message popup
+            self.ui_manager.show_error_message(f"Error: {error_message}")
+            
+        except Exception as e:
+            logger.error(f"Error in _handle_error: {e}")
+            # Fallback: just show error popup
+            self.ui_manager.show_error_message(f"Error: {error_message}")
 
     def _execute_request(self, request_id):
         """Execute request using StateManager's worker creation."""
@@ -548,9 +522,8 @@ class Launcher(QMainWindow):
             self.animate_resize(WindowSize.COMPACT_WIDTH,
                                 WindowSize.COMPACT_HEIGHT)
             QTimer.singleShot(10, lambda: (
-                self.ui_manager.conversation_area.setVisible(False)
+                self.ui_manager.hide_conversation_area()
             ))
-
 
     def show_status(self, message):
         """Print status instead of showing in UI."""
