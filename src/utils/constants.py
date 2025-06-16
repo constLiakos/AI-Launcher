@@ -37,6 +37,8 @@ class Files:
     CONVERSATION_BTN_SHOW_RESPONSE_PATH = _base_path / "assets" / "show_last_response_btn.png"
     CONVERSATION_BTN_SHOW_HISTORY_PATH = _base_path / "assets" / "show_history_btn.png"
     CLEAR_CONVESRATION_BTN = _base_path / "assets" / "clear_history.png"
+    SUCCESS_ICON = _base_path / "assets" / "success.png"
+    COPY_BTN = _base_path / "assets" / "copy.png"
     USER_ICON_PATH = _base_path / "assets" / "user.png"
     ASSISTANT_ICON_PATH = _base_path / "assets" / "assistant.png"
     CONVERSATIONS_DATABASE_PATH = Directories.CONVERSATIONS_DATABASE_DIR / 'ai_conversations.db'
@@ -304,7 +306,8 @@ class Timing:
     THINKING_ANIMATION_INTERVAL = 440
 
     # UI feedback delays
-    COPY_FEEDBACK_DURATION = 2000
+    COPY_FEEDBACK_DURATION = 1000
+    CLEAR_HISTORY_FEEDBACK_DURATION = 1000
     STATUS_DISPLAY_DURATION = 3000
     SETTINGS_FEEDBACK_DURATION = 3000
     TRAY_MESSAGE_DURATION = 2000

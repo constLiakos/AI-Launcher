@@ -753,6 +753,19 @@ class StyleManager:
                 padding: 8px 16px;
             }}
             """
+        
+                
+        def get_clear_history_button_success_style(self):
+            """Get success style for copy button."""
+            colors = self.parent.get_theme_colors()
+            self.parent.logger.debug("Generated copy button success style")
+            return f"""
+            QPushButton {{
+                background: {colors['semantic_success']};
+                color: {colors['text_primary']};
+                border: none;
+            }}
+            """
         def get_hotkeyRecorderBTN_style(self):
             colors = self.parent.get_theme_colors()
             self.parent.logger.debug("get_hotkeyRecorderBTN_style")

@@ -66,7 +66,8 @@ class ConversationWidget(QWidget):
         self.clear_history_button.setFixedSize(30, 30)
         
         # Copy button
-        self.copy_button = QPushButton(Text.COPY_BUTTON)
+        self.copy_button = QPushButton()
+        self.copy_button.setIcon(QIcon(str(Files.COPY_BTN)))
         self.copy_button.setToolTip("Copy Response")
         self.copy_button.setObjectName("copyButton")
         self.copy_button.setFixedSize(ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
@@ -148,18 +149,36 @@ class ConversationWidget(QWidget):
                 clipboard.setText(response_text)
 
                 # Visual feedback
-                original_text = self.copy_button.text()
-                self.copy_button.setText(Text.COPY_SUCCESS)
+                self.copy_button.setIcon(QIcon(str(Files.SUCCESS_ICON)))
                 self.copy_button.setStyleSheet(
                     self.style_manager.button_styles.get_copy_button_success_style())
 
                 QTimer.singleShot(Timing.COPY_FEEDBACK_DURATION, lambda: (
-                    self.copy_button.setText(original_text),
-                    self.copy_button.setStyleSheet("")
+                    self.copy_button.setStyleSheet(""),
+                    self.copy_button.setIcon(QIcon(str(Files.COPY_BTN)))
                 ))
         except Exception as e:
             self.logger.error(f"{Text.ERROR_COPYING_CLIPBOARD} {str(e)}")
     
+    def _clear_history(self):
+        """Clear conversation history."""
+        self.logger.debug("Clear History Request")
+        if self.conversation_manager:
+            self.conversation_manager.clear_current_conversation()
+            self.reapply_conversation_history_theme()
+            self.history_cleared.emit()
+    
+            # Visual feedback
+            original_text = self.clear_history_button.text()
+            self.clear_history_button.setIcon(QIcon(str(Files.SUCCESS_ICON)))
+
+            self.clear_history_button.setStyleSheet(
+                self.style_manager.button_styles.get_clear_history_button_success_style())
+            QTimer.singleShot(Timing.CLEAR_HISTORY_FEEDBACK_DURATION, lambda: (
+                self.clear_history_button.setStyleSheet(""),
+                self.clear_history_button.setIcon(QIcon(str(Files.CLEAR_CONVESRATION_BTN)))
+            ))
+
     def append_response_text(self, text):
         """Append text to response - only works in current response mode."""
         if not self.show_history_mode:
@@ -192,14 +211,8 @@ class ConversationWidget(QWidget):
         else:
             self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
             self.history_button.setToolTip("Show Conversation History")
-    
-    def _clear_history(self):
-        """Clear conversation history."""
-        if self.conversation_manager:
-            self.conversation_manager.clear_current_conversation()
-            self.reapply_conversation_history_theme()
-            self.history_cleared.emit()
-    
+
+
     def _show_conversation_history(self):
         """Display the full conversation history."""
         if not self.conversation_manager:
