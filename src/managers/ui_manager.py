@@ -721,14 +721,6 @@ class UIManager(QObject):
         self.multiline_toggle_button.style().unpolish(self.multiline_toggle_button)
         self.multiline_toggle_button.style().polish(self.multiline_toggle_button)
 
-
-    def _create_copy_button(self):
-        self.copy_button = QPushButton(Text.COPY_BUTTON)
-        self.copy_button.setToolTip("Copy Button")
-        self.copy_button.setObjectName("copyButton")
-        self.copy_button.setFixedSize(ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
-        return self.copy_button
-
     def _create_conversation_toggle_button(self):
         """Create the conversation toggle button as a floating element at bottom edge."""
         self.conversation_toggle_button = QPushButton()
