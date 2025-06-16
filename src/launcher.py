@@ -33,7 +33,9 @@ class Launcher(QMainWindow):
         self._setup_signal_connections()
         self.current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
         self.style_manager.set_theme(self.current_theme)
-        self.setup_ui()
+        self.ui_manager.setup_ui(self.conversation_manager)
+
+        self._reconnect_ui_signals()
         self.stt_configure()
         self.update_stt_button_visibility()
         self.apply_modern_style()
@@ -99,7 +101,6 @@ class Launcher(QMainWindow):
             logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
         self.ui_manager = UIManager(
             self, logger, self.config, self.style_manager)
-        self.ui_manager.set_conversation_manager(self.conversation_manager)
         
         # Set up WindowManager after window exists
         self.window_manager.set_window(self)
@@ -228,13 +229,11 @@ class Launcher(QMainWindow):
         """Hide window using WindowManager."""
         self.window_manager.hide_window()
 
-    def setup_ui(self):
-        """Setup UI using UIManager."""
-        is_multiline = self.config.get(
-            'multiline_input', InputSettings.IS_MULTILINE_INPUT)
-        self.ui_manager.setup_ui(multiline_input=is_multiline)
-        # Connect signals
-        self._reconnect_ui_signals()
+    # def setup_ui(self):
+    #     """Setup UI using UIManager."""
+    #     self.ui_manager.setup_ui()
+    #     # Connect signals
+    #     self._reconnect_ui_signals()
 
     def update_stt_button_visibility(self):
         """Update mic button visibility."""

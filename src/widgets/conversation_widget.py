@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTextBrowser,
                              QPushButton, QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon, QFont, QFontDatabase
+from managers.conversation_manager import ConversationManager
 from utils.constants import Files, ElementSize, Text
 from utils.markdown_render import MarkdownRenderer
 
@@ -95,7 +96,7 @@ class ConversationWidget(QWidget):
         self.clear_history_button.clicked.connect(self._clear_history)
         self.copy_button.clicked.connect(self.copy_requested.emit)
     
-    def set_conversation_manager(self, conversation_manager):
+    def set_conversation_manager(self, conversation_manager:ConversationManager):
         """Set the conversation manager reference."""
         self.conversation_manager = conversation_manager
     

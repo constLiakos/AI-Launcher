@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QText
                              QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSlot, QTimer, pyqtSignal, QObject
 from PyQt5.QtGui import QIcon, QFont, QKeySequence, QFontDatabase
-from managers.conversation_manager import ConversationManager
 from managers.style_manager import StyleManager
 from utils.constants import (
     ElementSize, Files, InputSettings, Text, WindowSize)
@@ -45,17 +44,20 @@ class UIManager(QObject):
         self.conversation_visible = False
         
         # Managers
-        self.conversation_manager = None
         self.markdown_render = MarkdownRenderer(logger, self.style_manager)
 
-    def setup_ui(self, multiline_input=False):
+    def setup_ui(self, conversation_manager):
         """Create and setup all UI components."""
-        self.input_type_is_multiline = multiline_input
+        is_multiline = self.config.get(
+            'multiline_input', InputSettings.IS_MULTILINE_INPUT)
+        self.input_type_is_multiline = is_multiline
         self._create_main_container()
         self._create_input_section()
         self._create_response_section()
         self._create_conversation_toggle_button()
         self._setup_shortcuts()
+
+        self.conversation_widget.set_conversation_manager(conversation_manager)
 
     def connect_signals(self, callbacks):
         """Connect UI signals to callbacks."""
@@ -587,167 +589,12 @@ class UIManager(QObject):
         else:
             self.show_conversation_area()
 
-    def set_conversation_manager(self, conversation_manager):
-        """Set the conversation manager reference."""
-        self.conversation_manager = conversation_manager
-
-    def _clear_history(self):
-        """Clear History"""
-        self.conversation_manager.clear_current_conversation()
-        self.reapply_conversation_history_theme()
-
     def reapply_conversation_history_theme(self):
-        if self.conversation_visible:
-            self._show_conversation_history()
-
-    def _show_conversation_history(self):
-        """Display the full conversation history."""
-        self.get_current_response_text()
-        if not self.conversation_manager:
-            self.logger.warning("No conversation manager available")
-            return
-        
-        try:
-            history = self.conversation_manager.get_conversation_history()
-            if not history:
-                self.conversation_widget.conversation_area.setHtml("<p><i>No conversation history available.</i></p>")
-                return
-            
-            html_content = self._format_conversation_history(history)
-            self.conversation_widget.conversation_area.setHtml(html_content)
-            self._setup_emoji_font(self.conversation_widget.conversation_area)
-            
-            # Scroll to the bottom to show most recent messages
-            scrollbar = self.conversation_widget.conversation_area.verticalScrollBar()
-            scrollbar.setValue(scrollbar.maximum())
-            
-        except Exception as e:
-            self.logger.error(f"Error loading conversation history: {e}")
-            self.conversation_widget.conversation_area.setHtml("<p><i>Error loading conversation history.</i></p>")
-            self._setup_emoji_font(self.conversation_widget.conversation_area)
-
-    def _format_conversation_history(self, history):
-        """Format conversation history as HTML for display with text message bubble style."""
-        html_parts = self._build_html_header()
-        
-        for message in history:
-            if formatted_message := self._format_single_message(message):
-                html_parts.append(formatted_message)
-        html_parts.append("</body></html>")
-        return "".join(html_parts)
-
-    def _build_html_header(self):
-        """Build the HTML header with styles."""
-        return [f"""
-                <!DOCTYPE html><html><head><style>
-                {self.style_manager.get_history_conversation_style()}
-                </style></head><body class='body'>"""]
-
-    def _format_single_message(self, message):
-        """Format a single message into HTML."""
-        role = message.get('role', 'unknown')
-        content = message.get('content', '')
-        timestamp = message.get('timestamp', '')
-        
-        # Skip empty messages
-        if not content.strip():
-            return None
-        
-        time_str = self._format_timestamp(timestamp)
-        formatted_content = self.markdown_render.to_html(content) if content else ""
-        
-        # Message formatters mapping
-        formatters = {
-            'user': self._format_user_message,
-            'assistant': self._format_assistant_message,
-            'system': self._format_system_message
-        }
-        
-        formatter = formatters.get(role)
-        if formatter:
-            return formatter(formatted_content, time_str)
-        
-        return None
-
-    def _format_timestamp(self, timestamp):
-        """Format timestamp string for display."""
-        if not timestamp:
-            return ""
-        
-        try:
-            from datetime import datetime
-            if isinstance(timestamp, str):
-                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-            else:
-                dt = timestamp
-            return dt.strftime('%H:%M')
-        except Exception:
-            return str(timestamp)[:5] if timestamp else ""
-
-    def _get_icon(self, icon_attr, fallback_emoji):
-        """Get icon HTML or fallback emoji."""
-        if hasattr(Files, icon_attr):
-            icon_path = getattr(Files, icon_attr)
-            return f"<img src='{str(icon_path)}' width='25' height='25' style='vertical-align: middle;'>"
-        return fallback_emoji
-
-    def _format_user_message(self, content, time_str):
-        """Format user message HTML."""
-        user_icon = self._get_icon('USER_ICON_PATH', "👤")
-        return f"""
-        <div class='message-container'>
-            <div class='user-message-wrapper'>
-                <div class='user-message'>
-                    <div class='message-header-user'>
-                        You {time_str} {user_icon}
-                    </div>
-                    <div class='message-content'>{content}</div>
-                </div>
-            </div>
-        </div>
-        """
-
-    def _format_assistant_message(self, content, time_str):
-        """Format assistant message HTML."""
-        bot_icon = self._get_icon('ASSISTANT_ICON_PATH', "🤖")
-        return f"""
-        <div class='message-container'>
-            <div class='assistant-message-wrapper'>
-                <div class='assistant-message'>
-                    <div class='message-header-assistant'>
-                        {bot_icon} Assistant {time_str}
-                    </div>
-                    <div class='message-content'>{content}</div>
-                </div>
-            </div>
-        </div>
-        """
-
-    def _format_system_message(self, content, time_str):
-        """Format system message HTML."""
-        system_icon = self._get_icon('SETTINGS_GEAR_ICON_PATH', "⚙️")
-        if hasattr(Files, 'SETTINGS_GEAR_ICON_PATH'):
-            system_icon = system_icon.replace('vertical-align: middle;', 'vertical-align: middle; margin-right: 4px;')
-        
-        time_html = f"<br><small>{time_str}</small>" if time_str else ""
-        return f"""
-        <div class='message-container'>
-            <div class='system-message'>
-                {system_icon}System: {content}
-                {time_html}
-            </div>
-        </div>
-        """
+        self.conversation_widget.reapply_conversation_history_theme()
 
     def set_response_text(self, text):
         """Set response text - now aware of history mode."""
-        self._current_response = text
-        html_content = self.markdown_render.to_html(text)
-
-        if self.conversation_widget.show_history_mode:
-            self._show_conversation_history()
-        else:
-            self.conversation_widget.conversation_area.setHtml(html_content)
+        self.conversation_widget.set_response_text(text)
 
     def is_showing_history(self):
         """Check if currently showing conversation history."""
@@ -813,7 +660,6 @@ class UIManager(QObject):
     def _handle_history_cleared(self):
         """Handle history cleared signal from conversation widget."""
         self.logger.debug("History cleared from conversation widget")
-
 
 #   ##########################################################################################
 #       Button Functions
