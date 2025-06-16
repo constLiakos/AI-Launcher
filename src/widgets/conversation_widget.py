@@ -1,5 +1,5 @@
 import logging
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTextBrowser, 
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTextBrowser,
                              QPushButton, QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon, QFont, QFontDatabase
@@ -90,11 +90,38 @@ class ConversationWidget(QWidget):
         
         parent_layout.addWidget(self.conversation_area)
     
+
+    def _disconnect_all_signals(self):
+        """Disconnect all signals before reconnecting"""
+        try:
+
+            if hasattr(self.copy_button, 'clicked'):
+                try:
+                    self.copy_button.clicked.disconnect()
+                except TypeError:
+                    pass
+
+            if hasattr(self.history_button, 'clicked'):
+                try:
+                    self.history_button.clicked.disconnect()
+                except TypeError:
+                    pass
+
+            if hasattr(self.clear_history_button, 'clicked'):
+                try:
+                    self.clear_history_button.clicked.disconnect()
+                except TypeError:
+                    pass
+
+        except Exception as e:
+            self.logger.error(f"Error disconnecting signals: {e}")
+
     def _connect_signals(self):
         """Connect internal signals."""
+        self._disconnect_all_signals()
         self.history_button.clicked.connect(self._toggle_history_view)
         self.clear_history_button.clicked.connect(self._clear_history)
-        self.copy_button.clicked.connect(self.copy_requested.emit)
+        self.copy_button.clicked.connect(self.copy_request)
     
     def set_conversation_manager(self, conversation_manager:ConversationManager):
         """Set the conversation manager reference."""
@@ -109,6 +136,10 @@ class ConversationWidget(QWidget):
         else:
             html_content = self.markdown_render.to_html(text)
             self.conversation_area.setHtml(html_content)
+
+    def copy_request(self):
+        self.logger.debug("Copy Request")
+        self.copy_requested.emit()
     
     def append_response_text(self, text):
         """Append text to response - only works in current response mode."""

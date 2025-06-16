@@ -449,12 +449,6 @@ class UIManager(QObject):
                 except TypeError:
                     pass
 
-            if hasattr(self.copy_button, 'clicked'):
-                try:
-                    self.copy_button.clicked.disconnect()
-                except TypeError:
-                    pass
-
             if hasattr(self.multiline_toggle_button, 'clicked'):
                 try:
                     self.multiline_toggle_button.clicked.disconnect()
@@ -464,18 +458,6 @@ class UIManager(QObject):
             if hasattr(self.conversation_toggle_button, 'clicked'):  # Add this block
                 try:
                     self.conversation_toggle_button.clicked.disconnect()
-                except TypeError:
-                    pass
-
-            if hasattr(self.history_button, 'clicked'):
-                try:
-                    self.history_button.clicked.disconnect()
-                except TypeError:
-                    pass
-
-            if hasattr(self.clear_history_button, 'clicked'):
-                try:
-                    self.clear_history_button.clicked.disconnect()
                 except TypeError:
                     pass
 
