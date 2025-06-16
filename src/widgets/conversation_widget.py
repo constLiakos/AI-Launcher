@@ -25,16 +25,10 @@ class ConversationWidget(QWidget):
         self._current_response = ""
         
         # UI Components
-        self.conversation_area = None
-        self.history_button = None
-        self.clear_history_button = None
-        self.copy_button = None
-        
-        self._setup_ui()
-        self._connect_signals()
-    
-    def _setup_ui(self):
-        """Setup the conversation widget UI."""
+        self.history_button = self._create_history_toggle_button()
+        self.clear_history_button = self._create_history_button()
+        self.copy_button = self._create_copy_button()
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(5)
@@ -43,33 +37,14 @@ class ConversationWidget(QWidget):
         self._create_button_section(layout)
         
         # Create conversation area
-        self._create_conversation_area(layout)
+        self.conversation_area = self._create_conversation_area(layout)
+        self._connect_signals()
     
     def _create_button_section(self, parent_layout):
         """Create the button section."""
         button_layout = QHBoxLayout()
         button_layout.setContentsMargins(0, 0, 0, 0)
         
-        # History toggle button
-        self.history_button = QPushButton()
-        self.history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
-        self.history_button.setToolTip("Show Conversation History")
-        self.history_button.setObjectName("historyButton")
-        self.history_button.setFixedSize(30, 30)
-        
-        # Clear history button
-        self.clear_history_button = QPushButton()
-        self.clear_history_button.setIcon(QIcon(str(Files.CLEAR_CONVESRATION_BTN)))
-        self.clear_history_button.setToolTip("Clear Conversation History")
-        self.clear_history_button.setObjectName("clearHistoryButton")
-        self.clear_history_button.setFixedSize(30, 30)
-        
-        # Copy button
-        self.copy_button = QPushButton()
-        self.copy_button.setIcon(QIcon(str(Files.COPY_BTN)))
-        self.copy_button.setToolTip("Copy Response")
-        self.copy_button.setObjectName("copyButton")
-        self.copy_button.setFixedSize(ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
         
         # Layout buttons
         button_layout.addWidget(self.history_button, alignment=Qt.AlignLeft)
@@ -78,17 +53,46 @@ class ConversationWidget(QWidget):
         button_layout.addWidget(self.copy_button, alignment=Qt.AlignRight)
         
         parent_layout.addLayout(button_layout)
+
+    def _create_history_button(self):
+        # Clear history button
+        clear_history_button = QPushButton()
+        clear_history_button.setIcon(QIcon(str(Files.CLEAR_CONVESRATION_BTN)))
+        clear_history_button.setToolTip("Clear Conversation History")
+        clear_history_button.setObjectName("clearHistoryButton")
+        clear_history_button.setFixedSize(30, 30)
+        return clear_history_button
+
+    def _create_copy_button(self):
+        # Copy button
+        copy_button = QPushButton()
+        copy_button.setIcon(QIcon(str(Files.COPY_BTN)))
+        copy_button.setToolTip("Copy Response")
+        copy_button.setObjectName("copyButton")
+        copy_button.setFixedSize(ElementSize.COPY_BUTTON_WIDTH, ElementSize.COPY_BUTTON_HEIGHT)
+        return copy_button
+    
+    def _create_history_toggle_button(self):
+        # History toggle button
+        history_button = QPushButton()
+        history_button.setIcon(QIcon(str(Files.CONVERSATION_BTN_SHOW_HISTORY_PATH)))
+        history_button.setToolTip("Show Conversation History")
+        history_button.setObjectName("historyButton")
+        history_button.setFixedSize(30, 30)
+        return history_button
+        
     
     def _create_conversation_area(self, parent_layout):
         """Create the conversation display area."""
-        self.conversation_area = QTextBrowser()
-        self.conversation_area.setObjectName("conversationArea")
-        self.conversation_area.setAcceptRichText(True)
-        self.conversation_area.setOpenExternalLinks(True)
-        self.conversation_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self._setup_emoji_font(self.conversation_area)
+        conversation_area = QTextBrowser()
+        conversation_area.setObjectName("conversationArea")
+        conversation_area.setAcceptRichText(True)
+        conversation_area.setOpenExternalLinks(True)
+        conversation_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._setup_emoji_font(conversation_area)
         
-        parent_layout.addWidget(self.conversation_area)
+        parent_layout.addWidget(conversation_area)
+        return conversation_area
     
 
     def _disconnect_all_signals(self):
