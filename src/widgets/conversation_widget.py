@@ -1,10 +1,10 @@
 import logging
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTextBrowser,
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTextBrowser, QApplication,
                              QPushButton, QSizePolicy)
 from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon, QFont, QFontDatabase
 from managers.conversation_manager import ConversationManager
-from utils.constants import Files, ElementSize, Text
+from utils.constants import Files, ElementSize, Text, Timing
 from utils.markdown_render import MarkdownRenderer
 
 class ConversationWidget(QWidget):
@@ -140,6 +140,25 @@ class ConversationWidget(QWidget):
     def copy_request(self):
         self.logger.debug("Copy Request")
         self.copy_requested.emit()
+
+        try:
+            response_text = self._current_response   #self.state_manager.accumulated_response or self.get_coversation_area_text()
+            if response_text.strip():
+                clipboard = QApplication.clipboard()
+                clipboard.setText(response_text)
+
+                # Visual feedback
+                original_text = self.copy_button.text()
+                self.copy_button.setText(Text.COPY_SUCCESS)
+                self.copy_button.setStyleSheet(
+                    self.style_manager.button_styles.get_copy_button_success_style())
+
+                QTimer.singleShot(Timing.COPY_FEEDBACK_DURATION, lambda: (
+                    self.copy_button.setText(original_text),
+                    self.copy_button.setStyleSheet("")
+                ))
+        except Exception as e:
+            self.logger.error(f"{Text.ERROR_COPYING_CLIPBOARD} {str(e)}")
     
     def append_response_text(self, text):
         """Append text to response - only works in current response mode."""

@@ -193,8 +193,6 @@ class Launcher(QMainWindow):
             'return_pressed': self.force_send_request,
             'stt_clicked': self.recording_manager.toggle_recording,
             'settings_clicked': self.open_settings,
-            'copy_clicked': self.copy_response,
-            # 'history_clicked': self.on_history_clicked,
             'start_thinking_animation': self.animation_manager.start_thinking_animation,
             'stop_thinking_animation': self.animation_manager.stop_thinking_animation,
         }
@@ -270,31 +268,6 @@ class Launcher(QMainWindow):
         # Let UIManager handle all resize-related UI updates
         if hasattr(self, 'ui_manager'):
             self.ui_manager.handle_window_resize(self.size())
-
-    def copy_response(self):
-        """Copy accumulated response text to clipboard."""
-        try:
-            response_text = self.state_manager.accumulated_response or self.ui_manager.get_coversation_area_text()
-            if response_text.strip():
-                clipboard = QApplication.clipboard()
-                clipboard.setText(response_text)
-
-                # Visual feedback
-                original_text = self.ui_manager.copy_button.text()
-                self.ui_manager.copy_button.setText(Text.COPY_SUCCESS)
-                self.ui_manager.copy_button.setStyleSheet(
-                    self.style_manager.button_styles.get_copy_button_success_style())
-
-                QTimer.singleShot(Timing.COPY_FEEDBACK_DURATION, lambda: (
-                    self.ui_manager.copy_button.setText(original_text),
-                    self.ui_manager.copy_button.setStyleSheet("")
-                ))
-            else:
-                self.show_status(Text.STATUS_NO_TEXT_TO_COPY)
-
-        except Exception as e:
-            logger.error(f"{Text.ERROR_COPYING_CLIPBOARD} {str(e)}")
-            self.show_status(Text.STATUS_COPY_FAILED)
 
     def animate_resize(self, width, height, fast=False):
         """Animate window resize using WindowManager."""

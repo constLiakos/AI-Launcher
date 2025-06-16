@@ -639,6 +639,7 @@ class UIManager(QObject):
         if hasattr(self, '_copy_callback') and self._copy_callback:
             self._copy_callback()
 
+
     def _handle_history_cleared(self):
         """Handle history cleared signal from conversation widget."""
         self.logger.debug("History cleared from conversation widget")
