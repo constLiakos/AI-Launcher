@@ -36,7 +36,6 @@ class UIManager(QObject):
         self.conversation_toggle_button = None
         self.error_message = None
 
-        self.original_input_height = None
         self.original_window_height = None
         self.min_window_height = WindowSize.COMPACT_HEIGHT
         self.animation_callbacks = {}
@@ -504,12 +503,7 @@ class UIManager(QObject):
             self.input_field.setPlaceholderText(
                 f"{Text.INPUT_PLACEHOLDER} (Ctrl+Enter to send)")
 
-            # Set initial height to single line equivalent
-            font_metrics = self.input_field.fontMetrics()
-            single_line_height = font_metrics.height()
-
             # Store original heights
-            self.original_input_height = single_line_height
             if self.original_window_height is None:
                 self.original_window_height = self.parent.height()
 
