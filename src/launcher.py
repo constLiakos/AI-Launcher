@@ -227,12 +227,6 @@ class Launcher(QMainWindow):
         """Hide window using WindowManager."""
         self.window_manager.hide_window()
 
-    # def setup_ui(self):
-    #     """Setup UI using UIManager."""
-    #     self.ui_manager.setup_ui()
-    #     # Connect signals
-    #     self._reconnect_ui_signals()
-
     def update_stt_button_visibility(self):
         """Update mic button visibility."""
         self.stt_enabled = self.config.get('stt_enabled', STT.DEFAULT_ENABLED)
@@ -247,15 +241,6 @@ class Launcher(QMainWindow):
             self.animation_manager.start_thinking_animation(self.ui_manager.input_field)
         else:
             self.animation_manager.stop_thinking_animation()
-
-    # def on_history_clicked(self):
-    #     """Handle history button click."""
-    #     logger.debug("History Toggle Button Clicked")
-    #     if self.ui_manager.is_showing_history():
-    #         # User switched back to current response - restore it
-    #         current_response = self.ui_manager.get_current_response_text()
-    #         if current_response:
-    #             self.ui_manager.set_response_text(current_response)
 
     def on_input_type_changed(self):
         """Called by UIManager when input type changes"""

@@ -281,10 +281,6 @@ class UIManager(QObject):
     def is_multiline_input(self):
         return self.input_type_is_multiline
 
-    def reset_input_height(self):
-        """Reset input field to original single-line height."""
-        pass
-
     def recreate_input_field(self, is_multiline_input):
         """Recreate input field when mode changes."""
         if self.input_field:
