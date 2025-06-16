@@ -298,10 +298,10 @@ class Launcher(QMainWindow):
 
         if state == "recording":
             self.ui_manager.stt_button.setObjectName("sttButtonRecording")
-            self.update_stt_button_appearance(state)
+            self.ui_manager.update_stt_button_appearance(state)
         elif state == "idle":
             self.ui_manager.stt_button.setObjectName("sttButton")
-            self.update_stt_button_appearance(state)
+            self.ui_manager.update_stt_button_appearance(state)
         else:
             logger.info("Wrong State when updating stt button")
 
@@ -320,18 +320,6 @@ class Launcher(QMainWindow):
             # Log the error and optionally show user feedback
             logger.error(f"Failed to transcribe audio: {str(e)}")
             self.ui_manager.show_error_message(f"Transcription failed: {str(e)}")
-
-    def update_stt_button_appearance(self, state):
-        """Update STT button appearance based on state."""
-        # self.ui_manager.stt_button.setStyle(self.ui_manager.stt_button.style())
-        if state == "recording":
-            self.ui_manager.stt_button.setIcon(QIcon(str(Files.MIC_RECORDING_ICON_PATH)))
-            self.ui_manager.stt_button.style().unpolish(self.ui_manager.stt_button)
-            self.ui_manager.stt_button.style().polish(self.ui_manager.stt_button)
-        elif state == "idle":
-            self.ui_manager.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
-            self.ui_manager.stt_button.style().unpolish(self.ui_manager.stt_button)
-            self.ui_manager.stt_button.style().polish(self.ui_manager.stt_button)
 
     def _update_response_display(self):
         """Update response display with basic markdown formatting."""

@@ -710,6 +710,18 @@ class UIManager(QObject):
         self.conversation_toggle_button.raise_()
         QTimer.singleShot(50, self.position_conversation_toggle_button)
 
+    def update_stt_button_appearance(self, state):
+        """Update STT button appearance based on state."""
+        # self.ui_manager.stt_button.setStyle(self.ui_manager.stt_button.style())
+        if state == "recording":
+            self.stt_button.setIcon(QIcon(str(Files.MIC_RECORDING_ICON_PATH)))
+            self.stt_button.style().unpolish(self.stt_button)
+            self.stt_button.style().polish(self.stt_button)
+        elif state == "idle":
+            self.stt_button.setIcon(QIcon(str(Files.MIC_IDLE_ICON_PATH)))
+            self.stt_button.style().unpolish(self.stt_button)
+            self.stt_button.style().polish(self.stt_button)
+
 
 #   ##########################################################################################
 #       State Functions
