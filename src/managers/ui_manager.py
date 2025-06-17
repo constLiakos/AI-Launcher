@@ -1072,10 +1072,8 @@ class UIManager(QObject):
             
             container_geom = self.main_container.geometry()
             
-            # widget_width = min(600, int(container_geom.width() * 0.8))
-            # widget_height = min(400, int(container_geom.height() * 0.6))
-            widget_width = 300
-            widget_height = 300
+            widget_width = min(600, int(container_geom.width() * 0.8))
+            widget_height = min(400, int(container_geom.height() * 0.8))
             
             x = (container_geom.width() - widget_width) // 2
             y = (container_geom.height() - widget_height) // 2

@@ -38,7 +38,7 @@ class ConversationHistoryWidget(QWidget):
         
     def _setup_ui(self):
         """Setup the UI components."""
-        self.setFixedSize(350, 450)  # Adjust size as needed
+        # self.setFixedSize(350, 450)  # Adjust size as needed
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
