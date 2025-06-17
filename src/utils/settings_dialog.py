@@ -376,6 +376,7 @@ class SettingsDialog(QDialog):
     def _create_theme_combo(self):
         """Create theme selection combo box."""
         combo = QComboBox()
+
         combo.addItems(self.style_manager.get_available_themes())
         current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
         theme_index = combo.findText(current_theme)
@@ -383,6 +384,8 @@ class SettingsDialog(QDialog):
             combo.setCurrentIndex(theme_index)
         combo.setObjectName("settingsComboBox")
         combo.setMinimumHeight(35)
+        combo.setEditable(True)
+
         self.logger.debug(f"Theme loaded: {current_theme}")
         return combo
 
