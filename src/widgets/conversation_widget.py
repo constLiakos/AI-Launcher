@@ -26,7 +26,7 @@ class ConversationWidget(QWidget):
         
         # UI Components
         self.history_button = self._create_history_toggle_button()
-        self.clear_history_button = self._create_history_button()
+        self.clear_history_button = self._create_clear_conversation_history_button()
         self.copy_button = self._create_copy_button()
 
         layout = QVBoxLayout(self)
@@ -54,7 +54,7 @@ class ConversationWidget(QWidget):
         
         parent_layout.addLayout(button_layout)
 
-    def _create_history_button(self):
+    def _create_clear_conversation_history_button(self):
         # Clear history button
         clear_history_button = QPushButton()
         clear_history_button.setIcon(QIcon(str(Files.CLEAR_CONVESRATION_BTN)))
@@ -136,7 +136,7 @@ class ConversationWidget(QWidget):
         self._current_response = text
         
         if self.show_history_mode:
-            self._show_conversation_history()
+            self.show_conversation_history()
         else:
             html_content = self.markdown_render.to_html(text)
             self.conversation_area.setHtml(html_content)
@@ -198,7 +198,7 @@ class ConversationWidget(QWidget):
     def reapply_conversation_history_theme(self):
         """Reapply theme to conversation history."""
         if self.show_history_mode:
-            self._show_conversation_history()
+            self.show_conversation_history()
     
     def _toggle_history_view(self):
         """Toggle between showing last response only and full conversation history."""
@@ -215,14 +215,14 @@ class ConversationWidget(QWidget):
             self.history_button.setToolTip("Show Conversation History")
 
 
-    def _show_conversation_history(self):
+    def show_conversation_history(self, conversation_id=None):
         """Display the full conversation history."""
         if not self.conversation_manager:
             self.logger.warning("No conversation manager available")
             return
         
         try:
-            history = self.conversation_manager.get_conversation_history()
+            history = self.conversation_manager.get_conversation_history(conversation_id)
             if not history:
                 self.conversation_area.setHtml("<p><i>No conversation history available.</i></p>")
                 return

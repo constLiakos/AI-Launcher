@@ -41,6 +41,7 @@ class Files:
     COPY_BTN = _base_path / "assets" / "copy.png"
     USER_ICON_PATH = _base_path / "assets" / "user.png"
     ASSISTANT_ICON_PATH = _base_path / "assets" / "assistant.png"
+    REFRESH_ICON_PATH = _base_path / "assets" / "refresh.png"
     CONVERSATIONS_DATABASE_PATH = Directories.CONVERSATIONS_DATABASE_DIR / 'ai_conversations.db'
 
     

@@ -343,3 +343,55 @@ class ConversationManager:
         except Exception as e:
             self.logger.error(f"Failed to search conversations: {e}")
             return []
+        
+    def clear_all_conversations(self) -> bool:
+        """Clear all conversations by archiving them."""
+        try:
+            conversations = self.db_manager.get_conversations(include_archived=False)
+            update_data = ConversationUpdate(is_archived=True)
+            
+            success_count = 0
+            for conv in conversations:
+                if self.db_manager.update_conversation(conv.id, update_data):
+                    success_count += 1
+            
+            if conversations and success_count == len(conversations):
+                self.current_conversation_id = None
+                self.logger.info(f"Cleared {success_count} conversations")
+                return True
+            
+            return success_count > 0
+            
+        except Exception as e:
+            self.logger.error(f"Failed to clear all conversations: {e}")
+            return False
+        
+
+    def get_conversation_history_for_widget(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Get conversation history formatted for the history widget."""
+        try:
+            conversations = self.db_manager.get_conversations(
+                include_archived=False, 
+                limit=limit
+            )
+            
+            widget_data = []
+            for conv in conversations:
+                messages = self.db_manager.get_messages(conv.id, limit=2)
+                if messages:
+                    # Find user and assistant messages
+                    user_msg = next((m for m in messages if m.sender == "user"), None)
+                    assistant_msg = next((m for m in messages if m.sender == "assistant"), None)
+                    
+                    widget_data.append({
+                        "conversation_id": conv.id,
+                        "user_message": user_msg.content if user_msg else "No user message",
+                        "assistant_response": assistant_msg.content if assistant_msg else "No response",
+                        "timestamp": conv.updated_at.isoformat()
+                    })
+            
+            return widget_data
+            
+        except Exception as e:
+            self.logger.error(f"Failed to get conversation history for widget: {e}")
+            return []

@@ -806,3 +806,78 @@ class StyleManager:
                 font-weight: bold;
             }
         """
+    
+
+    def get_conversation_history_style(self):
+        """Get conversation history widget styles."""
+        colors = self.get_theme_colors()
+        return f"""
+        QWidget[objectName="conversation_history_widget"] {{
+            background-color: {colors['bg_secondary']};
+            border: 1px solid {colors['border_default']};
+            border-radius: 8px;
+        }}
+
+        QLabel[objectName="historyTitle"] {{
+            color: {colors['text_primary']};
+            font-weight: bold;
+            padding: 4px;
+        }}
+        
+        QPushButton[objectName="historyRefreshButton"],
+        QPushButton[objectName="historyClearButton"] {{
+            background-color: {colors['button_secondary_bg']};
+            border: 1px solid {colors['button_tertiarty_border']};
+            border-radius: 3px;
+            padding: 2px;
+            color: {colors['text_on_secondary']};
+        }}
+
+        QPushButton[objectName="historyRefreshButton"]:hover,
+        QPushButton[objectName="historyClearButton"]:hover {{
+            background-color: {colors['button_secondary_hover']};
+        }}
+        QLineEdit[objectName="historySearchField"] {{
+            padding: 6px;
+            border: 1px solid {colors['settings_input_border']};
+            border-radius: 4px;
+            font-size: 9pt;
+            background: {colors['settings_input_bg']};
+            color: {colors['text_primary']};
+        }}
+        QLineEdit[objectName="historySearchField"]:focus {{
+            border: 1px solid {colors['settings_input_border_focus']};
+            background: {colors['settings_input_bg_focus']};
+        }}
+        QListWidget[objectName="historyList"] {{
+            background-color: {colors['bg_tertiary']};
+            border: 1px solid {colors['border_default']};
+            border-radius: 4px;
+            selection-background-color: {colors['brand_primary']};
+            selection-color: {colors['text_on_primary']};
+            font-size: 9pt;
+            padding: 2px;
+            color: {colors['text_primary']};
+        }}
+        QListWidget[objectName="historyList"]::item {{
+            padding: 8px;
+            border-bottom: 1px solid {colors['border_subtle']};
+        }}
+        QListWidget[objectName="historyList"]::item:hover {{
+            background-color: {colors['combobox_item_hover']};
+        }}
+        QListWidget[objectName="historyList"]::item:selected {{
+            background-color: {colors['brand_primary']};
+            color: {colors['text_on_primary']};
+        }}
+        QLabel[objectName="historyStatus"] {{
+            color: {colors['text_secondary']};
+            font-size: 8pt;
+            padding: 4px;
+        }}
+        QLabel[objectName="historyStatusError"] {{
+            color: {colors['semantic_error']};
+            font-size: 8pt;
+            padding: 4px;
+        }}
+        """

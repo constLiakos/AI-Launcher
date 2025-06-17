@@ -8,6 +8,7 @@ from managers.style_manager import StyleManager
 from utils.constants import (
     ElementSize, Files, InputSettings, Text, WindowSize)
 from utils.markdown_render import MarkdownRenderer
+from widgets.conversation_history_widget import ConversationHistoryWidget
 from widgets.conversation_widget import ConversationWidget
 from widgets.error_message import ErrorMessage
 
@@ -33,6 +34,8 @@ class UIManager(QObject):
         self.multiline_toggle_button = None
         self.conversation_toggle_button = None
         self.error_message = None
+        self.conversation_history_button = None
+        self.conversation_history_widget = None
         
         # State
         self.input_type_is_multiline = False
@@ -51,11 +54,15 @@ class UIManager(QObject):
         is_multiline = self.config.get(
             'multiline_input', InputSettings.IS_MULTILINE_INPUT)
         self.input_type_is_multiline = is_multiline
+        self.conversation_manager = conversation_manager
         self._create_main_container()
         self._create_input_section()
         self._create_response_section()
         self._create_conversation_toggle_button()
         self._setup_shortcuts()
+
+        self._create_conversation_history_button()
+        self._create_conversation_history_widget()  
 
         self.conversation_widget.set_conversation_manager(conversation_manager)
 
@@ -77,7 +84,6 @@ class UIManager(QObject):
         # Button signals
         if 'stt_clicked' in callbacks:
             self.stt_button.clicked.connect(callbacks['stt_clicked'])
-
         if 'settings_clicked' in callbacks:
             self.settings_button.clicked.connect(callbacks['settings_clicked'])
         
@@ -86,7 +92,8 @@ class UIManager(QObject):
             self.animation_callbacks['start_thinking'] = callbacks['start_thinking_animation']
         if 'stop_thinking_animation' in callbacks:
             self.animation_callbacks['stop_thinking'] = callbacks['stop_thinking_animation']
-
+        
+        self.conversation_history_button.clicked.connect(self.toggle_history_widget)
         self.multiline_toggle_button.clicked.connect(self._toggle_input_type)
         self.conversation_toggle_button.clicked.connect(self.toggle_response_visibility)
 
@@ -422,6 +429,20 @@ class UIManager(QObject):
         self.conversation_toggle_button.style().unpolish(self.conversation_toggle_button)
         self.conversation_toggle_button.style().polish(self.conversation_toggle_button)
 
+    def update_conversation_history_toggle_button(self):
+        """Update conversation toggle button appearance based on current state."""
+        if self.conversation_history_widget and self.conversation_history_widget.isVisible():
+            self.conversation_history_button.setText("▶")
+            self.conversation_history_button.setToolTip("Hide Conversation History")
+            self.conversation_history_button.setObjectName("conversationToggleButtonExpanded")
+        else:
+            self.conversation_history_button.setText("◀")
+            self.conversation_history_button.setToolTip("Show Conversation History")
+            self.conversation_history_button.setObjectName("conversationToggleButton")
+        # Force style update
+        self.conversation_history_button.style().unpolish(self.conversation_history_button)
+        self.conversation_history_button.style().polish(self.conversation_history_button)
+
     def _disconnect_all_signals(self):
         """Disconnect all signals before reconnecting"""
         try:
@@ -454,6 +475,12 @@ class UIManager(QObject):
             if hasattr(self.conversation_toggle_button, 'clicked'):  # Add this block
                 try:
                     self.conversation_toggle_button.clicked.disconnect()
+                except TypeError:
+                    pass
+
+            if hasattr(self.conversation_history_button, 'clicked'):
+                try:
+                    self.conversation_history_button.clicked.disconnect()
                 except TypeError:
                     pass
 
@@ -538,9 +565,12 @@ class UIManager(QObject):
             self.is_expanded = True
             self.expansion_changed.emit(True)
             self.update_conversation_toggle_button(True)
+            self.update_conversation_history_toggle_button()
+            self.conversation_history_button.setVisible(True)
             
             # Reposition the toggle button after expansion
             QTimer.singleShot(10, self.position_conversation_toggle_button)
+            QTimer.singleShot(10, self.position_conversation_history_button)
             
             self.logger.debug("Response area shown")
 
@@ -554,6 +584,8 @@ class UIManager(QObject):
             self.is_expanded = False
             self.expansion_changed.emit(False)
             self.update_conversation_toggle_button(False)
+            self.conversation_history_button.setVisible(False)
+            self._hide_history_widget()
             
             QTimer.singleShot(10, self.position_conversation_toggle_button)
             QTimer.singleShot(50, lambda: self.response_container.setVisible(False))
@@ -660,7 +692,6 @@ class UIManager(QObject):
         except Exception as e:
             self.logger.error(f"Error positioning conversation toggle button: {e}")
 
-
     def update_stt_button_appearance(self, state):
         """Update STT button appearance."""
         if state == "recording":
@@ -716,6 +747,45 @@ class UIManager(QObject):
             self.stt_button.style().unpolish(self.stt_button)
             self.stt_button.style().polish(self.stt_button)
 
+    def _create_conversation_history_button(self):
+        """Create the conversation history button as a floating element on the right side."""
+        self.conversation_history_button = QPushButton()
+        self.conversation_history_button.setParent(self.main_container)
+        self.conversation_history_button.setFixedSize(
+            ElementSize.CONVERSATION_TOGGLE_BUTTON_HEIGHT,  # Use height as width for square button
+            ElementSize.CONVERSATION_TOGGLE_BUTTON_WIDTH
+        )
+        self.conversation_history_button.setFont(QFont("Segoe UI", 5))
+        self.update_conversation_history_toggle_button()
+        self.conversation_history_button.setToolTip("Show conversation history")
+        self.conversation_history_button.setObjectName("conversationHistoryButton")
+        
+        # Hide initially (only show when expanded)
+        self.conversation_history_button.setVisible(False)
+        self.conversation_history_button.raise_()
+        
+        QTimer.singleShot(50, self.position_conversation_history_button)
+
+    def position_conversation_history_button(self):
+        """Position the conversation history button at the right middle of the window."""
+        if not self.conversation_history_button or not self.main_container:
+            self.logger.debug("Conversation History Button not positioned")
+            return
+        try:
+            # Get container dimensions
+            container_geometry = self.main_container.geometry()
+            button_width = self.conversation_history_button.width()
+            button_height = self.conversation_history_button.height()
+            
+            # x = container_geometry.width() - button_width - 2   # 2px from right edge
+            x = 5
+            y = (container_geometry.height() - button_height) // 2
+            
+            self.conversation_history_button.move(x, y)
+            self.logger.debug(f"Conversation history button positioned at ({x}, {y})")
+            
+        except Exception as e:
+            self.logger.error(f"Error positioning conversation history button: {e}")
 
 #   ##########################################################################################
 #       State Functions
@@ -787,6 +857,12 @@ class UIManager(QObject):
         """Handle window resize to reposition elements and adjust constraints."""
         if hasattr(self, 'conversation_toggle_button'):
             self.position_conversation_toggle_button()
+
+        if hasattr(self, 'conversation_history_button') and self.conversation_history_button.isVisible():
+            self.position_conversation_history_button()
+
+        if (hasattr(self, 'conversation_history_widget') and self.conversation_history_widget and self.conversation_history_widget.isVisible()):
+            self._position_history_widget()
 
         # Dynamically adjust response area constraints based on window size
         if hasattr(self, 'conversation_area'):
@@ -889,3 +965,127 @@ class UIManager(QObject):
                 
         except Exception as e:
             self.logger.error(f"Error clearing response on show: {e}")
+
+    def _create_conversation_history_widget(self):
+        """Create the conversation history widget."""
+        self.conversation_history_widget = ConversationHistoryWidget(
+            style_manager=self.style_manager,
+            parent=self.main_container
+        )
+        
+        # Set conversation manager
+        if self.conversation_manager:
+            self.conversation_history_widget.set_conversation_manager(self.conversation_manager)
+        
+        # Connect signals
+        self.conversation_history_widget.conversation_selected.connect(self._on_history_conversation_selected)
+        self.conversation_history_widget.history_cleared.connect(self._on_history_cleared)
+        self._hide_history_widget()
+
+    def _on_history_conversation_selected(self, conversation_id: str):
+        """Handle when a conversation is selected from history."""
+        try:
+            self.logger.debug(f"History conversation selected: {conversation_id}")
+
+            self.conversation_widget.show_conversation_history(conversation_id)
+        
+            if not self.conversation_visible:
+                self.show_conversation_area()
+            
+            self._hide_history_widget()
+            self.input_field.setFocus()
+            self.set_visual_state("normal")
+            
+        except Exception as e:
+            self.logger.error(f"Error handling history conversation selection: {e}")
+            self.show_error_message("Failed to load selected conversation")
+            
+        except Exception as e:
+            self.logger.error(f"Error handling history conversation selection: {e}")
+            self.show_error_message("Failed to load selected conversation")
+
+
+
+    def _on_history_cleared(self):
+        """Handle when conversation history is cleared."""
+        try:
+            self.logger.debug("Conversation history cleared")
+            self._hide_history_widget()
+            
+            if self.is_showing_history():
+                self.clear_conversation_area()       
+            # TODO move to info message
+            message = "Conversation history was cleared!"
+            self.show_error_message(message)
+
+        except Exception as e:
+            self.logger.error(f"Error handling history cleared: {e}")
+
+
+
+    def show_history_widget(self):
+        """Show the conversation history widget."""
+        try:
+            if not hasattr(self, 'conversation_history_widget') or not self.conversation_history_widget:
+                self.logger.warning("Conversation history widget not initialized")
+                return
+            
+            self._position_history_widget()
+            
+            self.conversation_history_widget.setVisible(True)
+            self.conversation_history_widget.raise_()
+            self.conversation_history_widget.load_conversations()
+            
+            self.logger.debug("Conversation history widget shown")
+            
+        except Exception as e:
+            self.logger.error(f"Error showing history widget: {e}")
+
+    def _hide_history_widget(self):
+        """Hide the conversation history widget."""
+        try:
+            if hasattr(self, 'conversation_history_widget') and self.conversation_history_widget:
+                self.conversation_history_widget.setVisible(False)
+                self.logger.debug("Conversation history widget hidden")
+        except Exception as e:
+            self.logger.error(f"Error hiding history widget: {e}")
+
+    def toggle_history_widget(self):
+        """Toggle the visibility of conversation history widget."""
+        try:
+            if (hasattr(self, 'conversation_history_widget') and 
+                self.conversation_history_widget and 
+                self.conversation_history_widget.isVisible()):
+                self._hide_history_widget()
+            else:
+                self.show_history_widget()
+            self.update_conversation_history_toggle_button()
+        except Exception as e:
+            self.logger.error(f"Error toggling history widget: {e}")
+
+
+    def _position_history_widget(self):
+        """Position the conversation history widget in the center of the main container."""
+        try:
+            if not self.conversation_history_widget or not self.main_container:
+                return
+            
+            container_geom = self.main_container.geometry()
+            
+            # widget_width = min(600, int(container_geom.width() * 0.8))
+            # widget_height = min(400, int(container_geom.height() * 0.6))
+            widget_width = 300
+            widget_height = 300
+            
+            x = (container_geom.width() - widget_width) // 2
+            y = (container_geom.height() - widget_height) // 2
+            
+            self.conversation_history_widget.setGeometry(x, y, widget_width, widget_height)
+            
+            self.logger.debug(f"History widget positioned at ({x}, {y}) with size {widget_width}x{widget_height}")
+            
+        except Exception as e:
+            self.logger.error(f"Error positioning history widget: {e}")
+
+
+
