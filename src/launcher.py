@@ -85,9 +85,10 @@ class Launcher(QMainWindow):
             self.on_processing_changed)
         self.state_manager.request_cancelled.connect(self.on_request_cancelled)
         self.state_manager.request_ready.connect(self.send_request)
-        self.state_manager.stt_state_changed.connect(self.on_stt_state_changed)
-        self.state_manager.recording_completed_sg.connect(
-            self.on_recording_completed)
+        # STT Recording Signals
+        self.recording_manager.recording_started.connect(self.on_stt_recording)
+        self.recording_manager.recording_stopped.connect(self.on_recording_completed)
+        self.recording_manager.recording_failed.connect(self.on_recording_failed)
        # UIManager signals (UI state)
         self.ui_manager.expansion_changed.connect(self.on_expanded_changed)
 
@@ -306,22 +307,16 @@ class Launcher(QMainWindow):
         # Execute request
         QTimer.singleShot(50, lambda: self._execute_request(request_id))
 
-    @pyqtSlot(str)
-    def on_stt_state_changed(self, state):
+    @pyqtSlot()
+    def on_stt_recording(self):
         """Handle STT state changes."""
-        self.logger.debug(f"STT state changed to: {state}")
-
-        if state == "recording":
-            self.ui_manager.stt_button.setObjectName("sttButtonRecording")
-            self.ui_manager.update_stt_button_appearance(state)
-        elif state == "idle":
-            self.ui_manager.stt_button.setObjectName("sttButton")
-            self.ui_manager.update_stt_button_appearance(state)
-        else:
-            self.logger.info("Wrong State when updating stt button")
+        self.logger.debug(f"STT recording.")
+        self.ui_manager.stt_button.setObjectName("sttButtonRecording")
+        self.ui_manager.update_stt_button_appearance("recording")
 
     @pyqtSlot()
     def on_recording_completed(self):
+        self.stt_idle()
         try:
             # Get transcribed text and fill the input field
             transcribed_text = self.stt_api_client.transcribe()
@@ -335,6 +330,18 @@ class Launcher(QMainWindow):
             # Log the error and optionally show user feedback
             self.logger.error(f"Failed to transcribe audio: {str(e)}")
             self.ui_manager.show_error_message(f"Transcription failed: {str(e)}")
+    
+    def stt_idle(self):
+        """Handle STT state changes."""
+        self.logger.debug(f"STT idle.")
+        self.ui_manager.stt_button.setObjectName("sttButton")
+        self.ui_manager.update_stt_button_appearance("idle")
+
+    @pyqtSlot()
+    def on_recording_failed(self):
+        error_message = "Failed while STT Recording!"
+        self.ui_manager.show_error_message(f"Error: {error_message}")
+
 
     def _update_response_display(self):
         """Update response display with basic markdown formatting."""
@@ -345,7 +352,6 @@ class Launcher(QMainWindow):
             self.ui_manager.show_conversation_area()
         else:
             self.ui_manager.set_response_text(response_text)
-        
 
     def _handle_request_lifecycle(self, request_id, action):
         """Centralized request lifecycle management."""

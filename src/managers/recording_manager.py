@@ -30,7 +30,7 @@ class RecordingManager(QObject):
         
         # Initialize audio recording attributes
         self.frames = []
-        self.recording = False
+        self.is_recording = False
         self.record_thread = None
         self.fs = 16000
         self._frames_lock = threading.Lock()
@@ -46,19 +46,15 @@ class RecordingManager(QObject):
 
     def toggle_recording(self):
         """Toggle speech-to-text recording - safe to call from GUI thread."""
-        if not self.recording:
+        if not self.is_recording:
             self.start_recording()
         else:
             self.stop_recording()
 
     def start_recording(self):
         """Start recording audio for speech-to-text."""
-        if not self.state_manager.stt_start_recording():
-            self.logger.debug("Start recording did not start as expected")
-            return
-        
         self.logger.debug("Starting audio recording")
-        self.recording = True
+        self.is_recording = True
         self._recording_start_time = time.time()
         self._stop_event.clear()
         
@@ -69,9 +65,9 @@ class RecordingManager(QObject):
         
         self.record_thread = threading.Thread(target=self.record_audio, daemon=True)
         self.record_thread.start()
-        
+                
         self.recording_started.emit()
-        self.logger.debug("Recording started")
+        return True
 
     def record_audio(self):
         """Record audio data - runs in separate thread."""
@@ -92,11 +88,11 @@ class RecordingManager(QObject):
                 blocksize=1024
             ):
                 while not self._stop_event.wait(timeout=0.2):
-                    if not self.recording:
+                    if not self.is_recording:
                         break
                     
             self.logger.debug("Recording completed")
-            self.state_manager.recording_completed()
+            self.recording_completed()
             
             # Save audio after recording stops
             with self._frames_lock:
@@ -119,7 +115,7 @@ class RecordingManager(QObject):
             self.recording_failed.emit(error_msg)
             
         finally:
-            self.recording = False
+            self.is_recording = False
             self._progress_timer.stop()
 
     def audio_callback(self, indata, frames, time_, status):
@@ -127,7 +123,7 @@ class RecordingManager(QObject):
         if status:
             self.logger.warning(f"InputStream status: {status}")
             
-        if self.recording:
+        if self.is_recording:
             try:
                 with self._frames_lock:
                     self.frames.append(indata.tobytes())
@@ -135,12 +131,9 @@ class RecordingManager(QObject):
                 self.logger.error(f"Error in audio callback: {e}")
 
     def stop_recording(self):
-        """Stop recording - safe to call from GUI thread."""
-        if not self.state_manager.stt_stop_recording():
-            return
-        
+        """Stop recording - safe to call from GUI thread."""        
         self.logger.debug("Stopping audio recording")
-        self.recording = False
+        self.is_recording = False
         self._stop_event.set()
         self._progress_timer.stop()
         
@@ -149,7 +142,7 @@ class RecordingManager(QObject):
             self.record_thread.join(timeout=5.0)
             if self.record_thread.is_alive():
                 self.logger.warning("Recording thread did not stop gracefully")
-        
+
         self.recording_stopped.emit()
 
     def save_audio(self):
@@ -176,7 +169,7 @@ class RecordingManager(QObject):
 
     def _update_progress(self):
         """Update recording progress - runs in main thread."""
-        if self.recording and self._recording_start_time:
+        if self.is_recording and self._recording_start_time:
             duration = time.time() - self._recording_start_time
             self.recording_progress.emit(duration)
 
@@ -184,14 +177,11 @@ class RecordingManager(QObject):
         """Handle recording errors - runs in main thread."""
         self.logger.error(f"Recording error handled: {error_message}")
         if hasattr(self.state_manager, 'stt_recording_failed'):
-            self.state_manager.stt_recording_failed()
-        else:
-            if hasattr(self.state_manager, 'reset_stt_state'):
-                self.state_manager.reset_stt_state()
+            self.stt_recording_failed()
 
     def cleanup(self):
         """Clean up resources - call this when closing the application."""
-        if self.recording:
+        if self.is_recording:
             self.stop_recording()
         
         self._progress_timer.stop()
@@ -205,7 +195,7 @@ class RecordingManager(QObject):
 
     def get_recording_state(self):
         """Get current recording state - thread-safe."""
-        return self.recording
+        return self.is_recording
 
     def get_audio_devices(self):
         """Get available audio input devices."""
@@ -223,3 +213,17 @@ class RecordingManager(QObject):
         except Exception as e:
             self.logger.error(f"Failed to get audio devices: {e}")
             return []
+
+    
+    def stt_recording_failed(self):
+        """Stop speech-to-text recording."""
+        # self.stt_state_changed.emit("idle")
+        self.recording_failed.emit()
+        return True
+
+    def get_stt_state(self):
+        """Get STT State"""
+        return self.is_recording
+    
+    def recording_completed(self):
+        self.recording_stopped.emit()

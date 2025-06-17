@@ -12,8 +12,6 @@ class StateManager(QObject):
     processing_changed = pyqtSignal(bool)
     request_cancelled = pyqtSignal()
     request_ready = pyqtSignal(str)
-    stt_state_changed = pyqtSignal(str)
-    recording_completed_sg = pyqtSignal()
 
     def __init__(self, config):
         super().__init__()
@@ -261,37 +259,6 @@ class StateManager(QObject):
         return self.is_processing
 
 
-    def stt_start_recording(self):
-        """Start speech-to-text recording."""
-        if self.stt_state != "idle":
-            return False
-        
-        self.stt_state = "recording"
-        self.is_recording = True
-        self.stt_state_changed.emit("recording")
-        return True
-    
-    def stt_stop_recording(self):
-        """Stop speech-to-text recording."""
-        if self.stt_state != "recording":
-            return False
-        
-        self.stt_state = "idle"
-        self.is_recording = False
-        self.stt_state_changed.emit("idle")
-        return True
-    
-    def stt_recording_failed(self):
-        """Stop speech-to-text recording."""
-        self.stt_state_changed.emit("idle")
-        return True
-
-    def get_stt_state(self):
-        """Get STT State"""
-        return self.stt_state
-    
-    def recording_completed(self):
-        self.recording_completed_sg.emit()
 
     def _send_request_signal(self):
         """Internal method to emit request signal."""
