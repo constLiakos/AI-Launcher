@@ -3,19 +3,20 @@ import sounddevice as sd
 import threading
 import wave
 import os
+import time
 import numpy as np
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 from PyQt5.QtWidgets import QApplication
 from managers.state_manager import StateManager
 from utils.constants import Directories, Files
 
-class RecordingManager(QObject):  # Inherit from QObject for signals
+class RecordingManager(QObject):
     # Qt signals for thread-safe communication
     recording_started = pyqtSignal()
     recording_stopped = pyqtSignal()
-    recording_failed = pyqtSignal(str)  # Error message
-    audio_saved = pyqtSignal(str)  # File path
-    recording_progress = pyqtSignal(float)  # Recording duration or level
+    recording_failed = pyqtSignal(str)
+    audio_saved = pyqtSignal(str)
+    recording_progress = pyqtSignal(float)
     
     def __init__(self, state_manager, config, parent=None):
         super().__init__(parent)
@@ -31,8 +32,9 @@ class RecordingManager(QObject):  # Inherit from QObject for signals
         self.frames = []
         self.recording = False
         self.record_thread = None
-        self.fs = 16000  # Sample rate
+        self.fs = 16000
         self._frames_lock = threading.Lock()
+        self._stop_event = threading.Event()
         
         # Qt-specific attributes
         self._progress_timer = QTimer()
@@ -44,15 +46,9 @@ class RecordingManager(QObject):  # Inherit from QObject for signals
 
     def toggle_recording(self):
         """Toggle speech-to-text recording - safe to call from GUI thread."""
-        # This method is called from the main Qt thread
-        QApplication.processEvents()  # Process any pending Qt events
-        
-        current_state = self.state_manager.get_stt_state()
-        self.logger.debug(f"Current State is: {current_state}")
-        
-        if current_state == "idle":
+        if not self.recording:
             self.start_recording()
-        elif current_state == "recording":
+        else:
             self.stop_recording()
 
     def start_recording(self):
@@ -63,19 +59,17 @@ class RecordingManager(QObject):  # Inherit from QObject for signals
         
         self.logger.debug("Starting audio recording")
         self.recording = True
-        self._recording_start_time = QTimer()
-        self._recording_start_time.start()
+        self._recording_start_time = time.time()
+        self._stop_event.clear()
         
         with self._frames_lock:
             self.frames = []
             
-        # Start progress timer
-        self._progress_timer.start(100)  # Update every 100ms
+        self._progress_timer.start(500)
         
         self.record_thread = threading.Thread(target=self.record_audio, daemon=True)
         self.record_thread.start()
         
-        # Emit signal in a thread-safe way
         self.recording_started.emit()
         self.logger.debug("Recording started")
 
@@ -95,13 +89,11 @@ class RecordingManager(QObject):  # Inherit from QObject for signals
                 channels=1, 
                 dtype='int16', 
                 callback=self.audio_callback,
-                blocksize=1024  # Add blocksize for better performance
+                blocksize=1024
             ):
-                while self.recording:
-                    sd.sleep(100)
-                    # Allow Qt to process events periodically
-                    if QApplication.instance():
-                        QApplication.processEvents()
+                while not self._stop_event.wait(timeout=0.2):
+                    if not self.recording:
+                        break
                     
             self.logger.debug("Recording completed")
             self.state_manager.recording_completed()
@@ -137,13 +129,8 @@ class RecordingManager(QObject):  # Inherit from QObject for signals
             
         if self.recording:
             try:
-                # Convert numpy array to bytes and store thread-safely
                 with self._frames_lock:
-                    if indata.dtype != np.int16:
-                        audio_data = (indata * 32767).astype(np.int16)
-                    else:
-                        audio_data = indata.copy()
-                    self.frames.append(audio_data.tobytes())
+                    self.frames.append(indata.tobytes())
             except Exception as e:
                 self.logger.error(f"Error in audio callback: {e}")
 
@@ -154,6 +141,7 @@ class RecordingManager(QObject):  # Inherit from QObject for signals
         
         self.logger.debug("Stopping audio recording")
         self.recording = False
+        self._stop_event.set()
         self._progress_timer.stop()
         
         # Wait for the recording thread to finish
@@ -162,7 +150,6 @@ class RecordingManager(QObject):  # Inherit from QObject for signals
             if self.record_thread.is_alive():
                 self.logger.warning("Recording thread did not stop gracefully")
         
-        # Emit signal
         self.recording_stopped.emit()
 
     def save_audio(self):
@@ -189,20 +176,16 @@ class RecordingManager(QObject):  # Inherit from QObject for signals
 
     def _update_progress(self):
         """Update recording progress - runs in main thread."""
-        # if self.recording and self._recording_start_time:
-            # Calculate recording duration or audio level
-            # duration = self._recording_start_time.elapsed() / 1000.0  # Convert to seconds
-            # self.recording_progress.emit(duration)
-        pass
+        if self.recording and self._recording_start_time:
+            duration = time.time() - self._recording_start_time
+            self.recording_progress.emit(duration)
 
     def _handle_recording_error(self, error_message):
         """Handle recording errors - runs in main thread."""
         self.logger.error(f"Recording error handled: {error_message}")
-        # Reset state
         if hasattr(self.state_manager, 'stt_recording_failed'):
             self.state_manager.stt_recording_failed()
         else:
-            # Fallback
             if hasattr(self.state_manager, 'reset_stt_state'):
                 self.state_manager.reset_stt_state()
 
@@ -213,7 +196,6 @@ class RecordingManager(QObject):  # Inherit from QObject for signals
         
         self._progress_timer.stop()
         
-        # Clean up temporary files if needed
         if os.path.exists(self.audio_file_path):
             try:
                 os.remove(self.audio_file_path)
