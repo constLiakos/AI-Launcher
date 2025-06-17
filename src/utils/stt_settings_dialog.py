@@ -11,11 +11,11 @@ from utils.constants import STTDialogSize, STT, Text, Theme
 class STTSettingsDialog(QDialog):
     settings_changed = pyqtSignal()
 
-    def __init__(self, logger: logging.Logger, config, parent=None):
+    def __init__(self, config, parent=None):
         super().__init__(parent)
-        self.logger = logger.getChild('stt_settings_dialog')
+        self.logger = logging.getLogger(__name__)
         self.config = config
-        self.style_manager = StyleManager(logger)
+        self.style_manager = StyleManager()
         self._is_dragging = False
         self._drag_position = None
 

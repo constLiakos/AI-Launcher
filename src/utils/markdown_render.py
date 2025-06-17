@@ -59,8 +59,8 @@ class ThinkExtension(Extension):
 class MarkdownRenderer:
     """Handle markdown to HTML conversion."""
 
-    def __init__(self, logger: logging.Logger, style_manager: StyleManager):
-        self.logger = logger.getChild('markdown_render')
+    def __init__(self, style_manager: StyleManager):
+        self.logger = logging.getLogger(__name__)
         self.style_manager = style_manager
 
     def to_html(self, text):

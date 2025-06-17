@@ -17,10 +17,10 @@ class RecordingManager(QObject):  # Inherit from QObject for signals
     audio_saved = pyqtSignal(str)  # File path
     recording_progress = pyqtSignal(float)  # Recording duration or level
     
-    def __init__(self, logger: logging.Logger, state_manager, config, parent=None):
+    def __init__(self, state_manager, config, parent=None):
         super().__init__(parent)
         
-        self.logger = logger.getChild('recording_manager')
+        self.logger = logging.getLogger(__name__)
         self.state_manager: StateManager = state_manager
         self.config = config
         self.tmp_dir = self.config.get('tmp_dir', Directories.DEFAULT_TMP)

@@ -15,7 +15,7 @@ class HotkeyRecorderDialog(QDialog):
     def __init__(self, parent=None, current_hotkey="", title="Record Hotkey", config=None):
         super().__init__(parent)
         self.logger = logging.getLogger(__name__)
-        self.style_manager = StyleManager(self.logger)
+        self.style_manager = StyleManager()
         self.config = config
 
         self.current_hotkey = current_hotkey

@@ -21,13 +21,14 @@ from utils.constants import STT, Conversation, ElementSize, Files, InputSettings
 from managers.state_manager import StateManager
 from utils.stt_api_client import SttApiClient
 
-logger = logging.getLogger(__name__)
-
 
 class Launcher(QMainWindow):
     def __init__(self, logdir: str, debug=False):
         super().__init__()
+
         self._setup_logging(logdir, debug)
+        self.logger = logging.getLogger(__name__)
+
         self._initialize_core_components()
         self._initialize_managers()
         self._setup_signal_connections()
@@ -93,9 +94,9 @@ class Launcher(QMainWindow):
     def _initialize_core_components(self):
         """Initialize config, API client, etc."""
         self.config = Config()
-        self.api_client = ApiClient(logger, self.config)
+        self.api_client = ApiClient(self.config)
         self.stt_api_client = None
-        self.window_manager = WindowManager(logger, self.config)
+        self.window_manager = WindowManager(self.config)
 
     def _initialize_managers(self):
         """Initialize managers"""
@@ -103,18 +104,18 @@ class Launcher(QMainWindow):
             'message_history_limit', Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT)
         # Initialize managers
         self.conversation_manager = ConversationManager(
-            logger, max_conversations=conversation_history_limit)
-        self.style_manager = StyleManager(logger)
+            max_conversations=conversation_history_limit)
+        self.style_manager = StyleManager()
         self.animation_manager = AnimationManager(
-            self, logger, self.style_manager)
-        self.state_manager = StateManager(self.config, logger)
-        self.hotkey_manager = HotkeyManager(logger, self.config)
+            self, self.style_manager)
+        self.state_manager = StateManager(self.config)
+        self.hotkey_manager = HotkeyManager(self.config)
         self.recording_manager = RecordingManager(
-            logger, state_manager=self.state_manager, config=self.config)
+            state_manager=self.state_manager, config=self.config)
         self.tray_manager = TrayManager(
-            logger, self.show_window, self.hide_window, self.open_settings, self.quit_application)
+            self.show_window, self.hide_window, self.open_settings, self.quit_application)
         self.ui_manager = UIManager(
-            self, logger, self.config, self.style_manager)
+            self, self.config, self.style_manager)
         
         # Set up WindowManager after window exists
         self.window_manager.set_window(self)
@@ -136,50 +137,50 @@ class Launcher(QMainWindow):
         try:
             if hasattr(self, 'tray_manager') and self.tray_manager:
                 self.tray_manager.show_message(title, message)
-                logger.debug(f"Tray message shown: {title} - {message}")
+                self.logger.debug(f"Tray message shown: {title} - {message}")
             else:
-                logger.warning("TrayManager not available for message display")
+                self.logger.warning("TrayManager not available for message display")
         except Exception as e:
-            logger.error(f"Error showing tray message: {e}")
+            self.logger.error(f"Error showing tray message: {e}")
 
     def _on_window_minimized(self):
         """Handle window minimized event"""
-        logger.debug("Window minimized - checking clear settings")
+        self.logger.debug("Window minimized - checking clear settings")
         # You can add any logic here for when window is minimized
-        logger.info("Hiding window to system tray")
+        self.logger.info("Hiding window to system tray")
         
         # Show tray message if tray is available
         if hasattr(self.tray_manager, 'tray_icon'):
-            logger.debug("Showing background tray message")
+            self.logger.debug("Showing background tray message")
         else:
-            logger.debug("No tray manager available for background message")
+            self.logger.debug("No tray manager available for background message")
         
         # Clear history if configured
         clear_history_on_minimize = self.config.get('clear_history_on_minimize', False)
         if clear_history_on_minimize:
-            logger.debug("Clearing conversation history (config enabled)")
+            self.logger.debug("Clearing conversation history (config enabled)")
             self.conversation_manager.clear_current_conversation()
 
         # Check if we should clear response on minimize
         clear_on_minimize = self.config.get('clear_on_minimize', False)
         if clear_on_minimize:
-            logger.debug("Clearing previous response on window show (config enabled)")
+            self.logger.debug("Clearing previous response on window show (config enabled)")
             self.ui_manager.clear_response_on_minimize()
         
-        logger.info("Window hidden successfully")
+        self.logger.info("Window hidden successfully")
         
     def _on_window_restored(self):
         """Handle window restored from minimized state"""
-        logger.debug("Window restored from minimized state")
+        self.logger.debug("Window restored from minimized state")
 
         # Focus on input field
         if hasattr(self.ui_manager, 'input_field'):
             self.ui_manager.input_field.setFocus()
-            logger.debug("Input field focused")
+            self.logger.debug("Input field focused")
         else:
-            logger.debug("No input field to focus")
+            self.logger.debug("No input field to focus")
             
-        logger.info("Window shown successfully")
+        self.logger.info("Window shown successfully")
 
 
     def stt_configure(self):
@@ -191,11 +192,11 @@ class Launcher(QMainWindow):
 
         try:
             if self.stt_api_client is None:
-                self.stt_api_client = SttApiClient(logger, self.config)
-            logger.info("STT API client initialized successfully")
+                self.stt_api_client = SttApiClient(self.config)
+            self.logger.info("STT API client initialized successfully")
             return True
         except Exception as e:
-            logger.error(f"Failed to initialize STT API client: {e}")
+            self.logger.error(f"Failed to initialize STT API client: {e}")
             self.stt_enabled = False
             self.stt_api_client = None
             return False
@@ -270,7 +271,7 @@ class Launcher(QMainWindow):
 
     def animate_resize(self, width, height, fast=False):
         """Animate window resize using WindowManager."""
-        logger.debug(f"Animating resize to {width}x{height}, fast={fast}")
+        self.logger.debug(f"Animating resize to {width}x{height}, fast={fast}")
         self.animation_manager.animate_window_resize(self, width, height, fast)
         # self.window_manager.animate_resize(width, height, fast)
 
@@ -284,10 +285,10 @@ class Launcher(QMainWindow):
     @pyqtSlot(str)
     def send_request(self, prompt):
         """Send request - called by StateManager signal."""
-        logger.debug(f"Sending request with prompt length: {len(prompt)}")
+        self.logger.debug(f"Sending request with prompt length: {len(prompt)}")
 
         if not prompt or self.state_manager.is_currently_processing():
-            logger.debug(
+            self.logger.debug(
                 "Request blocked - empty prompt or already processing")
             return
 
@@ -300,7 +301,7 @@ class Launcher(QMainWindow):
         request_id = self.state_manager.start_processing()
         self.ui_manager.set_visual_state("thinking")
 
-        logger.debug(f"Started processing with request_id: {request_id}")
+        self.logger.debug(f"Started processing with request_id: {request_id}")
 
         # Execute request
         QTimer.singleShot(50, lambda: self._execute_request(request_id))
@@ -308,7 +309,7 @@ class Launcher(QMainWindow):
     @pyqtSlot(str)
     def on_stt_state_changed(self, state):
         """Handle STT state changes."""
-        logger.debug(f"STT state changed to: {state}")
+        self.logger.debug(f"STT state changed to: {state}")
 
         if state == "recording":
             self.ui_manager.stt_button.setObjectName("sttButtonRecording")
@@ -317,7 +318,7 @@ class Launcher(QMainWindow):
             self.ui_manager.stt_button.setObjectName("sttButton")
             self.ui_manager.update_stt_button_appearance(state)
         else:
-            logger.info("Wrong State when updating stt button")
+            self.logger.info("Wrong State when updating stt button")
 
     @pyqtSlot()
     def on_recording_completed(self):
@@ -332,13 +333,13 @@ class Launcher(QMainWindow):
                     self.ui_manager.handle_multiline_resize()
         except Exception as e:
             # Log the error and optionally show user feedback
-            logger.error(f"Failed to transcribe audio: {str(e)}")
+            self.logger.error(f"Failed to transcribe audio: {str(e)}")
             self.ui_manager.show_error_message(f"Transcription failed: {str(e)}")
 
     def _update_response_display(self):
         """Update response display with basic markdown formatting."""
         response_text = self.state_manager.get_accumulated_response()
-        logger.debug(f"accumulated response unformatted: \n{response_text}")
+        self.logger.debug(f"accumulated response unformatted: \n{response_text}")
 
         if not self.ui_manager.is_conversation_visible():
             self.ui_manager.show_conversation_area()
@@ -349,7 +350,7 @@ class Launcher(QMainWindow):
     def _handle_request_lifecycle(self, request_id, action):
         """Centralized request lifecycle management."""
         if not self.state_manager.is_request_valid(request_id):
-            logger.debug(f"Invalid request_id {request_id}, ignoring {action}")
+            self.logger.debug(f"Invalid request_id {request_id}, ignoring {action}")
             return False
         return True
 
@@ -364,7 +365,7 @@ class Launcher(QMainWindow):
             self._update_response_display()
             self._auto_scroll_response()
         except Exception as e:
-            logger.error(f"Error handling chunk: {e}")
+            self.logger.error(f"Error handling chunk: {e}")
             self._handle_error(
                 f"Error processing response: {str(e)}", request_id)
 
@@ -382,7 +383,7 @@ class Launcher(QMainWindow):
         if hasattr(self, 'current_user_prompt') and full_response:
             self.conversation_manager.add_conversation(
                 self.current_user_prompt, full_response)
-            logger.debug("Conversation added to history")
+            self.logger.debug("Conversation added to history")
 
         # Final update of response
         self._update_response_display()
@@ -395,7 +396,7 @@ class Launcher(QMainWindow):
     def _handle_error(self, error_message, request_id=None):
         """Handle errors during API calls."""
         try:
-            logger.error(f"API Error (request_id: {request_id}): {error_message}")
+            self.logger.error(f"API Error (request_id: {request_id}): {error_message}")
             
             # Update UI state
             self.ui_manager.set_visual_state("error")
@@ -412,7 +413,7 @@ class Launcher(QMainWindow):
             self.ui_manager.show_error_message(f"Error: {error_message}")
             
         except Exception as e:
-            logger.error(f"Error in _handle_error: {e}")
+            self.logger.error(f"Error in _handle_error: {e}")
             # Fallback: just show error popup
             self.ui_manager.show_error_message(f"Error: {error_message}")
 
@@ -429,7 +430,7 @@ class Launcher(QMainWindow):
                 conversation_history=conversation_history
             )
             if not worker:
-                logger.error("Failed to create streaming worker")
+                self.logger.error("Failed to create streaming worker")
                 self._handle_error(
                     "Failed to create request worker", request_id)
                 return
@@ -448,7 +449,7 @@ class Launcher(QMainWindow):
             worker.start()
 
         except Exception as e:
-            logger.error(f"Error executing request: {e}")
+            self.logger.error(f"Error executing request: {e}")
             self._handle_error(str(e), request_id)
 
     @pyqtSlot()
@@ -500,14 +501,14 @@ class Launcher(QMainWindow):
 
     def on_stt_settings_changed(self):
         """STT settings change"""
-        logger.info("STT Settings Changed")
+        self.logger.info("STT Settings Changed")
         self.stt_configure()
         self.update_stt_button_visibility()
 
     def open_settings(self):
         """Open the settings dialog."""
-        logger.debug("Opening settings dialog")
-        dialog: SettingsDialog = SettingsDialog(logger, self.config, self)
+        self.logger.debug("Opening settings dialog")
+        dialog: SettingsDialog = SettingsDialog(self.config, self)
         # Connect the theme change signal
         dialog.theme_changed.connect(self.on_theme_changed)
         # Let the dialog calculate its size first
@@ -520,65 +521,65 @@ class Launcher(QMainWindow):
         center_y = main_rect.y() + (main_rect.height() - dialog_rect.height()) // 2
         dialog.move(center_x, center_y)
         if dialog.exec_():
-            logger.debug("Settings dialog accepted, processing changes")
+            self.logger.debug("Settings dialog accepted, processing changes")
             
             # Check if multiline setting changed
             old_multiline = self.ui_manager.is_multiline_input()
             new_multiline = self.config.get('multiline_input', False)
-            logger.debug(f"Multiline input - old: {old_multiline}, new: {new_multiline}")
+            self.logger.debug(f"Multiline input - old: {old_multiline}, new: {new_multiline}")
             
             if new_multiline != old_multiline:
-                logger.info(f"Multiline input mode changing from {old_multiline} to {new_multiline}")
+                self.logger.info(f"Multiline input mode changing from {old_multiline} to {new_multiline}")
                 self.ui_manager.set_input_type(new_multiline)
-                logger.debug("State manager updated with new input type")
+                self.logger.debug("State manager updated with new input type")
                 
                 # Update button appearance
                 self.ui_manager.update_multiline_toggle_button(new_multiline)
-                logger.debug("Multiline toggle button appearance updated")
+                self.logger.debug("Multiline toggle button appearance updated")
                 
                 # Recreate UI with new input mode
                 self.ui_manager.recreate_input_field(new_multiline)
-                logger.debug("Input field recreated with new mode")
+                self.logger.debug("Input field recreated with new mode")
                 
                 # Reconnect signals
                 self.ui_manager.connect_signals(self._get_signal_callbacks)
-                logger.debug("UI signals reconnected")
+                self.logger.debug("UI signals reconnected")
 
             # Check theme changes
             old_theme = self.current_theme
             new_theme = self.config.get('theme', Theme.DEFAULT_THEME)
-            logger.debug(f"Theme - old: {old_theme}, new: {new_theme}")
+            self.logger.debug(f"Theme - old: {old_theme}, new: {new_theme}")
             
             if new_theme != old_theme:
-                logger.info(f"Theme changing from {old_theme} to {new_theme}")
+                self.logger.info(f"Theme changing from {old_theme} to {new_theme}")
                 self.current_theme = new_theme
                 self.style_manager.set_theme(self.current_theme)
-                logger.debug("Style manager updated with new theme")
+                self.logger.debug("Style manager updated with new theme")
                 self.apply_modern_style()
-                logger.debug("Modern style applied")
+                self.logger.debug("Modern style applied")
 
             # Show feedback with larger, visible status
             delay_seconds = self.config.get(
                 'request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)
             status_msg = f"✓ Settings saved! Request delay: {delay_seconds}s"
-            logger.info(f"Settings saved successfully - request delay: {delay_seconds}s")
+            self.logger.info(f"Settings saved successfully - request delay: {delay_seconds}s")
             self.show_status(status_msg)
 
             # Update API client
-            logger.debug("Updating API client with new configuration")
-            self.api_client = ApiClient(logger, self.config)
-            logger.debug("API client updated")
+            self.logger.debug("Updating API client with new configuration")
+            self.api_client = ApiClient(self.config)
+            self.logger.debug("API client updated")
             
-            logger.debug("Restarting hotkey listener")
+            self.logger.debug("Restarting hotkey listener")
             self.restart_hotkey_listener()
-            logger.debug("Hotkey listener restarted")
+            self.logger.debug("Hotkey listener restarted")
 
             # Hide status after longer delay
             QTimer.singleShot(
                 Timing.SETTINGS_FEEDBACK_DURATION, self.hide_status)
-            logger.debug(f"Status hide timer set for {Timing.SETTINGS_FEEDBACK_DURATION}ms")
+            self.logger.debug(f"Status hide timer set for {Timing.SETTINGS_FEEDBACK_DURATION}ms")
         else:
-            logger.debug("Settings dialog cancelled by user")
+            self.logger.debug("Settings dialog cancelled by user")
     def closeEvent(self, event):
         """Override close event to hide to tray instead of quitting."""
         self.window_manager.handle_close_event(event)
@@ -607,27 +608,27 @@ class Launcher(QMainWindow):
 
     def on_state_changed(self, new_state):
         """Handle state changes from StateManager."""
-        logger.debug(f"State changed to: {new_state}")
+        self.logger.debug(f"State changed to: {new_state}")
         self.set_input_state(new_state)
 
         if new_state == "normal" and not self.state_manager.get_current_prompt():
-            logger.debug(
+            self.logger.debug(
                 "State is normal with no prompt - checking if response should be hidden")
 
     def on_processing_changed(self, is_processing):
         """Handle processing state changes from StateManager."""
-        logger.debug(
+        self.logger.debug(
             f"Processing state changed: {'started' if is_processing else 'stopped'}")
         self.ui_manager.settings_button.setEnabled(not is_processing)
 
     def on_response_ready(self, response):
         """Handle when response is ready to display."""
-        logger.debug(f"Response ready, length: {len(response)} characters")
+        self.logger.debug(f"Response ready, length: {len(response)} characters")
         self.ui_manager.conversation_area.setHtml(response)
 
     def on_request_cancelled(self):
         """Handle request cancellation from StateManager."""
-        logger.debug("Request cancelled - resetting UI state")
+        self.logger.debug("Request cancelled - resetting UI state")
         self.ui_manager.set_visual_state("normal")
         self.ui_manager.settings_button.setEnabled(True)
 
@@ -636,7 +637,7 @@ class Launcher(QMainWindow):
         Handle input changes - coordinate between StateManager and UIManager.
         This is where the coordination happens.
         """
-        logger.debug(f"Input changed, length: {len(text)} characters")
+        self.logger.debug(f"Input changed, length: {len(text)} characters")
         self.state_manager.set_prompt(text, self.ui_manager.is_multiline_input())
 
         self.ui_manager.on_input_changed(text)
@@ -645,7 +646,7 @@ class Launcher(QMainWindow):
 
     def force_send_request(self):
         """Delegate to StateManager."""
-        logger.debug("Force send request triggered (Enter key pressed)")
+        self.logger.debug("Force send request triggered (Enter key pressed)")
         self.state_manager.force_send_request()
 
     # Add event filter for handling key presses

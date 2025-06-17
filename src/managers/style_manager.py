@@ -6,8 +6,8 @@ from utils.theme_colors import ThemeColors
 
 class StyleManager:
     """Manages all UI styles for the application."""
-    def __init__(self, logger:logging.Logger):
-        self.logger = logger.getChild('style_manager')
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
 
         self.current_theme = Theme.DEFAULT_THEME
         self.themes = ThemeColors.get_all_themes()

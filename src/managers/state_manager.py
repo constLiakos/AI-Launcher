@@ -15,9 +15,9 @@ class StateManager(QObject):
     stt_state_changed = pyqtSignal(str)
     recording_completed_sg = pyqtSignal()
 
-    def __init__(self, config, logger:logging.Logger):
+    def __init__(self, config):
         super().__init__()
-        self.logger = logger.getChild('state_manager')
+        self.logger = logging.getLogger(__name__)
         self.config = config
 
         self.current_prompt = ""
@@ -95,7 +95,6 @@ class StateManager(QObject):
         try:
             # Create worker with current application state
             worker = StreamingWorker(
-                logger=self.logger,
                 api_client=api_client,
                 prompt=self.current_prompt,
                 request_id=request_id,

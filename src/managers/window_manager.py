@@ -1,3 +1,4 @@
+import logging
 from PyQt5.QtCore import QObject, pyqtSignal, QRect, QPropertyAnimation, QEasingCurve, QPoint, QTimer
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
@@ -12,9 +13,9 @@ class WindowManager(QObject):
     window_minimized = pyqtSignal()
     window_restored = pyqtSignal()
     
-    def __init__(self, logger, config):
+    def __init__(self, config):
         super().__init__()
-        self.logger = logger.getChild('window_manager')
+        self.logger = logging.getLogger(__name__)
         self.config = config
         self._window = None
         self._animation = None

@@ -11,7 +11,7 @@ class HotkeyManager(QObject):
     hotkey_pressed = pyqtSignal()
     stt_hotkey_pressed = pyqtSignal()
 
-    def __init__(self, logger: logging.Logger, config):
+    def __init__(self, config):
         """
         Initialize hotkey manager.
         Args:
@@ -19,7 +19,7 @@ class HotkeyManager(QObject):
             config: Configuration object to get hotkey settings
         """
         super().__init__()
-        self.logger = logger.getChild('hotkey_manager')
+        self.logger = logging.getLogger(__name__)
 
         self.logger.debug("HotkeyManager initializing...")
         self.config = config

@@ -13,11 +13,11 @@ from utils.version import VERSION
 class SettingsDialog(QDialog):
     theme_changed = pyqtSignal(str)
     
-    def __init__(self, logger: logging.Logger, config, parent=None):
+    def __init__(self, config, parent=None):
         super().__init__(parent)
-        self.logger = logger.getChild('settings_dialogue')
+        self.logger = logging.getLogger(__name__)
         self.config = config
-        self.style_manager = StyleManager(logger)
+        self.style_manager = StyleManager()
         self.about_dialog = None
         self.stt_settings_dialog = None
         self._is_dragging = False
@@ -239,7 +239,7 @@ class SettingsDialog(QDialog):
         
         try:
             temp_config = self._get_current_api_config()
-            temp_api_client = ApiClient(config=temp_config, logger=self.logger)
+            temp_api_client = ApiClient(config=temp_config)
             model_ids = temp_api_client.get_available_models()
             
             if LLM.DEFAULT_LLM_MODEL not in model_ids:
@@ -256,7 +256,7 @@ class SettingsDialog(QDialog):
     def _get_models_from_saved_config(self):
         """Get models using the saved config when UI isn't ready yet."""
         try:
-            temp_api_client = ApiClient(config=self.config, logger=self.logger)
+            temp_api_client = ApiClient(config=self.config)
             model_ids = temp_api_client.get_available_models()
             
             if LLM.DEFAULT_LLM_MODEL not in model_ids:
@@ -391,7 +391,7 @@ class SettingsDialog(QDialog):
         """Show the About dialog."""
         self.logger.debug("Opening About dialog")
         if self.about_dialog is None:
-            self.about_dialog = AboutDialog(self.logger, self)
+            self.about_dialog = AboutDialog(self)
         self.about_dialog.show()
         self.about_dialog.raise_()
         self.about_dialog.activateWindow()
@@ -400,7 +400,7 @@ class SettingsDialog(QDialog):
         """Show the STT Settings dialog."""
         self.logger.debug("Opening STT Settings dialog")
         if self.stt_settings_dialog is None:
-            self.stt_settings_dialog = STTSettingsDialog(self.logger.parent, self.config, self)
+            self.stt_settings_dialog = STTSettingsDialog(self.config, self)
             current_theme = self.config.get('theme', Theme.DEFAULT_THEME)
             self.stt_settings_dialog.style_manager.set_theme(current_theme)
             self.stt_settings_dialog.apply_styles() 

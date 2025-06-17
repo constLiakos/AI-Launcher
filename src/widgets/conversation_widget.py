@@ -13,12 +13,12 @@ class ConversationWidget(QWidget):
     # Signals
     copy_requested = pyqtSignal()
     
-    def __init__(self, style_manager, logger, parent=None):
+    def __init__(self, style_manager, parent=None):
         super().__init__(parent)
         self.style_manager = style_manager
-        self.logger = logger.getChild('conversation_widget')
+        self.logger = logging.getLogger(__name__)
         self.conversation_manager = None
-        self.markdown_render = MarkdownRenderer(logger, style_manager)
+        self.markdown_render = MarkdownRenderer(style_manager)
         
         # State
         self.show_history_mode = False

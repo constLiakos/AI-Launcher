@@ -17,10 +17,10 @@ class UIManager(QObject):
     expansion_changed = pyqtSignal(bool)
     visual_state_changed = pyqtSignal(str)
 
-    def __init__(self, parent_window, logger, config, style_manager:StyleManager):
+    def __init__(self, parent_window, config, style_manager:StyleManager):
         super().__init__()
         self.parent = parent_window
-        self.logger = logger.getChild('ui_manager')
+        self.logger = logging.getLogger(__name__)
         self.config = config
         self.style_manager = style_manager
 
@@ -44,7 +44,7 @@ class UIManager(QObject):
         self.conversation_visible = False
         
         # Managers
-        self.markdown_render = MarkdownRenderer(logger, self.style_manager)
+        self.markdown_render = MarkdownRenderer(self.style_manager)
 
     def setup_ui(self, conversation_manager):
         """Create and setup all UI components."""
@@ -606,7 +606,6 @@ class UIManager(QObject):
         # Create conversation widget
         self.conversation_widget = ConversationWidget(
             style_manager=self.style_manager,
-            logger=self.logger,
             parent=self.main_container
         )
         

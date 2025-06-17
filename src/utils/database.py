@@ -104,8 +104,8 @@ class ConversationResponse(BaseModel):
 
 # Main Manager Class
 class AIConversationManager:
-    def __init__(self, logger):
-        self.logger: logging.Logger = logger.getChild('database')
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
         self.db_connection_string = Database.CONVERSATIONS_DATABASE_CONNECTION_STRING
         self.logger.info(f"Initializing AIConversationManager with database: {self.db_connection_string}")
         

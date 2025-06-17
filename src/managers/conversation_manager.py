@@ -1,3 +1,4 @@
+import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from utils.constants import Conversation
@@ -6,8 +7,8 @@ from utils.database import AIConversationManager, ConversationCreate, MessageCre
 class ConversationManager:
     """Manages conversation history for context in API requests using database storage."""
     
-    def __init__(self, logger, max_conversations: int = Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT, db_manager: Optional[AIConversationManager] = None):
-        self.logger = logger
+    def __init__(self, max_conversations: int = Conversation.DEFAULT_CONVERSATION_HISTORY_LIMIT, db_manager: Optional[AIConversationManager] = None):
+        self.logger = logging.getLogger(__name__)
         self.max_conversations = max_conversations
         self.current_conversation_id: Optional[str] = None
         
@@ -15,7 +16,7 @@ class ConversationManager:
         if db_manager:
             self.db_manager = db_manager
         else:
-            self.db_manager = AIConversationManager(logger)
+            self.db_manager = AIConversationManager()
         
         self.logger.info(f"ConversationManager initialized with max_conversations: {max_conversations}")
     

@@ -1,3 +1,4 @@
+import logging
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                             QPushButton, QTextBrowser)
 from PyQt5.QtCore import Qt
@@ -9,10 +10,10 @@ from PyQt5.QtGui import QFont, QFontDatabase
 from utils.version import VERSION
 
 class AboutDialog(QDialog):
-    def __init__(self, logger, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.logger = logger.getChild('about_dialog')
-        self.style_manager = StyleManager(logger)
+        self.logger = logging.getLogger(__name__)
+        self.style_manager = StyleManager()
         self.setup_ui()
         self.apply_styles()
 

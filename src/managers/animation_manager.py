@@ -7,9 +7,9 @@ from utils.constants import AnimationConfig
 class AnimationManager(QObject):
     """Manages all animations for the application."""
     
-    def __init__(self, parent_widget, logger:logging.Logger, style_manager:StyleManager):
+    def __init__(self, parent_widget, style_manager:StyleManager):
         super().__init__(parent_widget)
-        self.logger = logger.getChild('animation_manager')
+        self.logger = logging.getLogger(__name__)
         self.thinking_timer = QTimer()
         self.thinking_timer.timeout.connect(self.update_thinking_animation)
         self.thinking_phase = 0

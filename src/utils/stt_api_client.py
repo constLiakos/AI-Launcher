@@ -7,7 +7,7 @@ from utils.constants import STT, Files
 
 
 class SttApiClient:
-    def __init__(self, logger:logging.Logger, config):
+    def __init__(self, config):
         """
         Initializes the STT API client.
         Args:
@@ -15,7 +15,7 @@ class SttApiClient:
                            Expected keys: 'stt_api_base', 'stt_api_key', 
                                           'stt_model', 'stt_request_timeout'.
         """
-        self.logger = logger.getChild('stt_api_client')
+        self.logger = logging.getLogger(__name__)
         self.api_base_url = config.get('stt_api_base')
         self.api_token = config.get('stt_api_key')
         self.model_name = config.get('stt_model')

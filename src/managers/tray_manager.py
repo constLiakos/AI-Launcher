@@ -5,9 +5,9 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QFont
 from utils.constants import Style, Colors, Text, Timing, TrayIcon
 
 class TrayManager(QSystemTrayIcon):
-    def __init__(self, logger: logging.Logger, show_window, hide_window, open_settings, quit_application):
+    def __init__(self, show_window, hide_window, open_settings, quit_application):
         super().__init__()
-        self.logger = logger
+        self.logger = logging.getLogger(__name__)
         self.show_window = show_window
         self.hide_window = hide_window
         self.open_settings = open_settings

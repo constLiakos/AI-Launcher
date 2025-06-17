@@ -1,3 +1,4 @@
+import logging
 from PyQt5.QtCore import QThread, pyqtSignal
 from utils.api_client import ApiClient
 
@@ -7,9 +8,9 @@ class StreamingWorker(QThread):
     response_complete = pyqtSignal()  # Signal when response is complete
     error_occurred = pyqtSignal(str)  # Signal for errors
 
-    def __init__(self, logger, api_client, prompt, request_id, conversation_history=None):
+    def __init__(self, api_client, prompt, request_id, conversation_history=None):
         super().__init__()
-        self.logger = logger.getChild('streaming_worker')
+        self.logger = logging.getLogger(__name__)
         self.api_client:ApiClient = api_client
         self.prompt = prompt
         self.request_id = request_id

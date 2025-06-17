@@ -1,11 +1,12 @@
+import logging
 import requests
 import json
 
 from utils.constants import LLM
 
 class ApiClient:
-    def __init__(self, logger, config):
-        self.logger = logger.getChild('api_client')
+    def __init__(self, config):
+        self.logger = logging.getLogger(__name__)
         self.config = config
         self.current_request = None
         self.logger.debug("ApiClient initialized")
