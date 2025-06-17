@@ -146,7 +146,7 @@ class RecordingManager(QObject):
         
         # Wait for the recording thread to finish
         if self.record_thread and self.record_thread.is_alive():
-            self.record_thread.join(timeout=2.0)
+            self.record_thread.join(timeout=5.0)
             if self.record_thread.is_alive():
                 self.logger.warning("Recording thread did not stop gracefully")
         
