@@ -599,9 +599,6 @@ class UIManager(QObject):
         else:
             self.show_conversation_area()
 
-    def reapply_conversation_history_theme(self):
-        self.conversation_widget.reapply_conversation_history_theme()
-
     def set_response_text(self, text):
         """Set response text - now aware of history mode."""
         self.conversation_widget.set_response_text(text)
@@ -1034,7 +1031,7 @@ class UIManager(QObject):
             
             self.conversation_history_widget.setVisible(True)
             self.conversation_history_widget.raise_()
-            self.conversation_history_widget.load_conversations()
+            # self.conversation_history_widget.load_conversations()
             
             self.logger.debug("Conversation history widget shown")
             
@@ -1086,4 +1083,35 @@ class UIManager(QObject):
             self.logger.error(f"Error positioning history widget: {e}")
 
 
+    def apply_new_settings(self, signal_callbacks):
+        """Apply new settings (Main Settings Dialog)"""
 
+        # Check if multiline setting changed
+        old_multiline = self.is_multiline_input()
+        new_multiline = self.config.get('multiline_input', False)
+        self.logger.debug(f"Multiline input - old: {old_multiline}, new: {new_multiline}")
+        
+        if new_multiline != old_multiline:
+            self.logger.info(f"Multiline input mode changing from {old_multiline} to {new_multiline}")
+            self.set_input_type(new_multiline)
+            self.logger.debug("State manager updated with new input type")
+            
+            # Update button appearance
+            self.update_multiline_toggle_button(new_multiline)
+            self.logger.debug("Multiline toggle button appearance updated")
+            
+            # Recreate UI with new input mode
+            self.recreate_input_field(new_multiline)
+            self.logger.debug("Input field recreated with new mode")
+            
+            # Reconnect signals
+            self.connect_signals(signal_callbacks)
+            self.logger.debug("UI signals reconnected")
+
+
+    def reapply_new_theme(self):
+        """Reapply new theme"""
+        self.conversation_widget.reapply_conversation_history_theme()
+        self.conversation_history_widget.reapply_styles()
+        # self.conversation_toggle_button.style().unpolish(self.conversation_toggle_button)
+        # self.conversation_toggle_button.style().polish(self.conversation_toggle_button)

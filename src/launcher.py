@@ -280,7 +280,7 @@ class Launcher(QMainWindow):
         """Apply the modern stylesheet using StyleManager."""
         self.setStyleSheet(
             self.style_manager.get_complete_style(self.current_theme))
-        self.ui_manager.reapply_conversation_history_theme()
+        self.ui_manager.reapply_new_theme()
 
 
     @pyqtSlot(str)
@@ -528,42 +528,8 @@ class Launcher(QMainWindow):
         dialog.move(center_x, center_y)
         if dialog.exec_():
             self.logger.debug("Settings dialog accepted, processing changes")
+            self.ui_manager.apply_new_settings(self._get_signal_callbacks)
             
-            # Check if multiline setting changed
-            old_multiline = self.ui_manager.is_multiline_input()
-            new_multiline = self.config.get('multiline_input', False)
-            self.logger.debug(f"Multiline input - old: {old_multiline}, new: {new_multiline}")
-            
-            if new_multiline != old_multiline:
-                self.logger.info(f"Multiline input mode changing from {old_multiline} to {new_multiline}")
-                self.ui_manager.set_input_type(new_multiline)
-                self.logger.debug("State manager updated with new input type")
-                
-                # Update button appearance
-                self.ui_manager.update_multiline_toggle_button(new_multiline)
-                self.logger.debug("Multiline toggle button appearance updated")
-                
-                # Recreate UI with new input mode
-                self.ui_manager.recreate_input_field(new_multiline)
-                self.logger.debug("Input field recreated with new mode")
-                
-                # Reconnect signals
-                self.ui_manager.connect_signals(self._get_signal_callbacks)
-                self.logger.debug("UI signals reconnected")
-
-            # Check theme changes
-            old_theme = self.current_theme
-            new_theme = self.config.get('theme', Theme.DEFAULT_THEME)
-            self.logger.debug(f"Theme - old: {old_theme}, new: {new_theme}")
-            
-            if new_theme != old_theme:
-                self.logger.info(f"Theme changing from {old_theme} to {new_theme}")
-                self.current_theme = new_theme
-                self.style_manager.set_theme(self.current_theme)
-                self.logger.debug("Style manager updated with new theme")
-                self.apply_modern_style()
-                self.logger.debug("Modern style applied")
-
             # Show feedback with larger, visible status
             delay_seconds = self.config.get(
                 'request_delay', Timing.DEFAULT_REQUEST_DELAY_SECONDS)
@@ -586,6 +552,7 @@ class Launcher(QMainWindow):
             self.logger.debug(f"Status hide timer set for {Timing.SETTINGS_FEEDBACK_DURATION}ms")
         else:
             self.logger.debug("Settings dialog cancelled by user")
+
     def closeEvent(self, event):
         """Override close event to hide to tray instead of quitting."""
         self.window_manager.handle_close_event(event)

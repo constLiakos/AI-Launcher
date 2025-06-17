@@ -101,7 +101,11 @@ class ConversationHistoryWidget(QWidget):
         self.setStyleSheet(self.style_manager.get_conversation_history_style())
         self.style().unpolish(self)
         self.style().polish(self)
-        
+
+    def reapply_styles(self):
+        """Reapply Styles"""
+        self._apply_styles()
+
     def set_conversation_manager(self, conversation_manager):
         """Set the conversation manager."""
         self.conversation_manager = conversation_manager
