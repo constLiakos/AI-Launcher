@@ -432,11 +432,11 @@ class UIManager(QObject):
     def update_conversation_history_toggle_button(self):
         """Update conversation toggle button appearance based on current state."""
         if self.conversation_history_widget and self.conversation_history_widget.isVisible():
-            self.conversation_history_button.setText("▶")
+            self.conversation_history_button.setText("◀")
             self.conversation_history_button.setToolTip("Hide Conversation History")
             self.conversation_history_button.setObjectName("conversationToggleButtonExpanded")
         else:
-            self.conversation_history_button.setText("◀")
+            self.conversation_history_button.setText("▶")
             self.conversation_history_button.setToolTip("Show Conversation History")
             self.conversation_history_button.setObjectName("conversationToggleButton")
         # Force style update
