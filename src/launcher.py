@@ -48,15 +48,29 @@ class Launcher(QMainWindow):
 
     def _setup_logging(self, logdir, debug):
         """Setup logging configuration."""
+        from logging.handlers import TimedRotatingFileHandler
+        
         log_level = logging.DEBUG if debug else logging.INFO
         app_log_dir = Path.joinpath(logdir, 'ai_launcher.log')
         print(f"AppLogDir: {app_log_dir}")
+        
+        # Create timed rotating file handler
+        file_handler = TimedRotatingFileHandler(
+            app_log_dir,
+            when='midnight',
+            interval=1,
+            backupCount=15,
+            encoding='utf-8'
+        )
+        # Custom namer to ensure .log extension
+        file_handler.namer = lambda name: name.replace('.log.', '_') + '.log'
+        
         logging.basicConfig(
             level=log_level,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             handlers=[
-                logging.FileHandler(app_log_dir),
-                logging.StreamHandler()  # Still shows in console
+                file_handler,
+                logging.StreamHandler()
             ]
         )
 
