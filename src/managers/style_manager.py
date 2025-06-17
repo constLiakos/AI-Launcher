@@ -638,7 +638,7 @@ class StyleManager:
         """Get style for combo boxes."""
         colors = self.get_theme_colors()
         return f"""
-        #settingsComboBox {{
+        QComboBox {{
             padding: 12px 16px;
             border: 2px solid {colors['settings_input_border']};
             border-radius: 12px;
@@ -646,28 +646,18 @@ class StyleManager:
             color: {colors['text_primary']};
             min-height: 20px;
         }}
-        #settingsComboBox:focus {{
+        QComboBox:focus {{
             border: 2px solid {colors['border_focus']};
             outline: none;
         }}
         
-        /* Target dropdown with specific parent */
         QListView {{
-            border: 2px solid {colors['settings_input_border']} !important;
-            border-radius: 8px !important;
-            background: {colors['bg_secondary']} !important;
-            color: {colors['text_primary']} !important;
-            selection-background-color: {colors['combobox_selection_bg']} !important;
-        }}
-        QListView::item {{
-            padding: 8px 12px;
-            background: transparent;
-        }}
-        QListView::item:hover {{
-            background: {colors['combobox_item_hover']} !important;
-        }}
-        QListView::item:selected {{
-            background: {colors['combobox_selection_bg']} !important;
+            border: 2px solid {colors['settings_input_border']};
+            border-radius: 8px;
+            background: {colors['bg_secondary']};
+            color: {colors['text_primary']};
+            selection-background-color: {colors['combobox_item_hover']};
+            selection-color: {colors['text_on_item_hover']};
         }}
         """
     

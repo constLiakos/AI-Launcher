@@ -42,6 +42,8 @@ class ThemeColors:
             'text_inverse': '#ffffff',
             'text_thinking': "#c6c7cf",
             'text_tertiary': '#9ca3af',
+            'text_on_item_hover': "#ffffff",
+            # Text on Buttons
             'text_on_primary': '#ffffff',
             'text_on_secondary': '#374151',     
             # === BACKGROUND COLORS ===
@@ -115,7 +117,7 @@ class ThemeColors:
             'message_system_border': '#ffcc80',
             'dropdown_arrow_color': '#374151',       # For combo box down arrow
             'combobox_selection_bg': '#e0f2fe',      # For combobox item selection
-            'combobox_item_hover': '#f0f9ff',        # For combobox item hover
+            'combobox_item_hover': "#5da1f5",        # For combobox item hover
         }
     
     @staticmethod
@@ -144,6 +146,7 @@ class ThemeColors:
             'text_tertiary': '#9ca3af',
             'text_on_primary': '#ffffff',
             'text_on_secondary': '#ffffff',
+            'text_on_item_hover': "#1a1d29",
             # === BACKGROUND COLORS ===
             'bg_primary': 'rgba(45,49,66, 0.2)',
             'bg_secondary': '#252836',
@@ -215,7 +218,7 @@ class ThemeColors:
             'message_system_border': '#f59e0b',
             'dropdown_arrow_color': '#d1d5db',       # For combo box down arrow
             'combobox_selection_bg': '#374151',      # For combobox item selection
-            'combobox_item_hover': '#4b5563',        # For combobox item hover
+            'combobox_item_hover': "#7F95AF",        # For combobox item hover
         }
     
     @staticmethod
@@ -244,6 +247,7 @@ class ThemeColors:
             'text_tertiary': '#8A9992',
             'text_on_primary': '#ffffff',
             'text_on_secondary': '#33403C',     
+            'text_on_item_hover': "#ffffff",
             # === BACKGROUND COLORS ===
             'bg_primary': 'rgba(250,251,248, 0.2)',
             'bg_secondary': '#F1F4F0',
@@ -315,7 +319,7 @@ class ThemeColors:
             'message_system_border': '#FF7043',
             'dropdown_arrow_color': '#5D6B66',       # For combo box down arrow
             'combobox_selection_bg': '#E8F5E8',      # For combobox item selection
-            'combobox_item_hover': '#F1F8F1',        # For combobox item hover
+            'combobox_item_hover': "#71C274",        # For combobox item hover
         }
     
     @staticmethod
@@ -343,7 +347,8 @@ class ThemeColors:
             'text_thinking': "#B8A1AB",
             'text_tertiary': '#9E7B8A',
             'text_on_primary': '#ffffff',
-            'text_on_secondary': '#4A2C3A',     
+            'text_on_secondary': '#4A2C3A',
+            'text_on_item_hover': '#ffffff',
             # === BACKGROUND COLORS ===
             'bg_primary': 'rgba(253,248,251, 0.2)',
             'bg_secondary': '#F8F0F4',
@@ -415,7 +420,7 @@ class ThemeColors:
             'message_system_border': '#FF9800',
             'dropdown_arrow_color': '#6D4C57',       # For combo box down arrow
             'combobox_selection_bg': '#F7ECF0',      # For combobox item selection
-            'combobox_item_hover': '#FBEEF2',        # For combobox item hover
+            'combobox_item_hover': "#FA80A9",        # For combobox item hover
         }
         
     @staticmethod
@@ -443,10 +448,11 @@ class ThemeColors:
             'text_thinking': "#90A4AE",
             'text_tertiary': '#78909C',
             'text_on_primary': '#ffffff',
-            'text_on_secondary': '#2E3B2E',     
+            'text_on_secondary': '#2E3B2E',
+            'text_on_item_hover': "#2E3B2E",    
             # === BACKGROUND COLORS ===
             'bg_primary': 'rgba(253, 252, 250, 0.15)',  # Very subtle sky blue tint
-            'bg_secondary': '#F0F6FF',  # Gentle light blue
+            'bg_secondary': "#FAF3E9",  # Gentle light blue
             'bg_tertiary': '#F2F8F2',  # Gentle light green
             'bg_elevated': 'rgba(240, 246, 255, 0.9)',
             'bg_overlay': 'rgba(250, 252, 255, 0.8)',
@@ -515,5 +521,5 @@ class ThemeColors:
             'message_system_border': '#66BB6A',  # Pleasant green for system
             'dropdown_arrow_color': '#455A64',  # Evening sky color
             'combobox_selection_bg': '#E6F3FF',  # Gentle blue selection
-            'combobox_item_hover': '#F0F8FF',  # Soft blue hover
+            'combobox_item_hover': "#81C784",  # Soft blue hover
         }
