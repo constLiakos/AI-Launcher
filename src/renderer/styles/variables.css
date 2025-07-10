@@ -1,0 +1,10 @@
+:root {
+  --primary-color: #4f9cf9;
+  --secondary-color: #8b5cf6;
+  
+  --primary-hover: color-mix(in srgb, var(--primary-color) 80%, white);
+  --shadow-primary: color-mix(in srgb, var(--primary-color) 20%, transparent);
+  
+  --button-size: clamp(24px, 4vw, 32px);
+  --container-padding: clamp(12px, 2vw, 16px);
+}

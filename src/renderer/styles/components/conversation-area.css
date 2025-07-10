@@ -1,0 +1,439 @@
+/* =============================================================================
+   CONVERSATION AREA - ROUNDED DESIGN
+   ============================================================================= */
+   
+.conversation-area {
+  flex: 1;
+  background: var(--bg-elevated);
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all var(--transition-medium);
+  overflow: hidden;
+  display: none;
+}
+
+.conversation-area.visible {
+  opacity: 1;
+  transform: translateY(0);
+  display: flex;
+  flex-direction: column;
+}
+
+.conversation-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.conversation-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.conversation-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.message-container {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.conversation-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* =============================================================================
+   MESSAGES - ROUNDED BUBBLES
+   ============================================================================= */
+.message {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.message-user {
+  flex-direction: row-reverse;
+}
+
+.message-content {
+  max-width: 75%;
+  padding: 12px 18px;
+  border-radius: var(--border-radius-large);
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+
+.message-user .message-content {
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+  border-radius: var(--border-radius-large) var(--border-radius-large) 8px var(--border-radius-large);
+}
+
+.message-assistant .message-content {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-large) var(--border-radius-large) var(--border-radius-large) 8px;
+}
+
+.message-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.message-user .message-avatar {
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+}
+
+.message-assistant .message-avatar {
+  background: var(--bg-primary);
+  border: 2px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.message-placeholder {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 40px;
+  padding: 20px;
+}
+
+/* =============================================================================
+   MESSAGES
+   ============================================================================= */
+.message-system .message-content {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border-radius: var(--border-radius);
+  font-style: italic;
+}
+
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.message-user .message-avatar {
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+}
+
+.message-assistant .message-avatar {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.message-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.message-content {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: var(--border-radius);
+  position: relative;
+}
+
+.message-text {
+  padding: 0px 0px 0px 0px;
+  margin-bottom: 4px;
+  word-wrap: break-word;
+  line-height: 1.4;
+  user-select: text; /* Allow text selection */
+}
+.message-text ol, ul{
+  list-style-position: inside;
+}
+.message-text pre {
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.message-text code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+
+.message-text pre code {
+  padding: 0;
+  border-radius: 0;
+}
+
+.message-text a {
+  color: #61afef;
+  text-decoration: none;
+}
+
+.message-text a:hover {
+  text-decoration: underline;
+}
+
+.message-time {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+.message-attachments {
+  display: flex;
+  flex-wrap: wrap; /* Allows images to wrap to the next line if needed */
+  gap: 8px; /* Space between images */
+  margin-bottom: 8px; /* Space between images and message text */
+}
+
+.attachment-container {
+  position: relative;
+  display: inline-block;
+}
+
+.attachment-image {
+  max-width: 70px;
+  max-height: 70px;
+  width: auto; /* Maintain aspect ratio */
+  height: auto; /* Maintain aspect ratio */
+  border-radius: var(--border-radius-sm);
+  object-fit: cover; /* Ensures the image covers the 70x70 area without distortion */
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.attachment-container:hover .attachment-image {
+  filter: brightness(0.8);
+}
+
+.attachment-download-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.attachment-container:hover .attachment-download-btn {
+  opacity: 1;
+}
+
+.attachment-download-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+
+.attachment-image:hover {
+  transform: scale(1.1); /* Slightly enlarge on hover */
+}
+
+/* =============================================================================
+   CONTEXT MENU
+   ============================================================================= */
+.context-menu {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  width: 150px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.context-menu-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.context-menu-item:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.attachment-pdf {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  padding: 8px 12px;
+  border-radius: var(--border-radius);
+}
+
+.attachment-pdf-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--state-error);
+  flex-shrink: 0;
+}
+.attachment-pdf-icon svg{
+  width:100%;
+  height:100%;
+  fill:currentColor;
+}
+
+.attachment-pdf-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0; /* Fix for flexbox overflow */
+}
+
+.attachment-pdf-filename {
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attachment-pdf .attachment-download-btn {
+  /* Style the download button specifically for PDFs */
+  background: none;
+  border: none;
+  color: var(--brand-primary);
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.attachment-pdf .attachment-download-btn:hover {
+  text-decoration: underline;
+}
+
+/* Main container for the collapsible thinking block */
+.think-container {
+  background-color: #f7f7f7;
+  border-left: 3px solid #ccc;
+  border-radius: 4px;
+  margin: 12px 0;
+  overflow: hidden; /* Important for containing the rounded corners */
+}
+
+/* Header containing the button and collapsed label */
+.think-header {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+/* The toggle button */
+.think-toggle-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  margin-right: 8px;
+  cursor: pointer;
+  line-height: 0; /* Aligns the SVG nicely */
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.think-toggle-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.think-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: #555;
+}
+
+.think-collapsed-label {
+  font-style: italic;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.think-content {
+  font-style: italic;
+  color: #555;
+  padding: 10px 15px 15px 15px;
+  font-size: 0.9em;
+  white-space: pre-wrap;
+  transition: all 0.3s ease-in-out;
+}
+
+/* --- Toggle Logic --- */
+
+/* When collapsed, hide the content and the "collapse" icon */
+.think-container.collapsed .think-content,
+.think-container.collapsed .icon-collapse {
+  display: none;
+}
+
+/* When expanded, hide the "expand" icon and the collapsed label */
+.think-container:not(.collapsed) .icon-expand,
+.think-container:not(.collapsed) .think-collapsed-label {
+  display: none;
+}
+
+/* --- Dark Theme Adjustments ---
+body.dark .think-container {
+  background-color: #2c2c2c;
+  border-left-color: #555;
+}
+
+body.dark .think-toggle-btn:hover {
+  background-color: #444;
+}
+
+body.dark .think-toggle-btn svg,
+body.dark .think-collapsed-label,
+body.dark .think-content {
+  color: #bbb;
+  fill: #bbb;
+} */

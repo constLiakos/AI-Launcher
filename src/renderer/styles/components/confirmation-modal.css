@@ -1,0 +1,122 @@
+/* ==========================================================================
+   Global Confirmation Modal
+   ========================================================================== */
+
+/* 1. Overlay Container
+   -------------------------------------------------------------------------- */
+#global-confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    
+    /* Center the modal content vertically and horizontally */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: var(--bg-overlay);
+    backdrop-filter: blur(4px);
+    
+    /* Ensure it's on top of all other content, including the sidebar */
+    z-index: 10000; 
+}
+
+/* 2. Modal Content Box
+   -------------------------------------------------------------------------- */
+#global-confirm-modal .modal-content {
+    background-color: var(--surface-elevated);
+    border-radius: var(--border-radius-large);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--dialog-border);
+    padding: 24px;
+    width: 90%;
+    max-width: 500px;
+    
+    /* Add a subtle animation for appearing */
+    animation: fadeInScale 0.2s ease-out;
+}
+
+#global-confirm-modal .small-modal {
+    max-width: 400px;
+}
+
+/* 3. Typography
+   -------------------------------------------------------------------------- */
+#global-confirm-modal .modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0 0 12px 0; /* Reset margin and add bottom margin */
+}
+
+#global-confirm-modal .modal-message {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0 0 24px 0; /* Reset margin and add bottom margin */
+}
+
+/* 4. Actions Footer
+   -------------------------------------------------------------------------- */
+#global-confirm-modal .modal-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    align-items: center;
+    gap: 12px; /* Space between buttons */
+    
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-soft);
+}
+
+/* 5. Buttons
+   -------------------------------------------------------------------------- */
+
+/* Base styles for all buttons inside the modal actions */
+#global-confirm-modal .modal-actions .btn {
+    padding: 8px 16px;
+    border-radius: var(--border-radius-medium);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: 1px solid transparent;
+}
+
+/* Cancel Button */
+#global-confirm-modal .cancel-btn {
+    background: var(--button-secondary-bg);
+    color: var(--text-primary);
+    border-color: var(--border-default);
+}
+
+#global-confirm-modal .cancel-btn:hover {
+    background: var(--button-secondary-hover);
+    border-color: var(--border-focus);
+}
+
+/* Confirm (Danger) Button */
+#global-confirm-modal .confirm-btn {
+    background-color: var(--semantic-error); /* Use the semantic variable first */
+    background-color: var(--settings-danger-color, #d9534f); /* Fallback */
+    color: var(--text-on-primary);
+}
+
+#global-confirm-modal .confirm-btn:hover:not(:disabled) {
+    background-color: var(--state-recording-hover); /* Consider a more semantic name, e.g., --semantic-error-hover */
+    opacity: 0.9;
+}
+
+/* 6. Animations
+   -------------------------------------------------------------------------- */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

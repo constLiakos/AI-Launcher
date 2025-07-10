@@ -1,0 +1,63 @@
+/* src/renderer/styles/components/attachment-menu.css (ΕΝΗΜΕΡΩΜΕΝΟ) */
+/* =============================================================================
+   ATTACHMENT MENU COMPONENT
+   ============================================================================= */
+
+.attachment-menu {
+  position: fixed;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--border-radius); 
+  box-shadow: var(--shadow-lg);
+  z-index: 1001;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px); 
+  transition: opacity var(--transition-fast) ease, transform var(--transition-fast) ease, visibility var(--transition-fast);
+  -webkit-app-region: no-drag;
+}
+
+.attachment-menu.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* =============================================================================
+   MENU LIST & ITEMS
+   ============================================================================= */
+
+.attachment-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 8px; 
+}
+
+.attachment-menu li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  outline: none;
+  transition: all var(--transition-fast) ease;
+}
+
+.attachment-menu li:hover {
+  background-color: var(--brand-primary);
+  color: var(--text-inverse);
+  transform: translateX(2px);
+}
+
+/*
+ * Focus State for Accessibility:
+*/
+.attachment-menu li:focus-visible {
+  background-color: var(--bg-secondary);
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}

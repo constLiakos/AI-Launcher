@@ -1,0 +1,35 @@
+.chat-window {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius-xlarge);
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--shadow-xl);
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; 
+  min-width: 0; 
+}
+
+/* Ensure InputArea does not grow or shrink */
+.main-content > .input-area {
+  flex-shrink: 0;
+}
+
+/* Allow ConversationArea to take all available space */
+.main-content > .conversation-area { 
+  flex-grow: 1;
+  min-height: 0;
+}
+
+@media (max-width: 500px) {
+  .chat-window {
+    border-radius: var(--border-radius-large);
+  }
+}

@@ -1,0 +1,177 @@
+/* src/renderer/styles/components/screen-source-picker.css */
+/* =============================================================================
+   SCREEN SOURCE PICKER COMPONENT
+   ============================================================================= */
+
+/* =============================================================================
+   OVERLAY & WINDOW
+   ============================================================================= */
+
+.screen-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-fast) ease, visibility var(--transition-fast);
+}
+
+.screen-picker-overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.screen-picker-window {
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-lg, 12px);
+  box-shadow: var(--shadow-xl, 0 10px 30px rgba(0,0,0,0.2));
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.95);
+  transition: transform var(--transition-fast) ease;
+  border: 1px solid var(--dialog-border); 
+}
+
+.screen-picker-overlay.visible .screen-picker-window {
+    transform: scale(1);
+}
+
+/* =============================================================================
+   HEADER
+   ============================================================================= */
+
+.screen-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-default);
+  flex-shrink: 0;
+}
+
+.screen-picker-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.btn-close-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: 50%;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.btn-close-picker:hover {
+  background: var(--semantic-error);
+  border-color: var(--semantic-error);
+  color: var(--text-inverse);
+  transform: rotate(90deg);
+}
+
+.btn-close-picker:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+.btn-close-picker-icon {
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    stroke-width: 2px;
+}
+
+
+/* =============================================================================
+   SOURCE LIST
+   ============================================================================= */
+
+.source-list {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+
+.source-item {
+  cursor: pointer;
+  border-radius: var(--border-radius, 8px);
+  transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease, border-color var(--transition-fast) ease;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  outline: none;
+}
+
+.source-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg, 0 4px 15px rgba(0,0,0,0.1));
+  border-color: var(--brand-primary);
+}
+
+.source-item:active {
+    transform: translateY(-2px) scale(0.99);
+    box-shadow: var(--shadow-md);
+}
+
+.source-item:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--brand-primary);
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 2px;
+}
+
+.source-thumbnail-wrapper {
+    width: 100%;
+    padding-top: 56.25%;
+    position: relative;
+    background-color: var(--bg-tertiary);
+}
+
+.source-thumbnail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.source-name {
+  padding: 12px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  text-align: center;
+  transition: color var(--transition-fast) ease, background-color var(--transition-fast) ease;
+}
+
+.source-item:hover .source-name {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+}
