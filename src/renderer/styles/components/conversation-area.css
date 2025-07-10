@@ -30,9 +30,9 @@
 }
 
 .conversation-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-secondary);
 }
 
 .conversation-content {
