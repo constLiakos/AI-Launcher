@@ -34,7 +34,7 @@ input {
   position: relative;
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  gap: 5px;
   width: 100%;
 }
 .input-field {
@@ -62,7 +62,7 @@ input {
 }
 .input-field.single,
 .input-field.multi {
-  min-height: 44px;
+  min-height: 46px;
   max-height: 250px;
   overflow-y: auto;
 }
