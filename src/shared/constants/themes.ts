@@ -42,6 +42,7 @@ export interface ThemeColors {
     bg_window_start: string;
     bg_window_end: string;
     bg_conversation: string;
+    bg_window_glass: string;
 
     // === MAIN APP INPUT COLORS ===
     main_input_bg: string;
@@ -154,6 +155,8 @@ export const getLightTheme = (): ThemeColors => ({
     bg_window_start: '#f8fafc',
     bg_window_end: '#e2e8f0',
     bg_conversation: 'rgba(248, 250, 252, 0.9)',
+    bg_window_glass: 'rgba(255, 255, 255, 0.5)',
+
 
     // === MAIN APP INPUT COLORS ===
     main_input_bg: '#ffffff',
@@ -262,6 +265,7 @@ export const getDarkTheme = (): ThemeColors => ({
     bg_window_start: '#2d3142',
     bg_window_end: '#1a1d29',
     bg_conversation: 'rgba(37, 40, 54, 0.9)',
+    bg_window_glass: 'rgba(45, 49, 66, 0.5)',
 
     // === MAIN APP INPUT COLORS ===
     main_input_bg: '#374151',
@@ -370,6 +374,7 @@ export const getNatureTheme = (): ThemeColors => ({
     bg_window_start: '#F1F4F0',
     bg_window_end: '#E0E6DC',
     bg_conversation: 'rgba(241, 244, 240, 0.9)',
+    bg_window_glass: 'rgba(250, 251, 248, 0.5)',
 
     // === MAIN APP INPUT COLORS ===
     main_input_bg: '#FAFBF8',
@@ -478,6 +483,7 @@ export const getRoseTheme = (): ThemeColors => ({
     bg_window_start: '#F8F0F4',
     bg_window_end: '#F0D9E1',
     bg_conversation: 'rgba(248, 240, 244, 0.9)',
+    bg_window_glass: 'rgba(253, 248, 251, 0.5)',
 
     // === MAIN APP INPUT COLORS ===
     main_input_bg: '#FDF8FB',
@@ -586,6 +592,7 @@ export const getHuaweiTheme = (): ThemeColors => ({
     bg_window_start: '#DFE9F8',
     bg_window_end: '#FFF3E0',
     bg_conversation: 'rgba(252, 255, 255, 0.8)',
+    bg_window_glass: 'rgba(253, 252, 250, 0.5)',
 
     // === MAIN APP INPUT COLORS ===
     main_input_bg: 'rgba(253, 252, 250, 0.5)',
