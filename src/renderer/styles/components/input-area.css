@@ -7,7 +7,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 8px 12px 12px 12px;
+  padding: 8px 10px 8px 10px;
   background: transparent;
   z-index: 10;
   width: 100%;
@@ -152,7 +152,7 @@ input {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 4px 0 4px;
+  padding: 2px 4px 0px 4px;
   width: 100%;
 }
 

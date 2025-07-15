@@ -10,14 +10,14 @@ export const WINDOW_SIZE = {
   EXPANDED_WIDTH: 650,
 
   // Fallback and minimum heights
-  COMPACT_HEIGHT: 130, // Fallback height for compact mode
+  COMPACT_HEIGHT: 90, // Fallback height for compact mode
   MIN_EXPANDED_HEIGHT: 550, // Minimum height when expanded
   CHAT_AREA_BASE_HEIGHT: 320, // Base height for the chat/response area
   SCREEN_SOURCE_PICKER_HEIGHT: 450,
 
   // Constraints
   MIN_WIDTH: 400,
-  MIN_HEIGHT: 100,
+  MIN_HEIGHT: 90,
   MAX_WIDTH: 1200,
   MAX_HEIGHT: 1000
 } as const
