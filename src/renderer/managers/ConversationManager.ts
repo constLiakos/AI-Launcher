@@ -153,6 +153,8 @@ export class ConversationManager {
     const finalMessage =  await window.electronAPI.createMessage(new_msg);
     if (this.activeConversation)
       this.activeConversation.messages.push(finalMessage);
+    else
+      console.error("No active conversation found");
     
     const messageIndex = conversation.messages.findIndex(m => m.id === tempId);
     if (messageIndex !== -1) {
