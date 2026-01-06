@@ -7,6 +7,7 @@ import { promisify } from 'util';
 import { existsSync, mkdirSync } from 'fs';
 import * as path from 'path';
 import { promises as fs } from 'fs';
+import { readdir } from 'fs/promises';
 
 const execAsync = promisify(exec);
 
@@ -26,6 +27,86 @@ export class DatabaseService {
     try {
       await this.ensureDatabaseDirectory();
 
+      // Define Possible Paths for Node MOdules
+      let potentialPaths: string[] = [];
+
+      if (app.isPackaged) {
+        potentialPaths = [
+          // 1. Priority: Unpacked node_modules - manually
+          path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'prisma'),
+          path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', '@prisma', 'client'),
+          // 2. Extra Resources electron-builder defined: to="dist/generated/client"
+          path.join(process.resourcesPath, 'dist', 'generated', 'client'),
+          // 3. Fallback
+          path.join(process.resourcesPath, 'src', 'generated', 'client')
+        ];
+      } else {
+        // Development paths
+        potentialPaths = [
+          path.join(process.cwd(), 'src', 'generated', 'client'),
+          path.join(process.cwd(), 'node_modules', 'prisma')
+        ];
+      }
+
+      console.log('Searching for Prisma Engine in paths:', potentialPaths);
+
+      // Find Engine File
+      let enginePath: string | null = null;
+      let platformName = '';
+
+      // Clean suffix
+      if (process.platform === 'win32') {
+        platformName = 'windows';
+      } else if (process.platform === 'darwin') {
+        platformName = 'darwin';
+      } else {
+        platformName = 'debian-openssl';
+      }
+
+
+      for (const dir of potentialPaths) {
+        try {
+          if (!existsSync(dir)) continue;
+
+          const files = await readdir(dir);
+
+          // Find .node per OS
+          const exactMatch = files.find(f =>
+            f.endsWith('.node') && f.includes(platformName)
+          );
+
+          if (exactMatch) {
+            enginePath = path.join(dir, exactMatch);
+            console.log(`Found exact engine match at: ${enginePath}`);
+            break;
+          }
+
+          // Fallback
+          if (!enginePath) {
+            const anyNode = files.find(f => f.endsWith('.node'));
+            if (anyNode) {
+              // Keep as backup but search for for exact match
+              enginePath = path.join(dir, anyNode);
+              console.log(`Found candidate engine (fallback) at: ${enginePath}`);
+            }
+          }
+
+        } catch (e) {
+          // Ignore directories with no permissions
+          console.warn(`Skipping path check for ${dir}:`, e);
+        }
+      }
+
+
+      if (enginePath) {
+        console.log(`Setting PRISMA_QUERY_ENGINE_LIBRARY to: ${enginePath}`);
+        process.env.PRISMA_QUERY_ENGINE_LIBRARY = enginePath;
+      } else {
+        console.error('CRITICAL: No Prisma Engine (.node) file found in any search path!');
+        console.error('Searched in:', potentialPaths);
+      }
+
+      // Initialize Prisma Client
       this.prisma = new PrismaClient({
         datasources: {
           db: {
@@ -44,7 +125,7 @@ export class DatabaseService {
 
     } catch (error) {
       console.error('Failed to initialize database:', error);
-
+      console.error(`Database directory: ${this.databasePath}`);
       if (error instanceof Error) {
         throw new Error(`Database initialization failed: ${error.message}`);
       } else {
@@ -74,13 +155,11 @@ export class DatabaseService {
       const conversationTable = await this.prisma.$queryRawUnsafe<Array<{ name: string }>>(
         `SELECT name FROM sqlite_master WHERE type='table' AND name='Conversation';`
       );
-      // If the table exists, the database is already set up. We do nothing.
 
       if (conversationTable.length > 0) {
         console.log('Database schema already exists.');
         return;
       }
-      // If it doesn't exist, then we create the schema from the file.
 
       console.log('Database schema not found. Creating from schema.sql...');
 
@@ -89,12 +168,10 @@ export class DatabaseService {
         : path.join(app.getAppPath(), 'src/main/resources/schema.sql');
 
       const schemaSql = await fs.readFile(schemaSqlPath, 'utf-8');
-      // Split the SQL into separate statements and remove empty ones.
       const sqlCommands = schemaSql
         .split(';')
         .map(cmd => cmd.trim())
         .filter(cmd => cmd.length > 0);
-      // Execute all commands within a transaction for safety.
 
       await this.prisma.$transaction(
         sqlCommands.map(command => this.prisma!.$executeRawUnsafe(command))
@@ -179,7 +256,7 @@ export class DatabaseService {
 
     try {
       console.log('Starting database optimization...');
-      
+
       // Run VACUUM to reclaim space
       await this.prisma.$executeRaw`VACUUM`;
       console.log('Database VACUUM completed');
@@ -201,7 +278,7 @@ export class DatabaseService {
   async backup(backupPath: string): Promise<void> {
     try {
       const { copyFileSync } = await import('fs');
-      
+
       // Ensure database is flushed
       if (this.prisma) {
         await this.prisma.$executeRaw`PRAGMA wal_checkpoint(FULL)`;
@@ -237,7 +314,7 @@ export class DatabaseService {
 
       // Reinitialize database connection
       await this.initialize();
-      
+
       console.log(`Database restored from: ${backupPath}`);
     } catch (error) {
       console.error('Database restore failed:', error);
@@ -257,7 +334,7 @@ export class DatabaseService {
       // Delete in correct order due to foreign key constraints
       await this.prisma.message.deleteMany();
       await this.prisma.conversation.deleteMany();
-      
+
       console.log('All database data cleared');
     } catch (error) {
       console.error('Failed to clear database data:', error);
@@ -298,59 +375,59 @@ export class DatabaseService {
    * Health check - verify database connectivity and integrity
    */
   async healthCheck(): Promise<{
-  connected: boolean;
-  tablesExist: boolean;
-  canWrite: boolean;
-  errors: string[];
-}> {
-  const result = {
-    connected: false,
-    tablesExist: false,
-    canWrite: false,
-    errors: [] as string[] // ← Type assertion
-  };
+    connected: boolean;
+    tablesExist: boolean;
+    canWrite: boolean;
+    errors: string[];
+  }> {
+    const result = {
+      connected: false,
+      tablesExist: false,
+      canWrite: false,
+      errors: [] as string[] // ← Type assertion
+    };
 
-  try {
-    if (!this.prisma) {
-      result.errors.push('Prisma client not initialized');
-      return result;
-    }
+    try {
+      if (!this.prisma) {
+        result.errors.push('Prisma client not initialized');
+        return result;
+      }
 
-    // Test connection
-    await this.prisma.$queryRaw`SELECT 1`;
-    result.connected = true;
+      // Test connection
+      await this.prisma.$queryRaw`SELECT 1`;
+      result.connected = true;
 
-    // Check if tables exist
-    const tables = await this.prisma.$queryRaw`
+      // Check if tables exist
+      const tables = await this.prisma.$queryRaw`
       SELECT name FROM sqlite_master WHERE type='table' AND name IN ('Conversation', 'Message')
     ` as Array<{ name: string }>;
-    
-    result.tablesExist = tables.length === 2;
-    if (!result.tablesExist) {
-      result.errors.push('Required database tables do not exist');
+
+      result.tablesExist = tables.length === 2;
+      if (!result.tablesExist) {
+        result.errors.push('Required database tables do not exist');
+      }
+
+      // Test write capability
+      const testId = `health-check-${Date.now()}`;
+      await this.prisma.conversation.create({
+        data: {
+          id: testId,
+          title: 'Health Check Test'
+        }
+      });
+
+      await this.prisma.conversation.delete({
+        where: { id: testId }
+      });
+
+      result.canWrite = true;
+
+    } catch (error) {
+      result.errors.push(`Health check failed: ${error}`);
     }
 
-    // Test write capability
-    const testId = `health-check-${Date.now()}`;
-    await this.prisma.conversation.create({
-      data: {
-        id: testId,
-        title: 'Health Check Test'
-      }
-    });
-    
-    await this.prisma.conversation.delete({
-      where: { id: testId }
-    });
-    
-    result.canWrite = true;
-
-  } catch (error) {
-    result.errors.push(`Health check failed: ${error}`);
+    return result;
   }
-
-  return result;
-}
 
   /**
    * Get database path

@@ -18,7 +18,7 @@
       "to": "prisma/schema.prisma"
     },
     {
-      "from": "dist/generated/client",
+      "from": "src/generated/client",
       "to": "generated/client",
       "filter": ["*.node"]
     },

@@ -10,9 +10,9 @@
   "main": "dist/main/main.js",
   "scripts": {
     "setup": "node setup.js",
-    "dev": "npm run prisma:generate && cross-env NODE_ENV=development concurrently \"npm run dev:renderer\" \"npm run dev:main\" \"npm run dev:electron\"",
+    "build:main-dev": "cross-env NODE_ENV=development tsc -p tsconfig.main.json && tsc-alias -p tsconfig.main.json",
+    "dev": "npm run prisma:generate && npm run build:main-dev && cross-env NODE_ENV=development concurrently \"npm run dev:renderer\" \"npm run dev:main\" \"npm run dev:electron\"",
     "dev:main": "cross-env NODE_ENV=development tsc -p tsconfig.main.json && tsc-alias -p tsconfig.main.json --watch",
-    
     "dev:renderer": "cross-env NODE_ENV=development vite",
     "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron . --inspect",
 
@@ -29,7 +29,6 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:gensql": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > src/main/resources/schema.sql",
 
-    
     "debug:main": "cross-env NODE_ENV=development electron . --inspect=5858",
     "debug:renderer": "cross-env NODE_ENV=development vite --mode development"
   },
