@@ -206,6 +206,7 @@ export class InputArea {
     this.inputField.addEventListener('keydown', this.handleKeyDown.bind(this));
     this.inputField.addEventListener('focus', this.handleFocus.bind(this));
     this.inputField.addEventListener('blur', this.handleBlur.bind(this));
+    this.inputField.addEventListener('paste', this.handlePaste.bind(this));
     this.element.addEventListener('drop', this.handleDrop.bind(this));
     this.element.addEventListener('dragover', this.handleDragOver.bind(this));
     this.element.addEventListener('dragenter', this.handleDragEnter.bind(this));
@@ -276,6 +277,23 @@ export class InputArea {
     }
   }
 
+  private async handlePaste(event: ClipboardEvent): Promise<void> {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        event.preventDefault();
+        const blob = items[i].getAsFile();
+        if (blob) await this.processFile(blob);
+      } else if (items[i].type === 'application/pdf') {
+        event.preventDefault();
+        const blob = items[i].getAsFile();
+        if (blob) await this.processFile(blob);
+      }
+    }
+  }
+
   private handleFileSelect(event: Event): void {
     const files = (event.target as HTMLInputElement).files;
     if (!files) return;
@@ -285,6 +303,12 @@ export class InputArea {
 
   private async handleFiles(files: FileList): Promise<void> {
     for (const file of Array.from(files)) {
+      await this.processFile(file);
+    }
+  }
+
+  private async processFile(file: File): Promise<void> {
+    return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const result = e.target?.result as string;
@@ -310,7 +334,6 @@ export class InputArea {
               console.error('PDF processing failed:', response.error);
               const error_msg = "PDF processing failed. " + response.error
               NotificationService.showError(error_msg)
-              
             }
           } catch (error) {
             console.error("IPC call for PDF processing failed: ", error);
@@ -320,9 +343,10 @@ export class InputArea {
              this.renderThumbnails();
           }
         }
+        resolve();
       };
       reader.readAsDataURL(file);
-    }
+    });
   }
 
   private renderPdfThumbnail(att: any, isProcessing: boolean): void {
@@ -640,6 +664,7 @@ export class InputArea {
     this.inputField.removeEventListener('keydown', this.handleKeyDown.bind(this));
     this.inputField.removeEventListener('focus', this.handleFocus.bind(this));
     this.inputField.removeEventListener('blur', this.handleBlur.bind(this));
+    this.inputField.removeEventListener('paste', this.handlePaste.bind(this));
     this.element.removeEventListener('drop', this.handleDrop.bind(this));
     this.element.removeEventListener('dragover', this.handleDragOver.bind(this));
     this.element.removeEventListener('dragenter', this.handleDragEnter.bind(this));
