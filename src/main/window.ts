@@ -64,13 +64,34 @@ export class WindowManager extends EventEmitter {
       y = windowConfig.position?.y ?? defaultPosition.y;
     }
 
+    // 1. Παίρνουμε τα όρια της βασικής οθόνης (Work Area: εξαιρεί taskbars)
+    const primaryWorkArea = primaryDisplay.workArea;
+
+    // 2. Υπολογίζουμε το κέντρο του παραθύρου με βάση τις συντεταγμένες που βρήκαμε
+    const windowCenterX = x + (width / 2);
+    const windowCenterY = y + (height / 2);
+
+    // 3. Ελέγχουμε αν το κέντρο του παραθύρου πέφτει μέσα στη βασική οθόνη
+    const isInsidePrimary = (
+        windowCenterX >= primaryWorkArea.x &&
+        windowCenterX <= (primaryWorkArea.x + primaryWorkArea.width) &&
+        windowCenterY >= primaryWorkArea.y &&
+        windowCenterY <= (primaryWorkArea.y + primaryWorkArea.height)
+    );
+
+    // 4. Αν είναι εκτός, το επαναφέρουμε στο κέντρο της βασικής οθόνης
+    if (!isInsidePrimary) {
+        console.log('⚠️ Window position detected outside primary screen bounds. Resetting to center.');
+        const centerPos = getCenterPosition(width, height, screenWidth, screenHeight);
+        
+        // Προσθέτουμε το offset της οθόνης (αν η primary δεν ξεκινάει στο 0,0 - σπάνιο αλλά πιθανό σε Linux)
+        x = primaryWorkArea.x + centerPos.x;
+        y = primaryWorkArea.y + centerPos.y;
+    }
+
     const iconPath = join(getAssetsPath(), 'icons', 'icon.png');
-
     const icon = nativeImage.createFromPath(iconPath);
-
     const preloadMainPath = join(__dirname, '../preload/preload.js');
-
-
 
     this.mainWindow = new BrowserWindow({
       width: width,
