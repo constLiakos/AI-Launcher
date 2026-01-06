@@ -149,15 +149,21 @@ export class WindowManager extends EventEmitter {
       return this.settingsWindow;
     }
 
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+    // Find the display where the cursor is currently located (Active Screen)
+    const cursorPoint = screen.getCursorScreenPoint();
+    const activeDisplay = screen.getDisplayNearestPoint(cursorPoint);
+    const { width: screenWidth, height: screenHeight, x: screenX, y: screenY } = activeDisplay.workArea;
 
-    const position = getCenterPosition(
+    const centerPos = getCenterPosition(
       SETTINGS_WINDOW_SIZE.WIDTH,
       SETTINGS_WINDOW_SIZE.HEIGHT,
       screenWidth,
       screenHeight
     );
+
+    // Add offset to position correctly on the active monitor
+    const x = screenX + centerPos.x;
+    const y = screenY + centerPos.y;
 
     const preloadSettingsPath = join(__dirname, '../preload/preload.js');
 
@@ -166,8 +172,8 @@ export class WindowManager extends EventEmitter {
       height: SETTINGS_WINDOW_SIZE.HEIGHT,
       minWidth: SETTINGS_WINDOW_SIZE.MIN_WIDTH,
       minHeight: SETTINGS_WINDOW_SIZE.MIN_HEIGHT,
-      x: position.x,
-      y: position.y,
+      x: x,
+      y: y,
       show: false,
       frame: false,
       transparent: true,
