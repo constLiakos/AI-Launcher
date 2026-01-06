@@ -1,6 +1,6 @@
 {
   "name": "ai-launcher-electron",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Desktop AI Assistant with system tray integration",
   "author": {
     "name": "constliakos",
@@ -11,26 +11,21 @@
   "scripts": {
     "setup": "node setup.js",
     "version": "node scripts/update-readme.js && git add README.md",
-
     "build:main-dev": "cross-env NODE_ENV=development tsc -p tsconfig.main.json && tsc-alias -p tsconfig.main.json",
     "dev": "npm run prisma:generate && npm run build:main-dev && cross-env NODE_ENV=development concurrently \"npm run dev:renderer\" \"npm run dev:main\" \"npm run dev:electron\"",
     "dev:main": "cross-env NODE_ENV=development tsc -p tsconfig.main.json && tsc-alias -p tsconfig.main.json --watch",
     "dev:renderer": "cross-env NODE_ENV=development vite",
     "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron . --inspect",
-
     "build": "npm run prisma:generate && npm run build:main && npm run build:renderer",
     "build:main": "cross-env NODE_ENV=production tsc -p tsconfig.main.json && tsc-alias -p tsconfig.main.json",
     "build:renderer": "cross-env NODE_ENV=production vite build",
-    
     "start": "cross-env NODE_ENV=production npm run build && electron .",
     "dist": "cross-env NODE_ENV=production npm run build && electron-builder",
     "electron": "electron .",
     "clean": "rimraf dist generated",
-
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:gensql": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > src/main/resources/schema.sql",
-
     "debug:main": "cross-env NODE_ENV=development electron . --inspect=5858",
     "debug:renderer": "cross-env NODE_ENV=development vite --mode development"
   },
