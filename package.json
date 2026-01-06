@@ -10,6 +10,8 @@
   "main": "dist/main/main.js",
   "scripts": {
     "setup": "node setup.js",
+    "version": "node scripts/update-readme.js && git add README.md",
+
     "build:main-dev": "cross-env NODE_ENV=development tsc -p tsconfig.main.json && tsc-alias -p tsconfig.main.json",
     "dev": "npm run prisma:generate && npm run build:main-dev && cross-env NODE_ENV=development concurrently \"npm run dev:renderer\" \"npm run dev:main\" \"npm run dev:electron\"",
     "dev:main": "cross-env NODE_ENV=development tsc -p tsconfig.main.json && tsc-alias -p tsconfig.main.json --watch",
