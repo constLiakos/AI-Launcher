@@ -107,6 +107,8 @@ const electronAPI: ElectronAPI = {
   showNotification: (title: string, body: string) => 
     ipcRenderer.invoke('notification:show', { title, body }),
 
+  showContextMenu: () => ipcRenderer.invoke('system:show-context-menu'),
+
   // Clipboard
   writeToClipboard: (text: string) => 
     ipcRenderer.invoke('clipboard:write-text', text),

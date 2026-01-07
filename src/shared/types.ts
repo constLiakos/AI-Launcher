@@ -346,6 +346,7 @@ export interface ElectronAPI {
   captureHighResSource: (sourceId: string) => Promise<string>;
 
 
+  showContextMenu: () => Promise<void>;
   openExternal: (url: string) => Promise<void>;
   showNotification: (title: string, body: string) => Promise<void>;
   writeToClipboard: (text: string) => Promise<boolean>;

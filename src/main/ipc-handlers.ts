@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { ipcMain, dialog, shell, app, BrowserWindow, desktopCapturer, screen } from 'electron';
+import { ipcMain, dialog, shell, app, BrowserWindow, desktopCapturer, screen, Menu, MenuItem } from 'electron';
 import { DatabaseService } from '@main/services/DatabaseService';
 import { ConversationService } from '@main/services/ConversationService';
 import { MessageService } from '@main/services/MessageService';
@@ -504,6 +504,24 @@ export function setupIpcHandlers(
   // =============================================================================
   // SYSTEM OPERATIONS
   // =============================================================================
+
+  ipcMain.handle('system:show-context-menu', (event) => {
+    const template = [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'pasteAndMatchStyle' },
+      { role: 'delete' },
+      { type: 'separator' },
+      { role: 'selectAll' }
+    ];
+    // @ts-ignore
+    const menu = Menu.buildFromTemplate(template);
+    menu.popup({ window: BrowserWindow.fromWebContents(event.sender) || undefined });
+  });
 
   ipcMain.handle('system:get-app-version', () => {
     return app.getVersion();

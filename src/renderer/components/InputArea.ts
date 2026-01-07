@@ -207,6 +207,7 @@ export class InputArea {
     this.inputField.addEventListener('focus', this.handleFocus.bind(this));
     this.inputField.addEventListener('blur', this.handleBlur.bind(this));
     this.inputField.addEventListener('paste', this.handlePaste.bind(this));
+    this.inputField.addEventListener('contextmenu', this.handleContextMenu.bind(this));
     this.element.addEventListener('drop', this.handleDrop.bind(this));
     this.element.addEventListener('dragover', this.handleDragOver.bind(this));
     this.element.addEventListener('dragenter', this.handleDragEnter.bind(this));
@@ -292,6 +293,12 @@ export class InputArea {
         if (blob) await this.processFile(blob);
       }
     }
+  }
+
+  private handleContextMenu(e: MouseEvent): void {
+    e.preventDefault();
+    // @ts-ignore
+    window.electronAPI.showContextMenu();
   }
 
   private handleFileSelect(event: Event): void {
@@ -665,6 +672,7 @@ export class InputArea {
     this.inputField.removeEventListener('focus', this.handleFocus.bind(this));
     this.inputField.removeEventListener('blur', this.handleBlur.bind(this));
     this.inputField.removeEventListener('paste', this.handlePaste.bind(this));
+    this.inputField.removeEventListener('contextmenu', this.handleContextMenu.bind(this));
     this.element.removeEventListener('drop', this.handleDrop.bind(this));
     this.element.removeEventListener('dragover', this.handleDragOver.bind(this));
     this.element.removeEventListener('dragenter', this.handleDragEnter.bind(this));
