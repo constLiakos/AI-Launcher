@@ -4,7 +4,7 @@
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](#)
 > ✨ A lightweight desktop AI assistant that lives in your system tray with quick global hotkey access.
 
-![Demo](docs/assets/demo.gif "Demo 1")
+![Demo](assets/demo/demo.gif "Demo 1")
 
 ## 🌟 Features
 - **⚡ Global Hotkey**: Instantly summon the AI interface from anywhere.
