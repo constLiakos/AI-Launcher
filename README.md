@@ -24,8 +24,8 @@ Download the latest pre-built installer from the [releases page](https://github.
 ### 🛠️ From Source
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/constLiakos/AI-Launcher-Electron.git
-cd AI-Launcher-Electron
+git clone https://github.com/constLiakos/AI-Launcher.git
+cd AI-Launcher
 ```
 2. **Install dependencies:**
 ```bash
