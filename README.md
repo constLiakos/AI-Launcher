@@ -1,5 +1,5 @@
 # 🚀 AI Launcher
-[![Version](https://img.shields.io/badge/version-v1.0.8-blue.svg)](https://github.com/constLiakos/AI-Launcher-Electron/releases)
+[![Version](https://img.shields.io/badge/version-v1.0.9-rc.0-blue.svg)](https://github.com/constLiakos/AI-Launcher-Electron/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](#)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](#)
 > ✨ A lightweight desktop AI assistant that lives in your system tray with quick global hotkey access.
