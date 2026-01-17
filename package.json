@@ -1,6 +1,6 @@
 {
   "name": "ai-launcher-electron",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Desktop AI Assistant with system tray integration",
   "author": {
     "name": "constliakos",
