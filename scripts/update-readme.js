@@ -11,8 +11,10 @@ console.log(`Updating README to version: ${newVersion}`);
 
 let readmeContent = fs.readFileSync(readmePath, 'utf8');
 
-const regex = /badge\/version-v\d+\.\d+\.\d+-blue/g;
-const replacement = `badge/version-v${newVersion}-blue`;
+const regex = /badge\/version-v\d+\.\d+\.\d+(?:(?:-|--)[a-zA-Z0-9.-]+)?-blue/g;
+
+const safeVersion = newVersion.replace(/-/g, '--');
+const replacement = `badge/version-v${safeVersion}-blue`;
 
 if (readmeContent.match(regex)) {
     readmeContent = readmeContent.replace(regex, replacement);
