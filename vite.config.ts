@@ -31,7 +31,7 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom'], 
     alias: {
-
+      katex: resolve(__dirname, 'node_modules/katex/dist/katex.mjs')
     }
   },
   plugins: [tsconfigPaths()]
