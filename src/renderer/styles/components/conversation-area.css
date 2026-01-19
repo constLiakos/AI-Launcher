@@ -175,8 +175,23 @@
   line-height: 1.4;
   user-select: text; /* Allow text selection */
 }
-.message-text ol, ul{
-  list-style-position: inside;
+.message-text ol,
+.message-text ul {
+  margin-left: 20px;
+  padding-left: 0;
+  list-style-position: outside;
+}
+
+.message-text ul {
+  list-style-type: disc;
+}
+
+.message-text ol {
+  list-style-type: decimal;
+}
+
+.message-text li {
+  margin-bottom: 4px;
 }
 .message-text pre {
   margin: 10px 0;
